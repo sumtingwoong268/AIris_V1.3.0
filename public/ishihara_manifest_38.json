@@ -1,0 +1,304 @@
+{
+  "plates": [
+    {
+      "id": 1,
+      "image": "ishihara/plate_01.png",
+      "analysis": {
+        "raw": "Everyone should see number 12."
+      }
+    },
+    {
+      "id": 2,
+      "image": "ishihara/plate_02.png",
+      "analysis": {
+        "raw": "Normal view: 8",
+        "normal": "8"
+      }
+    },
+    {
+      "id": 3,
+      "image": "ishihara/plate_03.png",
+      "analysis": {
+        "raw": "Normal view: 6",
+        "normal": "6"
+      }
+    },
+    {
+      "id": 4,
+      "image": "ishihara/plate_04.png",
+      "analysis": {
+        "raw": "Normal view: 29",
+        "normal": "29"
+      }
+    },
+    {
+      "id": 5,
+      "image": "ishihara/plate_05.png",
+      "analysis": {
+        "raw": "Normal view: 57",
+        "normal": "57"
+      }
+    },
+    {
+      "id": 6,
+      "image": "ishihara/plate_06.png",
+      "analysis": {
+        "raw": "Normal view: 5",
+        "normal": "5"
+      }
+    },
+    {
+      "id": 7,
+      "image": "ishihara/plate_07.png",
+      "analysis": {
+        "raw": "Normal view: 3",
+        "normal": "3"
+      }
+    },
+    {
+      "id": 8,
+      "image": "ishihara/plate_08.png",
+      "analysis": {
+        "raw": "Normal view: 15",
+        "normal": "15"
+      }
+    },
+    {
+      "id": 9,
+      "image": "ishihara/plate_09.png",
+      "analysis": {
+        "raw": "Normal view: 74",
+        "normal": "74"
+      }
+    },
+    {
+      "id": 10,
+      "image": "ishihara/plate_10.png",
+      "analysis": {
+        "raw": "Normal view: 2",
+        "normal": "2"
+      }
+    },
+    {
+      "id": 11,
+      "image": "ishihara/plate_11.png",
+      "analysis": {
+        "raw": "Normal view: 6",
+        "normal": "6"
+      }
+    },
+    {
+      "id": 12,
+      "image": "ishihara/plate_12.png",
+      "analysis": {
+        "raw": "Normal view: 97",
+        "normal": "97"
+      }
+    },
+    {
+      "id": 13,
+      "image": "ishihara/plate_13.png",
+      "analysis": {
+        "raw": "Normal view: 45",
+        "normal": "45"
+      }
+    },
+    {
+      "id": 14,
+      "image": "ishihara/plate_14.png",
+      "analysis": {
+        "raw": "Normal view: 5",
+        "normal": "5"
+      }
+    },
+    {
+      "id": 15,
+      "image": "ishihara/plate_15.png",
+      "analysis": {
+        "raw": "Normal view: 7",
+        "normal": "7"
+      }
+    },
+    {
+      "id": 16,
+      "image": "ishihara/plate_16.png",
+      "analysis": {
+        "raw": "Normal view: 16",
+        "normal": "16"
+      }
+    },
+    {
+      "id": 17,
+      "image": "ishihara/plate_17.png",
+      "analysis": {
+        "raw": "Normal view: 73",
+        "normal": "73"
+      }
+    },
+    {
+      "id": 18,
+      "image": "ishihara/plate_18.png",
+      "analysis": {
+        "raw": "Normal view: nothing",
+        "normal": "nothing"
+      }
+    },
+    {
+      "id": 19,
+      "image": "ishihara/plate_19.png",
+      "analysis": {
+        "raw": "Normal view: nothing",
+        "normal": "nothing"
+      }
+    },
+    {
+      "id": 20,
+      "image": "ishihara/plate_20.png",
+      "analysis": {
+        "raw": "Normal view: nothing",
+        "normal": "nothing"
+      }
+    },
+    {
+      "id": 21,
+      "image": "ishihara/plate_21.png",
+      "analysis": {
+        "raw": "Normal view: nothing",
+        "normal": "nothing"
+      }
+    },
+    {
+      "id": 22,
+      "image": "ishihara/plate_22.png",
+      "analysis": {
+        "raw": "Normal view: 26",
+        "normal": "26"
+      }
+    },
+    {
+      "id": 23,
+      "image": "ishihara/plate_23.png",
+      "analysis": {
+        "raw": "Normal view: 42",
+        "normal": "42"
+      }
+    },
+    {
+      "id": 24,
+      "image": "ishihara/plate_24.png",
+      "analysis": {
+        "raw": "Normal view: 35",
+        "normal": "35"
+      }
+    },
+    {
+      "id": 25,
+      "image": "ishihara/plate_25.png",
+      "analysis": {
+        "raw": "Normal view: 96",
+        "normal": "96"
+      }
+    },
+    {
+      "id": 26,
+      "image": "ishihara/plate_26.png",
+      "analysis": {
+        "raw": "Normal view: purple and red spots",
+        "normal": "purple and red spots"
+      }
+    },
+    {
+      "id": 27,
+      "image": "ishihara/plate_27.png",
+      "analysis": {
+        "raw": "Normal view: purple and red spots",
+        "normal": "purple and red spots"
+      }
+    },
+    {
+      "id": 28,
+      "image": "ishihara/plate_28.png",
+      "analysis": {
+        "raw": "Normal view: nothing",
+        "normal": "nothing"
+      }
+    },
+    {
+      "id": 29,
+      "image": "ishihara/plate_29.png",
+      "analysis": {
+        "raw": "Normal view: nothing",
+        "normal": "nothing"
+      }
+    },
+    {
+      "id": 30,
+      "image": "ishihara/plate_30.png",
+      "analysis": {
+        "raw": "Normal view: blue-green line",
+        "normal": "blue-green line"
+      }
+    },
+    {
+      "id": 31,
+      "image": "ishihara/plate_31.png",
+      "analysis": {
+        "raw": "Normal view: blue-green line",
+        "normal": "blue-green line"
+      }
+    },
+    {
+      "id": 32,
+      "image": "ishihara/plate_32.png",
+      "analysis": {
+        "raw": "Normal view: orange line",
+        "normal": "orange line"
+      }
+    },
+    {
+      "id": 33,
+      "image": "ishihara/plate_33.png",
+      "analysis": {
+        "raw": "Normal view: orange line",
+        "normal": "orange line"
+      }
+    },
+    {
+      "id": 34,
+      "image": "ishihara/plate_34.png",
+      "analysis": {
+        "raw": "Normal view: blue-green and yellow-green line",
+        "normal": "blue-green and yellow-green line"
+      }
+    },
+    {
+      "id": 35,
+      "image": "ishihara/plate_35.png",
+      "analysis": {
+        "raw": "Normal view: blue-green and yellow-green line",
+        "normal": "blue-green and yellow-green line"
+      }
+    },
+    {
+      "id": 36,
+      "image": "ishihara/plate_36.png",
+      "analysis": {
+        "raw": "Normal view: violet and orange line",
+        "normal": "violet and orange line"
+      }
+    },
+    {
+      "id": 37,
+      "image": "ishihara/plate_37.png",
+      "analysis": {
+        "raw": "Normal view: violet and orange line",
+        "normal": "violet and orange line"
+      }
+    },
+    {
+      "id": 38,
+      "image": "ishihara/plate_38.png",
+      "analysis": {}
+    }
+  ]
+}
