@@ -21,6 +21,7 @@ export default function Profile() {
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -87,6 +88,50 @@ export default function Profile() {
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploading(true);
+    try {
+      // Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const filePath = `avatars/${user.id}-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      setAvatarUrl(data.publicUrl);
+
+      // Save to profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: data.publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      toast({ title: "Avatar uploaded!", description: "Your profile picture has been updated." });
+    } catch (error: any) {
+      console.error("Avatar upload error:", error);
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
@@ -102,7 +147,20 @@ export default function Profile() {
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <img src={logo} alt="AIris" className="h-10" />
+            <div 
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={() => navigate("/dashboard")}
+            >
+              <img src={logo} alt="AIris" className="h-10" />
+              <div className="flex flex-col">
+                <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                  AIris
+                </span>
+                <span className="text-[10px] text-muted-foreground -mt-1">
+                  the future of eyecare
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -127,6 +185,51 @@ export default function Profile() {
 
             {/* Profile Info */}
             <div className="space-y-4">
+              {/* Avatar Upload */}
+              <div className="space-y-2">
+                <Label>Profile Picture</Label>
+                <div className="flex items-center gap-4">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="Avatar"
+                      className="h-20 w-20 rounded-full object-cover border-2 border-primary"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-full bg-gradient-primary flex items-center justify-center text-white text-2xl font-bold">
+                      {displayName ? displayName[0].toUpperCase() : "?"}
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      id="avatar-upload"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById("avatar-upload")?.click()}
+                      disabled={uploading}
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      {uploading ? "Uploading..." : "Upload Photo"}
+                    </Button>
+                    {avatarUrl && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-2"
+                        onClick={() => setAvatarUrl("")}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="displayName">Display Name</Label>
                 <Input
@@ -146,21 +249,6 @@ export default function Profile() {
                   placeholder="Tell us about yourself"
                   rows={3}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="avatarUrl">Avatar URL</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="avatarUrl"
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="https://..."
-                  />
-                  <Button variant="outline" size="icon">
-                    <Upload className="h-4 w-4" />
-                  </Button>
-                </div>
               </div>
             </div>
 
