@@ -1,9 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useXP(userId: string | undefined) {
   const [xp, setXp] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const fetchXP = useCallback(async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("xp")
+      .eq("id", userId)
+      .single();
+
+    if (data && !error) {
+      setXp(data.xp);
+    }
+    setLoading(false);
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) {
@@ -12,19 +30,6 @@ export function useXP(userId: string | undefined) {
     }
 
     // Fetch initial XP
-    const fetchXP = async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("xp")
-        .eq("id", userId)
-        .single();
-
-      if (data && !error) {
-        setXp(data.xp);
-      }
-      setLoading(false);
-    };
-
     fetchXP();
 
     // Subscribe to realtime XP updates
@@ -49,7 +54,7 @@ export function useXP(userId: string | undefined) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, fetchXP]);
 
-  return { xp, loading };
+  return { xp, loading, refetch: fetchXP };
 }
