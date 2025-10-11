@@ -92,43 +92,111 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    // Validate file type and size
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a JPEG, PNG, GIF, or WebP image.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setUploading(true);
     try {
-      // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
-      const filePath = `avatars/${user.id}-${Date.now()}.${fileExt}`;
+      // Check if bucket exists and is accessible
+      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
       
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
+      if (bucketError) {
+        console.error("Bucket check error:", bucketError);
+        // Continue anyway - bucket might exist but not be listable
+      }
 
-      if (uploadError) throw uploadError;
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = fileName; // Store at root of bucket for simplicity
+
+      console.log("Uploading file:", filePath);
+
+      // Try to delete old file first (if exists)
+      if (avatarUrl) {
+        const oldPath = avatarUrl.split('/').pop();
+        if (oldPath) {
+          await supabase.storage.from('avatars').remove([oldPath]);
+        }
+      }
+
+      // Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { 
+          cacheControl: '3600',
+          upsert: true 
+        });
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+
+      console.log("Upload successful:", uploadData);
 
       // Get public URL
-      const { data } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      setAvatarUrl(data.publicUrl);
+      const publicUrl = urlData.publicUrl;
+      console.log("Public URL:", publicUrl);
+
+      setAvatarUrl(publicUrl);
 
       // Save to profile
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: data.publicUrl })
+        .update({ avatar_url: publicUrl })
         .eq('id', user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Profile update error:", updateError);
+        throw updateError;
+      }
 
-      toast({ title: "Avatar uploaded!", description: "Your profile picture has been updated." });
+      toast({ 
+        title: "Avatar uploaded!", 
+        description: "Your profile picture has been updated." 
+      });
     } catch (error: any) {
       console.error("Avatar upload error:", error);
+      
+      let errorMessage = error.message || "Unknown error occurred";
+      
+      // Provide helpful error messages
+      if (errorMessage.includes("Bucket not found")) {
+        errorMessage = "Avatar storage not configured. Please contact support or create an 'avatars' bucket in Supabase.";
+      } else if (errorMessage.includes("permission")) {
+        errorMessage = "Permission denied. Please check storage bucket permissions.";
+      }
+      
       toast({
         title: "Upload failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setUploading(false);
+      // Reset file input
+      e.target.value = '';
     }
   };
 

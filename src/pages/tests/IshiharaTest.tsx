@@ -49,7 +49,14 @@ export default function IshiharaTest() {
   useEffect(() => {
     fetch("/ishihara_manifest_38.json")
       .then((res) => res.json())
-      .then((data: ManifestData) => setManifest(data))
+      .then((data: ManifestData) => {
+        // Only use the first 24 plates
+        const limitedData = {
+          ...data,
+          plates: data.plates.slice(0, 24)
+        };
+        setManifest(limitedData);
+      })
       .catch((err) => console.error("Failed to load manifest:", err));
   }, []);
 
@@ -71,9 +78,9 @@ export default function IshiharaTest() {
   const handleStart = () => {
     if (!manifest) return;
     
-    // Select initial 20 plates randomly
+    // Select initial 15 plates randomly from the 24 available
     const shuffled = [...manifest.plates].sort(() => Math.random() - 0.5);
-    const initialPlates = shuffled.slice(0, 20);
+    const initialPlates = shuffled.slice(0, 15);
     
     setTestPlates(initialPlates);
     setStarted(true);
@@ -103,8 +110,8 @@ export default function IshiharaTest() {
     setUserInput("");
     setImageError(false);
 
-    // Adaptive logic: if incorrect, add follow-up plates
-    if (!isCorrect && testPlates.length < 32) {
+    // Adaptive logic: if incorrect, add follow-up plates (max 24 total)
+    if (!isCorrect && testPlates.length < 24) {
       // Find plates that help distinguish protan/deutan
       const followUpPlates = manifest.plates.filter(
         (p) => 
@@ -258,17 +265,17 @@ export default function IshiharaTest() {
             <CardContent className="space-y-6 p-8 text-center">
               <h1 className="text-3xl font-bold">Ishihara Color Test</h1>
               <p className="text-muted-foreground">
-                This test checks for color vision deficiencies. You'll be shown a series of colored
-                plates. Enter what you see in each plate.
+                This test checks for color vision deficiencies using 24 Ishihara plates. 
+                Enter what you see in each plate.
               </p>
               <div className="space-y-2 text-left">
                 <p className="font-semibold">Instructions:</p>
                 <ul className="list-disc space-y-1 pl-6 text-sm text-muted-foreground">
-                  <li>Look at each plate carefully</li>
+                  <li>Look at each plate carefully in good lighting</li>
                   <li>Enter the number, text, or pattern you see</li>
                   <li>Type "nothing" if you see no pattern</li>
+                  <li>Test adapts based on your answers (15-24 plates)</li>
                   <li>Complete all plates to earn up to 30 XP</li>
-                  <li>Adaptive test: incorrect answers may trigger follow-up plates</li>
                 </ul>
               </div>
               <Button size="lg" onClick={handleStart} className="w-full">

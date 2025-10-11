@@ -6,9 +6,121 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Download, FileText, Plus } from "lucide-react";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFPage } from "pdf-lib";
 import { saveAs } from "file-saver";
 import logo from "@/assets/logo.png";
+
+// Helper function to generate personalized analysis
+const generatePersonalizedAnalysis = (profile: any, latestByType: Record<string, any>) => {
+  const analyses: string[] = [];
+  const recommendations: string[] = [];
+  const exercises: string[] = [];
+  
+  // Analyze Ishihara results
+  const ishihara = latestByType.ishihara;
+  if (ishihara) {
+    if (ishihara.score >= 90) {
+      analyses.push("Your color vision is excellent, showing strong ability to distinguish color patterns.");
+      recommendations.push("Continue maintaining healthy eye habits to preserve your excellent color discrimination.");
+    } else if (ishihara.score >= 70) {
+      analyses.push("Moderate color vision performance detected. This may indicate mild color deficiency.");
+      recommendations.push("Consider consulting an optometrist for a comprehensive color vision assessment.");
+      if (ishihara.details?.subtype) {
+        analyses.push(`Pattern suggests ${ishihara.details.subtype} type color vision variation.`);
+        recommendations.push("Certain professions may require additional color vision testing. Consult with your eye care provider.");
+      }
+    } else {
+      analyses.push("Significant color vision challenges detected across multiple test plates.");
+      recommendations.push("IMPORTANT: Schedule an appointment with an eye care professional for comprehensive evaluation.");
+      exercises.push("While color vision deficiency typically cannot be corrected, specialized lenses may help in certain situations.");
+    }
+  }
+  
+  // Analyze Visual Acuity
+  const acuity = latestByType.acuity;
+  if (acuity) {
+    if (acuity.score >= 85) {
+      analyses.push("Visual acuity is within excellent range, indicating clear distance vision.");
+      recommendations.push("Maintain regular eye health practices and annual check-ups.");
+    } else if (acuity.score >= 60) {
+      analyses.push("Visual acuity shows moderate performance. You may experience occasional clarity issues.");
+      recommendations.push("Consider vision screening for corrective lenses if not already wearing them.");
+      exercises.push("Practice the 20-20-20 rule during screen time to reduce eye strain.");
+    } else {
+      analyses.push("Visual acuity results suggest significant clarity challenges.");
+      recommendations.push("IMMEDIATE ACTION: Schedule comprehensive eye examination to assess need for corrective lenses.");
+      exercises.push("Avoid prolonged screen time without breaks until professional evaluation.");
+    }
+  }
+  
+  // Analyze Amsler Grid
+  const amsler = latestByType.amsler;
+  if (amsler) {
+    if (amsler.score >= 90) {
+      analyses.push("Amsler grid test shows no significant central vision distortions.");
+      recommendations.push("Continue monitoring central vision with regular self-checks.");
+    } else {
+      analyses.push("Amsler grid results indicate possible central vision irregularities.");
+      recommendations.push("URGENT: Consult an eye care professional immediately. Distortions may indicate retinal issues.");
+      recommendations.push("Do not delay this appointment - early detection of macular conditions is critical.");
+    }
+  }
+  
+  // Analyze Reading Stress
+  const reading = latestByType.reading_stress;
+  if (reading) {
+    const avgDiff = reading.details?.avgDifficulty || 0;
+    const threshold = reading.details?.readabilityThreshold || 14;
+    
+    if (avgDiff <= 2) {
+      analyses.push("Reading comfort is excellent across various font sizes.");
+      recommendations.push("Your eyes handle reading tasks well. Maintain good lighting and posture.");
+    } else if (avgDiff <= 3.5) {
+      analyses.push(`Reading becomes challenging below ${threshold}px font size.`);
+      recommendations.push("Consider adjusting device font sizes to your comfort level.");
+      exercises.push("Practice focus-shifting exercises to improve accommodation flexibility.");
+      exercises.push("Take regular breaks during extended reading sessions.");
+    } else {
+      analyses.push("Significant reading discomfort detected, especially with smaller text.");
+      recommendations.push("Consider comprehensive vision assessment - may indicate accommodation issues or need for reading glasses.");
+      exercises.push("Reduce reading time until professional consultation.");
+      exercises.push("Ensure adequate lighting (500-1000 lux) for reading tasks.");
+    }
+  }
+  
+  // Overall health analysis based on activity
+  if (profile.current_streak >= 4) {
+    analyses.push(`Excellent engagement! You've maintained a ${profile.current_streak}-week testing streak.`);
+    recommendations.push("Your proactive approach to eye health monitoring is commendable. Keep it up!");
+  }
+  
+  // Level-based encouragement
+  const level = Math.floor((profile.xp || 0) / 100) + 1;
+  if (level >= 10) {
+    analyses.push(`You've reached Level ${level}, demonstrating strong commitment to eye health monitoring.`);
+  }
+  
+  return { analyses, recommendations, exercises };
+};
+
+// Helper to wrap text for PDF
+const wrapText = (text: string, maxChars: number): string[] => {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+  
+  words.forEach(word => {
+    if ((currentLine + word).length <= maxChars) {
+      currentLine += (currentLine ? ' ' : '') + word;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  });
+  
+  if (currentLine) lines.push(currentLine);
+  return lines;
+};
 
 export default function Reports() {
   const navigate = useNavigate();
@@ -158,6 +270,7 @@ export default function Reports() {
       Object.entries(testLabels).forEach(([key, label]) => {
         const result = latestByType[key];
         const scoreText = result ? `${result.score || 0}%` : "Not taken";
+        const dateText = result ? new Date(result.created_at).toLocaleDateString() : "";
         
         page.drawText(`${label}:`, {
           x: 60,
@@ -171,59 +284,90 @@ export default function Reports() {
           y: yPosition,
           size: 12,
           font: result ? font : undefined,
-          color: result ? rgb(0, 0, 0) : rgb(0.6, 0.6, 0.6),
+          color: result ? (result.score >= 80 ? rgb(0, 0.6, 0) : result.score >= 60 ? rgb(0.8, 0.6, 0) : rgb(0.8, 0, 0)) : rgb(0.6, 0.6, 0.6),
         });
+        
+        if (dateText) {
+          page.drawText(dateText, {
+            x: 350,
+            y: yPosition,
+            size: 10,
+            font,
+            color: rgb(0.5, 0.5, 0.5),
+          });
+        }
         
         yPosition -= 18;
       });
-      yPosition -= 20;
+      yPosition -= 30;
 
-      // Personalized Recommendations
-      page.drawText("Personalized Recommendations", {
+      // Generate personalized analysis
+      const { analyses, recommendations, exercises: customExercises } = generatePersonalizedAnalysis(profile, latestByType);
+
+      // Detailed Analysis Section
+      page.drawText("Personalized Analysis", {
         x: 50,
         y: yPosition,
         size: 16,
         font: boldFont,
-        color: rgb(0, 0, 0),
+        color: rgb(0.2, 0.4, 0.8),
       });
-      yPosition -= 25;
+      yPosition -= 20;
 
-      const insights: string[] = [];
-
-      // Add conditional insights
-      const ishihara = latestByType.ishihara;
-      if (ishihara && ishihara.score < 80) {
-        insights.push("Consider a professional color vision assessment");
-        if (ishihara.details?.subtype) {
-          insights.push(`Possible ${ishihara.details.subtype} color deficiency detected`);
-        }
-      }
-
-      const readingStress = latestByType.reading_stress;
-      if (readingStress && (readingStress.details?.avgDifficulty || 0) > 3) {
-        insights.push("Practice the 20-20-20 rule: Every 20 min, look 20 ft away for 20 sec");
-      }
-
-      const acuity = latestByType.acuity;
-      if (acuity && acuity.score < 70) {
-        insights.push("Consider a professional visual acuity examination");
-      }
-
-      if (insights.length === 0) {
-        insights.push("Your vision tests show healthy results!");
-        insights.push("Continue regular eye health monitoring");
-      }
-
-      insights.forEach((insight, i) => {
-        const text = `${i + 1}. ${insight}`;
-        page.drawText(text, {
-          x: 60,
-          y: yPosition,
-          size: 11,
-          font,
-          maxWidth: width - 120,
+      analyses.forEach((analysis) => {
+        const wrapped = wrapText(analysis, 70);
+        wrapped.forEach(line => {
+          if (yPosition < 100) {
+            const newPage = pdfDoc.addPage([595, 842]);
+            yPosition = newPage.getSize().height - 50;
+            page.drawText = newPage.drawText.bind(newPage);
+          }
+          page.drawText(`• ${line}`, {
+            x: 60,
+            y: yPosition,
+            size: 11,
+            font,
+            maxWidth: width - 120,
+          });
+          yPosition -= 16;
         });
-        yPosition -= 16;
+      });
+      yPosition -= 20;
+
+      // Recommendations Section
+      if (yPosition < 200) {
+        const newPage = pdfDoc.addPage([595, 842]);
+        yPosition = newPage.getSize().height - 50;
+        page.drawText = newPage.drawText.bind(newPage);
+      }
+
+      page.drawText("Clinical Recommendations", {
+        x: 50,
+        y: yPosition,
+        size: 16,
+        font: boldFont,
+        color: rgb(0.2, 0.4, 0.8),
+      });
+      yPosition -= 20;
+
+      recommendations.forEach((rec, i) => {
+        const wrapped = wrapText(rec, 70);
+        wrapped.forEach((line, lineIdx) => {
+          if (yPosition < 100) {
+            const newPage = pdfDoc.addPage([595, 842]);
+            yPosition = newPage.getSize().height - 50;
+            page.drawText = newPage.drawText.bind(newPage);
+          }
+          const prefix = lineIdx === 0 ? `${i + 1}. ` : "   ";
+          page.drawText(`${prefix}${line}`, {
+            x: 60,
+            y: yPosition,
+            size: 11,
+            font,
+            maxWidth: width - 120,
+          });
+          yPosition -= 16;
+        });
       });
       yPosition -= 20;
 
@@ -237,67 +381,137 @@ export default function Reports() {
       page.drawText("Recommended Eye Exercises", {
         x: 50,
         y: yPosition,
-        size: 14,
+        size: 16,
         font: boldFont,
-        color: rgb(0, 0, 0),
+        color: rgb(0.2, 0.4, 0.8),
       });
       yPosition -= 20;
 
-      const exercises = [
-        "Palming: Cup hands over eyes for 30 seconds to relax",
-        "Focus shift: Alternate focus between near (10 in) and far (10 ft) objects",
-        "Figure-8: Trace an imaginary figure-8 with your eyes",
-        "Blink training: Consciously blink every 3-4 seconds while reading",
+      const allExercises = [
+        ...customExercises,
+        "Palming: Cup hands over eyes for 30 seconds to relax eye muscles",
+        "Focus shift: Alternate focus between near (10 in) and far (10 ft) objects, 10 reps",
+        "Figure-8: Trace an imaginary figure-8 horizontally with your eyes, 2 minutes",
+        "Blink training: Consciously blink every 3-4 seconds while reading or using screens",
+        "Eye rolling: Slowly roll eyes in circles, 5 times each direction",
+        "Zooming: Hold finger at arm's length, focus on it, slowly bring closer to nose",
       ];
 
-      exercises.forEach((ex) => {
-        page.drawText(`• ${ex}`, {
-          x: 60,
-          y: yPosition,
-          size: 10,
-          font,
-          maxWidth: width - 120,
+      allExercises.forEach((ex) => {
+        const wrapped = wrapText(ex, 70);
+        wrapped.forEach((line, idx) => {
+          if (yPosition < 100) {
+            const newPage = pdfDoc.addPage([595, 842]);
+            yPosition = newPage.getSize().height - 50;
+            page.drawText = newPage.drawText.bind(newPage);
+          }
+          const prefix = idx === 0 ? "• " : "  ";
+          page.drawText(`${prefix}${line}`, {
+            x: 60,
+            y: yPosition,
+            size: 10,
+            font,
+            maxWidth: width - 120,
+          });
+          yPosition -= 14;
         });
-        yPosition -= 14;
       });
       yPosition -= 20;
 
       // Nutrition Tips
+      if (yPosition < 200) {
+        const newPage = pdfDoc.addPage([595, 842]);
+        yPosition = newPage.getSize().height - 50;
+        page.drawText = newPage.drawText.bind(newPage);
+      }
+
       page.drawText("Nutrition for Eye Health", {
         x: 50,
         y: yPosition,
-        size: 14,
+        size: 16,
         font: boldFont,
-        color: rgb(0, 0, 0),
+        color: rgb(0.2, 0.4, 0.8),
       });
       yPosition -= 20;
 
       const nutrition = [
-        "Vitamin A: Carrots, sweet potatoes, spinach",
-        "Lutein & Zeaxanthin: Leafy greens, eggs, corn",
-        "Omega-3: Salmon, tuna, flaxseed, walnuts",
-        "Zinc: Oysters, beef, pumpkin seeds, chickpeas",
-        "Vitamin C: Citrus fruits, bell peppers, broccoli",
+        "Vitamin A (Retinol): Essential for retinal health. Found in carrots, sweet potatoes, liver, spinach.",
+        "Lutein & Zeaxanthin: Protects against macular degeneration. Found in kale, spinach, eggs, corn.",
+        "Omega-3 Fatty Acids (DHA/EPA): Reduces dry eye and inflammation. Found in salmon, sardines, flaxseed, walnuts.",
+        "Zinc: Supports vitamin A absorption and night vision. Found in oysters, beef, pumpkin seeds, chickpeas.",
+        "Vitamin C: Powerful antioxidant for eye tissue. Found in citrus fruits, bell peppers, strawberries, broccoli.",
+        "Vitamin E: Protects cells from oxidative stress. Found in almonds, sunflower seeds, avocados.",
+        "Beta-carotene: Converts to vitamin A in the body. Found in carrots, mangoes, apricots.",
       ];
 
       nutrition.forEach((item) => {
-        page.drawText(`• ${item}`, {
-          x: 60,
-          y: yPosition,
-          size: 10,
-          font,
-          maxWidth: width - 120,
+        const wrapped = wrapText(item, 70);
+        wrapped.forEach((line, idx) => {
+          if (yPosition < 100) {
+            const newPage = pdfDoc.addPage([595, 842]);
+            yPosition = newPage.getSize().height - 50;
+            page.drawText = newPage.drawText.bind(newPage);
+          }
+          const prefix = idx === 0 ? "• " : "  ";
+          page.drawText(`${prefix}${line}`, {
+            x: 60,
+            y: yPosition,
+            size: 10,
+            font,
+            maxWidth: width - 120,
+          });
+          yPosition -= 14;
         });
-        yPosition -= 14;
+      });
+      yPosition -= 30;
+
+      // Disclaimer
+      if (yPosition < 150) {
+        const newPage = pdfDoc.addPage([595, 842]);
+        yPosition = newPage.getSize().height - 50;
+        page.drawText = newPage.drawText.bind(newPage);
+      }
+
+      page.drawText("Important Disclaimer", {
+        x: 50,
+        y: yPosition,
+        size: 14,
+        font: boldFont,
+        color: rgb(0.6, 0, 0),
+      });
+      yPosition -= 20;
+
+      const disclaimer = "This report is generated based on self-administered vision screening tests and is NOT a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of a qualified eye care professional with any questions about your eye health. If you experience sudden vision changes, eye pain, flashes of light, or other concerning symptoms, seek immediate medical attention.";
+      const disclaimerWrapped = wrapText(disclaimer, 75);
+      disclaimerWrapped.forEach(line => {
+        page.drawText(line, {
+          x: 50,
+          y: yPosition,
+          size: 9,
+          font,
+          color: rgb(0.3, 0.3, 0.3),
+          maxWidth: width - 100,
+        });
+        yPosition -= 12;
       });
 
-      // Footer
-      page.drawText("AIris - The Future of Eyecare", {
-        x: 50,
-        y: 30,
-        size: 8,
-        font,
-        color: rgb(0.5, 0.5, 0.5),
+      // Footer on all pages
+      const pages = pdfDoc.getPages();
+      pages.forEach((p, idx) => {
+        p.drawText("AIris - The Future of Eyecare", {
+          x: 50,
+          y: 30,
+          size: 8,
+          font,
+          color: rgb(0.5, 0.5, 0.5),
+        });
+        p.drawText(`Page ${idx + 1} of ${pages.length}`, {
+          x: width - 100,
+          y: 30,
+          size: 8,
+          font,
+          color: rgb(0.5, 0.5, 0.5),
+        });
       });
 
       // Save PDF
