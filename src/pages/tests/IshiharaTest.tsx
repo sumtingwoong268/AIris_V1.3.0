@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { XPBar } from "@/components/XPBar";
 import { useXP } from "@/hooks/useXP";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
@@ -19,6 +21,8 @@ export default function IshiharaTest() {
   const [currentPlate, setCurrentPlate] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [manifest, setManifest] = useState<any>(null);
+  const [plates, setPlates] = useState<any[]>([]);
+  const [answerText, setAnswerText] = useState("");
 
   useEffect(() => {
     fetch("/ishihara_manifest_38.json")
@@ -27,19 +31,29 @@ export default function IshiharaTest() {
       .catch((err) => console.error("Failed to load manifest:", err));
   }, []);
 
+  useEffect(() => {
+    if (manifest?.plates?.length) {
+      setPlates(manifest.plates.slice(0, 10));
+    }
+  }, [manifest]);
+
   const handleStart = () => {
     setStarted(true);
     setCurrentPlate(0);
     setAnswers([]);
+    setAnswerText("");
   };
 
-  const handleAnswer = (answer: string) => {
-    const newAnswers = [...answers, answer];
-    setAnswers(newAnswers);
+  const totalPlates = plates.length || 10;
 
-    if (currentPlate < 9) {
-      // Show 10 plates for now
-      setCurrentPlate(currentPlate + 1);
+  const handleAnswer = (answer: string) => {
+    const normalized = answer.trim();
+    const newAnswers = [...answers, normalized];
+    setAnswers(newAnswers);
+    setAnswerText("");
+
+    if (currentPlate < totalPlates - 1) {
+      setCurrentPlate((p) => p + 1);
     } else {
       completeTest(newAnswers);
     }
@@ -49,15 +63,30 @@ export default function IshiharaTest() {
     if (!user) return;
 
     try {
-      const score = testAnswers.filter((a) => a !== "").length * 10;
-      const xpEarned = Math.min(30, score);
+      const expected = plates.map((p) => String(p.analysis?.normal ?? ""));
+      const correctness = testAnswers.map((ans, i) => {
+        const exp = expected[i];
+        if (exp.toLowerCase() === "nothing") return ans === "0" || ans === "" ? 1 : 0;
+        return ans === exp ? 1 : 0;
+      });
+      const correctCount = correctness.reduce((a, b) => a + b, 0);
+      const score = correctCount * 10;
+      const xpEarned = Math.min(30, correctCount * 3);
 
       await supabase.from("test_results").insert({
         user_id: user.id,
         test_type: "ishihara",
         score,
         xp_earned: xpEarned,
-        details: { answers: testAnswers },
+        details: {
+          plates: plates.map((p, i) => ({
+            id: p.id,
+            image: p.image,
+            expected: String(p.analysis?.normal ?? ""),
+            answer: testAnswers[i] ?? "",
+            correct: correctness[i] === 1,
+          })),
+        },
       });
 
       await supabase.rpc("update_user_xp", {
@@ -134,29 +163,44 @@ export default function IshiharaTest() {
               <CardContent className="space-y-6 p-8">
                 <div className="text-center">
                   <p className="mb-2 text-sm text-muted-foreground">
-                    Plate {currentPlate + 1} of 10
+                    Plate {currentPlate + 1} of {totalPlates}
                   </p>
                   <div className="mx-auto w-full max-w-md">
-                    {/* Placeholder for plate image */}
-                    <div className="aspect-square rounded-lg bg-gradient-to-br from-primary-lighter to-muted flex items-center justify-center">
-                      <p className="text-muted-foreground">Plate {currentPlate + 1}</p>
+                    <div className="aspect-square overflow-hidden rounded-lg border bg-card">
+                      {plates[currentPlate] ? (
+                        <img
+                          src={`/${plates[currentPlate].image}`}
+                          alt={`Ishihara plate ${plates[currentPlate].id}`}
+                          className="h-full w-full object-contain"
+                          loading="eager"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-muted-foreground">Loading plate…</div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <p className="text-center font-medium">What number do you see?</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                      <Button
-                        key={num}
-                        variant="outline"
-                        size="lg"
-                        onClick={() => handleAnswer(String(num))}
-                      >
-                        {num}
-                      </Button>
-                    ))}
+                <div className="space-y-4">
+                  <p className="text-center font-medium">Enter the number you see</p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={2}
+                      placeholder="e.g. 12 or 5"
+                      value={answerText}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/[^0-9]/g, "");
+                        setAnswerText(v);
+                      }}
+                    />
+                    <Button onClick={() => handleAnswer(answerText)} disabled={answerText.length === 0}>
+                      Submit
+                    </Button>
+                    <Button variant="outline" onClick={() => handleAnswer("0")}>
+                      Can't see
+                    </Button>
                   </div>
                 </div>
               </CardContent>
