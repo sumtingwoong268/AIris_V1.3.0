@@ -39,8 +39,11 @@ export default function Setup() {
   });
 
   const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [customSymptoms, setCustomSymptoms] = useState("");
   const [eyeConditions, setEyeConditions] = useState<string[]>([]);
+  const [customEyeConditions, setCustomEyeConditions] = useState("");
   const [familyHistory, setFamilyHistory] = useState<string[]>([]);
+  const [customFamilyHistory, setCustomFamilyHistory] = useState("");
 
   const symptomOptions = [
     "blurred_distance", "near_strain", "headaches", "dryness", 
@@ -99,15 +102,29 @@ export default function Setup() {
         avatar_url = publicUrl;
       }
 
+      // Merge custom and checkbox values (semicolon-separated, trimmed, non-empty)
+      const mergedSymptoms = [
+        ...symptoms,
+        ...customSymptoms.split(';').map(s => s.trim()).filter(Boolean)
+      ].filter((v, i, arr) => arr.indexOf(v) === i);
+      const mergedEyeConditions = [
+        ...eyeConditions,
+        ...customEyeConditions.split(';').map(s => s.trim()).filter(Boolean)
+      ].filter((v, i, arr) => arr.indexOf(v) === i);
+      const mergedFamilyHistory = [
+        ...familyHistory,
+        ...customFamilyHistory.split(';').map(s => s.trim()).filter(Boolean)
+      ].filter((v, i, arr) => arr.indexOf(v) === i);
+
       // Update profile
       const { error } = await supabase
         .from("profiles")
         .update({
           ...formData,
           avatar_url,
-          symptoms,
-          eye_conditions: eyeConditions,
-          family_history: familyHistory,
+          symptoms: mergedSymptoms,
+          eye_conditions: mergedEyeConditions,
+          family_history: mergedFamilyHistory,
           setup_completed: true,
           updated_at: new Date().toISOString(),
         })
@@ -252,7 +269,7 @@ export default function Setup() {
                   </div>
                 </div>
                 <div>
-                  <Label>Common Symptoms (Select all that apply)</Label>
+                  <Label>Common Symptoms (Select all that apply or add custom; separate custom values with a semicolon <code>;</code>)</Label>
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     {symptomOptions.map(symptom => (
                       <div key={symptom} className="flex items-center space-x-2">
@@ -261,6 +278,12 @@ export default function Setup() {
                       </div>
                     ))}
                   </div>
+                  <Input
+                    className="mt-2"
+                    placeholder="Custom symptoms (e.g. blurry vision; eye pain)"
+                    value={customSymptoms}
+                    onChange={e => setCustomSymptoms(e.target.value)}
+                  />
                 </div>
               </div>
 
@@ -268,7 +291,7 @@ export default function Setup() {
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold">👁️ Eye Health History</h3>
                 <div>
-                  <Label>Known Eye Conditions</Label>
+                  <Label>Known Eye Conditions (Select or add custom; separate custom values with a semicolon <code>;</code>)</Label>
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     {conditionOptions.map(condition => (
                       <div key={condition} className="flex items-center space-x-2">
@@ -277,9 +300,15 @@ export default function Setup() {
                       </div>
                     ))}
                   </div>
+                  <Input
+                    className="mt-2"
+                    placeholder="Custom conditions (e.g. dry eye; keratoconus)"
+                    value={customEyeConditions}
+                    onChange={e => setCustomEyeConditions(e.target.value)}
+                  />
                 </div>
                 <div>
-                  <Label>Family Eye History</Label>
+                  <Label>Family Eye History (Select or add custom; separate custom values with a semicolon <code>;</code>)</Label>
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     {familyOptions.map(history => (
                       <div key={history} className="flex items-center space-x-2">
@@ -288,6 +317,12 @@ export default function Setup() {
                       </div>
                     ))}
                   </div>
+                  <Input
+                    className="mt-2"
+                    placeholder="Custom family history (e.g. glaucoma; macular degeneration)"
+                    value={customFamilyHistory}
+                    onChange={e => setCustomFamilyHistory(e.target.value)}
+                  />
                 </div>
                 <div>
                   <Label>Eye Surgeries or Trauma (Optional)</Label>
