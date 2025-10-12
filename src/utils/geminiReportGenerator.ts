@@ -24,7 +24,8 @@ interface AIReportData {
 
 export async function generateAIReport(
   profile: Profile,
-  testResults: Record<string, TestResult>
+  testResults: Record<string, TestResult>,
+  testHistory: TestResult[] = []
 ): Promise<AIReportData> {
   
   // Get API key from environment
@@ -40,7 +41,7 @@ export async function generateAIReport(
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    // Prepare test data for AI
+    // Prepare current test data
     const testSummary = Object.entries(testResults).map(([type, result]) => {
       let details = "";
       
@@ -67,65 +68,135 @@ export async function generateAIReport(
           break;
       }
       
-      return `${type}: ${result.score || 0}% (${details})`;
+      return `${type}: ${result.score || 0}% (${details}, Date: ${new Date(result.created_at).toLocaleDateString()})`;
+    }).join('\n');
+
+    // Prepare historical trend data
+    const historicalTrends = Object.keys(testResults).map(type => {
+      const history = testHistory.filter(t => t.test_type === type);
+      if (history.length < 2) return `${type}: Insufficient historical data`;
+      
+      const scores = history.map(t => t.score || 0);
+      const trend = scores[scores.length - 1] - scores[scores.length - 2];
+      const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+      
+      return `${type}: ${history.length} tests completed, avg ${avgScore.toFixed(1)}%, trend: ${trend > 0 ? '+' : ''}${trend.toFixed(1)}%`;
     }).join('\n');
 
     // Create prompt for Gemini
-    const prompt = `You are an expert optometrist and vision health specialist. Analyze the following vision screening test results and provide a detailed, personalized report.
+    const prompt = `You are an expert optometrist and vision health specialist with 20+ years of clinical experience. You are creating a comprehensive, detailed personalized vision health report for a patient. This report should be 750-2000 words and provide actionable, evidence-based insights.
 
 **Patient Profile:**
 - Name: ${profile.display_name || 'User'}
-- Engagement Level: ${profile.current_streak} week streak, Level ${Math.floor(profile.xp / 100) + 1}
+- Engagement Level: ${profile.current_streak} week testing streak, Level ${Math.floor(profile.xp / 100) + 1}
+- Total XP: ${profile.xp}
 
-**Test Results:**
+**Current Test Results (Most Recent):**
 ${testSummary}
 
-**Instructions:**
-1. Provide a comprehensive analysis (2-3 paragraphs) explaining what these results mean for the patient's eye health. Be specific about each test.
+**Historical Trends:**
+${historicalTrends}
 
-2. Give 4-6 clinical recommendations based on the severity:
-   - If scores are 90%+: maintenance recommendations
-   - If scores are 70-89%: suggest professional consultation
-   - If scores are <70%: recommend urgent evaluation
-   - For Amsler test with distortions: URGENT care needed
-   - Consider the patient's engagement level
+**Instructions for Report Generation:**
 
-3. Recommend 5-7 specific eye exercises tailored to their test results. Include:
+You MUST provide an extensive, detailed report (minimum 750 words, ideally 1000-2000 words) covering ALL of the following sections comprehensively:
+
+1. **DETAILED ANALYSIS (4-6 comprehensive paragraphs):**
+   - Explain EACH test result in detail with clinical context
+   - Describe what the specific scores indicate about eye function
+   - Compare results to normal population ranges
+   - Discuss any patterns or correlations between different tests
+   - Analyze historical trends if available (improving/declining/stable)
+   - Consider the patient's engagement and consistency
+   - Explain the physiological mechanisms behind any issues detected
+   - Discuss potential underlying causes for suboptimal scores
+   - Be thorough and educational - this is the main body of the report
+
+2. **CLINICAL RECOMMENDATIONS (6-10 detailed items):**
+   - Severity-based professional care recommendations:
+     * 90%+ scores: Maintain current eye health practices, annual checkups
+     * 70-89% scores: Schedule comprehensive eye examination within 3-6 months
+     * <70% scores: URGENT - Schedule professional evaluation within 2-4 weeks
+     * Amsler distortions: IMMEDIATE ophthalmologist consultation
+   - Lifestyle modifications specific to test results
+   - Workplace/environment adjustments
+   - Screen time management strategies
+   - Sleep and rest recommendations
+   - When to seek emergency care
+   - Follow-up testing timeline
+   - Preventive measures for family members if hereditary risks detected
+
+3. **PERSONALIZED EYE EXERCISES (8-12 exercises):**
+   For EACH exercise provide:
    - Exercise name
-   - Detailed instructions
-   - Duration/repetitions
-   - Which test result it addresses
+   - DETAILED step-by-step instructions (3-5 steps minimum)
+   - Exact duration and frequency (e.g., "10 repetitions, 3 times daily")
+   - Which specific test result/condition it targets
+   - Expected benefits and timeframe
+   - Precautions or contraindications
+   
+   Include exercises for: accommodation, convergence, tracking, peripheral awareness, focusing stamina, eye-hand coordination, relaxation
 
-4. Provide 5-7 nutrition recommendations with:
-   - Specific nutrient names
-   - Why it's important for eye health
-   - Food sources (at least 3 per nutrient)
+4. **COMPREHENSIVE NUTRITION PLAN (8-12 nutrients):**
+   For EACH nutrient provide:
+   - Specific nutrient name and recommended daily amount
+   - Detailed explanation of WHY it's critical for eye health (mechanism of action)
+   - At least 4-5 specific food sources with serving sizes
+   - Supplementation guidance if dietary intake insufficient
+   - Which test result/condition it specifically addresses
+   
+   Cover: Vitamin A, Lutein, Zeaxanthin, Omega-3s, Zinc, Vitamin C, Vitamin E, Beta-carotene, B-complex vitamins, antioxidants
 
-5. Assess urgency level (low, moderate, or high) based on scores
+5. **LIFESTYLE & ENVIRONMENTAL RECOMMENDATIONS (5-8 items):**
+   - Lighting optimization for different activities
+   - Screen ergonomics and blue light management
+   - Proper reading distance and posture
+   - Outdoor time recommendations
+   - UV protection strategies
+   - Humidity and air quality considerations
+   - Sleep hygiene for eye health
 
-**Format your response EXACTLY like this:**
+6. **URGENCY ASSESSMENT:**
+   Rate as: low / moderate / high
+   Provide clear reasoning for the urgency level
+   Specify exact timeline for professional consultation
+
+**Formatting Requirements:**
+- Use clear section headers as shown below
+- Write in professional yet accessible language
+- Include specific measurements, percentages, and timelines
+- Provide evidence-based information
+- Be encouraging but honest about concerns
+- Total length: 750-2000 words (err on the longer side)
+
+**Response Format:**
 
 ANALYSIS:
-[Your detailed analysis here - 2-3 paragraphs]
+[Write 4-6 detailed, comprehensive paragraphs analyzing all test results, trends, and implications. Each paragraph should be 80-150 words. Total: 400-800 words]
 
 RECOMMENDATIONS:
-1. [First recommendation]
-2. [Second recommendation]
-[etc.]
+1. [Detailed recommendation with specific actions and timelines]
+2. [Next recommendation]
+[Continue for 6-10 items, each 40-60 words]
 
 EXERCISES:
-1. [Exercise name]: [Detailed instructions with duration]
-2. [Exercise name]: [Detailed instructions with duration]
-[etc.]
+1. [Exercise Name]: [Detailed step-by-step instructions - 50-80 words including duration, frequency, and targeted condition]
+2. [Next exercise]
+[Continue for 8-12 exercises]
 
 NUTRITION:
-1. [Nutrient name]: [Why important] - Found in: [foods]
-2. [Nutrient name]: [Why important] - Found in: [foods]
-[etc.]
+1. [Nutrient Name - Daily Amount]: [Detailed explanation of benefits and mechanism - 40-60 words] - Found in: [4-5 specific foods with serving sizes]
+2. [Next nutrient]
+[Continue for 8-12 nutrients]
 
-URGENCY: [low/moderate/high]
+LIFESTYLE:
+1. [Detailed lifestyle recommendation with reasoning]
+2. [Next recommendation]
+[Continue for 5-8 items]
 
-Be professional, compassionate, and evidence-based. Use medical terminology where appropriate but explain it in accessible language.`;
+URGENCY: [low/moderate/high] - [Explanation and recommended action timeline]
+
+Remember: This report will be given to the patient and potentially their doctor. Be thorough, professional, evidence-based, and compassionate. Aim for 1000-2000 words total.`;
 
     // Generate content with Gemini
     const result = await model.generateContent(prompt);
@@ -154,8 +225,9 @@ function parseAIResponse(text: string): AIReportData {
     // Extract sections using markers
     const analysisMatch = text.match(/ANALYSIS:\s*([\s\S]*?)(?=RECOMMENDATIONS:|$)/i);
     const recommendationsMatch = text.match(/RECOMMENDATIONS:\s*([\s\S]*?)(?=EXERCISES:|$)/i);
-    const exercisesMatch = text.match(/EXERCISES:\s*([\s\S]*?)(?=NUTRITION:|$)/i);
-    const nutritionMatch = text.match(/NUTRITION:\s*([\s\S]*?)(?=URGENCY:|$)/i);
+    const exercisesMatch = text.match(/EXERCISES:\s*([\s\S]*?)(?=NUTRITION:|LIFESTYLE:|$)/i);
+    const nutritionMatch = text.match(/NUTRITION:\s*([\s\S]*?)(?=LIFESTYLE:|URGENCY:|$)/i);
+    const lifestyleMatch = text.match(/LIFESTYLE:\s*([\s\S]*?)(?=URGENCY:|$)/i);
     const urgencyMatch = text.match(/URGENCY:\s*(\w+)/i);
 
     // Parse analysis
@@ -188,6 +260,16 @@ function parseAIResponse(text: string): AIReportData {
         .split(/\d+\.\s+/)
         .filter(n => n.trim())
         .map(n => n.trim());
+    }
+
+    // Parse lifestyle (append to recommendations)
+    if (lifestyleMatch) {
+      const lifeText = lifestyleMatch[1];
+      const lifestyleItems = lifeText
+        .split(/\d+\.\s+/)
+        .filter(l => l.trim())
+        .map(l => l.trim());
+      sections.recommendations.push(...lifestyleItems);
     }
 
     // Parse urgency

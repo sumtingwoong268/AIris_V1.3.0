@@ -45,6 +45,7 @@ export default function IshiharaTest() {
   const [manifest, setManifest] = useState<ManifestData | null>(null);
   const [userInput, setUserInput] = useState("");
   const [imageError, setImageError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetch("/ishihara_manifest_38.json")
@@ -168,7 +169,7 @@ export default function IshiharaTest() {
         }
       }
 
-      const xpEarned = Math.round(30 * (score / 100));
+      const xpEarned = Math.round(50 * (score / 100)); // Scaled up from 30
 
       await supabase.from("test_results").insert({
         user_id: user.id,
@@ -224,6 +225,8 @@ export default function IshiharaTest() {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
