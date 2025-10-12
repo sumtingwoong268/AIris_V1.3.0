@@ -51,14 +51,18 @@ export const ThemeManager = () => {
     applyStoredTheme();
 
     const initialize = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data, error } = await supabase.auth.getUser();
 
-      await syncTheme(user?.id ?? null);
+      if (error) {
+        console.error("Failed to get user during theme initialization:", error.message);
+      }
+
+      await syncTheme(data?.user?.id ?? null);
     };
 
-    initialize();
+    initialize().catch((error) => {
+      console.error("Theme initialization failed:", error);
+    });
 
     const {
       data: { subscription },
