@@ -100,8 +100,8 @@ export async function generateAIReport(
       return `${type}: ${history.length} tests, avg ${avgScore.toFixed(1)}%, trend: ${trend > 0 ? '+' : ''}${trend.toFixed(1)}%`;
     }).join("\n");
 
-    // --- USER PROMPT INJECTION ---
-    const userPrompt = `You are a digital eye-health assistant that generates detailed, personalized reports from quantitative and qualitative vision-screening data.\n\nUse the complete dataset provided below, including:\n- current test results and scores,\n- previous test results and their trend,\n- demographic and lifestyle data (age, gender, screen time, outdoor time, nutrition habits, corrective lenses, etc.),\n- symptom responses (blurred vision, dryness, glare, headaches, color confusion, etc.).\n\nWrite a structured report in clear professional English. Do not use emojis or informal language. Keep tone objective, clinical, and easy to understand. Avoid repetition.\n\n---\n\n### DATASET\n${demographics}${symptoms}\n${eyeConditions}\n${familyHistory}\n\nCurrent Test Results (Most Recent):\n${testSummary}\n\nHistorical Trends:\n${historicalTrends}\n\n---\n\n### Report Requirements\n\n**1. Summary Overview**\n- Summarize the user's overall vision status in 2–3 crisp paragraphs.\n- Mention the total health score, risk level, and the direction of change from previous results (improved / stable / declined).\n- Explain briefly what the main findings indicate about visual acuity, color perception, macular or retinal health, and general eye function.\n\n**2. Detailed Test Analysis**\nFor each test completed (for example: visual_acuity, amsler_grid, color_vision, contrast_sensitivity, refraction, reaction_time, etc.):\n- State the current score and its interpretation.\n- Compare it with previous scores and highlight any improvement or deterioration.\n- Explain, in simple but precise language, what the score reveals about that specific visual function.\n- If abnormalities are found, describe possible causes or mechanisms (e.g., macular stress, uncorrected refractive error, eye-strain, early AMD patterns).\n\n**3. Personalised Self-Care Guidance**\nProvide actionable steps that the user can follow independently, tailored to their data:\n- **Eye exercises**: give 3–5 specific routines (palming, near-far focusing, figure-eight tracking, blinking intervals, etc.), each with short instructions and daily frequency.\n- **Lifestyle adjustments**: screen-time management, lighting, sleep, hydration, air quality, and UV protection.\n- **Nutrition**: list key vitamins and nutrients (A, C, E, lutein, zeaxanthin, omega-3) and foods containing them. Suggest a sample one-day meal plan supporting eye health.\n\n**4. Medical Follow-Up**\n- Clearly state whether a professional examination is advised (e.g., “routine check in 6 months” or “consult ophthalmologist soon”).\n- Describe what additional diagnostic tests or imaging (OCT, refraction, slit-lamp, etc.) may be useful based on current findings.\n- Provide a short explanation of what these tests assess and why they are relevant for this user.\n\n**5. Long-Term Improvement Plan**\n- Offer realistic next steps for the next 3–6 months, including re-testing frequency.\n- Recommend habit-tracking metrics (daily breaks, lighting setup, exercise frequency, nutrition adherence).\n- Summarize measurable targets (for example: maintain acuity ≥80%, reduce Amsler distortions, improve comfort score).\n\n**6. Disclaimers**\nEnd with a neutral statement clarifying that the report is informational and not a substitute for professional diagnosis or treatment.\n\n---\n\n### Output Format\nProduce a long, continuous text with section headings:\n1. Summary Overview  \n2. Detailed Test Analysis  \n3. Personalised Self-Care Guidance  \n4. Medical Follow-Up  \n5. Long-Term Improvement Plan  \n6. Disclaimers  \n\nNo bullet icons, emojis, or stylistic punctuation. Use plain text with standard capitalization.`;
+  // --- USER PROMPT INJECTION ---
+  const userPrompt = `You are a digital eye-health assistant for the AIris platform. Generate a visually beautiful, modern, and branded report for the user, suitable for display in a web app.\n\n**Branding:**\n- The report should feature the AIris logo at the top (logo file: 'logo.png').\n- Use clear, elegant section headers and a visually pleasing layout.\n- Use color, whitespace, and visual hierarchy to make the report easy to read and aesthetically pleasing.\n- Use callout boxes or highlights for important findings or urgent recommendations.\n\n**Content:**\n- Use all the data provided: demographics, lifestyle, symptoms, test results, and history.\n- Write in clear, professional, and friendly English.\n- Avoid repetition and keep the tone modern and supportive.\n\n**Sections:**\n1. Cover Page\n   - AIris logo\n   - Report title: 'AIris Vision Health Report'\n   - User's name and date\n2. Summary Overview\n   - 2–3 crisp paragraphs summarizing vision status, risk, and trends\n3. Detailed Test Analysis\n   - For each test: score, interpretation, trend, and explanation\n   - Use visual cues (e.g., colored bars, icons, or highlights) for scores and risk\n4. Personalized Self-Care Guidance\n   - Eye exercises (3–5 routines, with instructions)\n   - Lifestyle tips (screen time, sleep, hydration, etc.)\n   - Nutrition advice (key nutrients, foods, and a sample meal plan)\n5. Medical Follow-Up\n   - When to see a professional, and what tests may be needed\n   - Short explanations for each\n6. Long-Term Improvement Plan\n   - Next steps for 3–6 months, habit tracking, and measurable targets\n7. Disclaimers\n   - Standard medical disclaimer\n\n**Format:**\n- Output in HTML5 markup, using semantic tags (section, h1-h3, p, ul, li, etc.)\n- Use inline styles for color, spacing, and highlights (no external CSS).\n- Include an <img> tag for the logo at the top: <img src='logo.png' alt='AIris Logo' style='height:60px;margin-bottom:24px;'>\n- Use <div> or <section> with background color or border for callouts/highlights.\n- Use <hr> to separate major sections.\n- Do NOT use emojis.\n- Make the report visually appealing and easy to scan.\n\n---\n\n### DATASET\n${demographics}${symptoms}\n${eyeConditions}\n${familyHistory}\n\nCurrent Test Results (Most Recent):\n${testSummary}\n\nHistorical Trends:\n${historicalTrends}`;
 
     // Generate content with Gemini
   const result = await model.generateContent(userPrompt);
@@ -116,6 +116,7 @@ export async function generateAIReport(
 }
 
 function parseAIResponse(text: string): AIReportData {
+  // Try to parse sections, but if not found, return the full text as analysis
   const sections = {
     analysis: '',
     recommendations: [] as string[],
@@ -133,9 +134,12 @@ function parseAIResponse(text: string): AIReportData {
     const lifestyleMatch = text.match(/LIFESTYLE:\s*([\s\S]*?)(?=URGENCY:|$)/i);
     const urgencyMatch = text.match(/URGENCY:\s*(\w+)/i);
 
+    let foundSection = false;
+
     // Parse analysis
     if (analysisMatch) {
       sections.analysis = analysisMatch[1].trim();
+      foundSection = true;
     }
 
     // Parse recommendations
@@ -145,6 +149,7 @@ function parseAIResponse(text: string): AIReportData {
         .split(/\d+\.\s+/)
         .filter(r => r.trim())
         .map(r => r.trim());
+      foundSection = true;
     }
 
     // Parse exercises
@@ -154,6 +159,7 @@ function parseAIResponse(text: string): AIReportData {
         .split(/\d+\.\s+/)
         .filter(e => e.trim())
         .map(e => e.trim());
+      foundSection = true;
     }
 
     // Parse nutrition
@@ -163,6 +169,7 @@ function parseAIResponse(text: string): AIReportData {
         .split(/\d+\.\s+/)
         .filter(n => n.trim())
         .map(n => n.trim());
+      foundSection = true;
     }
 
     // Parse lifestyle (append to recommendations)
@@ -173,6 +180,7 @@ function parseAIResponse(text: string): AIReportData {
         .filter(l => l.trim())
         .map(l => l.trim());
       sections.recommendations.push(...lifestyleItems);
+      foundSection = true;
     }
 
     // Parse urgency
@@ -180,11 +188,19 @@ function parseAIResponse(text: string): AIReportData {
       const urgency = urgencyMatch[1].toLowerCase();
       if (urgency === 'low' || urgency === 'moderate' || urgency === 'high') {
         sections.urgencyLevel = urgency;
+        foundSection = true;
       }
+    }
+
+    // If no sections found, just return the full text as analysis
+    if (!foundSection) {
+      sections.analysis = text.trim();
     }
 
   } catch (error) {
     console.error("Error parsing AI response:", error);
+    // On error, return the full text as analysis
+    sections.analysis = text.trim();
   }
 
   return sections;

@@ -10,6 +10,17 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { saveAs } from "file-saver";
 import { generateAIReport } from "@/utils/geminiReportGenerator";
 import logo from "@/assets/logo.png";
+// Helper to safely render HTML (Gemini output)
+function GeminiReportHTML({ html }: { html: string }) {
+  if (!html) return null;
+  return (
+    <div
+      className="prose max-w-none border rounded-lg bg-white/90 shadow-lg p-6 my-8"
+      style={{ overflowX: 'auto' }}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+}
 
 // Helper to wrap text for PDF
 const wrapText = (text: string, maxChars: number): string[] => {
@@ -451,8 +462,10 @@ export default function Reports() {
       });
 
       // Save PDF
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  const pdfBytes = await pdfDoc.save();
+  // Ensure compatibility: convert Uint8Array to ArrayBuffer for Blob
+  // Convert Uint8Array to a regular array for Blob compatibility
+  const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });
       const fileName = `AIris_Report_${profile.display_name?.replace(/\s/g, "_") || "User"}_${new Date().toISOString().split("T")[0]}.pdf`;
       saveAs(blob, fileName);
 
@@ -518,6 +531,14 @@ export default function Reports() {
             {generating ? "Generating..." : "Generate New Report"}
           </Button>
         </div>
+
+        {/* Preview the latest Gemini HTML report if available */}
+        {reports.length > 0 && reports[0].analysis && reports[0].analysis.startsWith('<') && (
+          <>
+            <h2 className="text-2xl font-semibold mb-2 mt-8">Latest AIris Report Preview</h2>
+            <GeminiReportHTML html={reports[0].analysis} />
+          </>
+        )}
 
         {reports.length === 0 ? (
           <Card className="shadow-card">
