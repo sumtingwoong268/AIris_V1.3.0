@@ -80,14 +80,25 @@ export default function Profile() {
     }
   };
 
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    localStorage.setItem("darkMode", String(newMode));
-    if (newMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+  const handleThemeToggle = async () => {
+    if (themeLoading || savingTheme) {
+      return;
+    }
+
+    const nextTheme = theme === "dark" ? "light" : "dark";
+
+    setSavingTheme(true);
+
+    try {
+      await updateTheme(nextTheme);
+      toast({
+        title: nextTheme === "dark" ? "Dark mode enabled" : "Dark mode disabled",
+        description: "Your preference has been saved.",
+      });
+    } catch (error) {
+      console.error("Failed to update theme preference:", error);
+    } finally {
+      setSavingTheme(false);
     }
   };
 
@@ -171,11 +182,16 @@ export default function Profile() {
             {/* Dark Mode Toggle */}
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="flex items-center gap-3">
-                {darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                {theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                 <span className="font-medium">Dark Mode</span>
               </div>
-              <Button variant="outline" size="sm" onClick={toggleDarkMode}>
-                {darkMode ? "Disable" : "Enable"}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleThemeToggle}
+                disabled={themeLoading || savingTheme}
+              >
+                {savingTheme ? "Saving..." : theme === "dark" ? "Disable" : "Enable"}
               </Button>
             </div>
 
