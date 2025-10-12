@@ -25,25 +25,33 @@ export default function Profile() {
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    const isDark = localStorage.getItem("darkMode") === "true";
-    setDarkMode(isDark);
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    }
-  }, []);
-
-  useEffect(() => {
     if (user) {
       const fetchProfile = async () => {
-        const { data } = await supabase
+        const { data: profile } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", user.id)
           .single();
-        if (data) {
-          setDisplayName(data.display_name || "");
-          setBio(data.bio || "");
-          setAvatarUrl(data.avatar_url || "");
+        if (profile) {
+          setDisplayName(profile.display_name || "");
+          setBio(profile.bio || "");
+          setAvatarUrl(profile.avatar_url || "");
+        }
+
+        // Fetch dark mode preference
+        const { data: prefs } = await supabase
+          .from("user_preferences")
+          .select("dark_mode")
+          .eq("user_id", user.id)
+          .single();
+        
+        if (prefs) {
+          setDarkMode(prefs.dark_mode);
+          if (prefs.dark_mode) {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
         }
       };
       fetchProfile();
@@ -77,14 +85,28 @@ export default function Profile() {
     }
   };
 
-  const toggleDarkMode = () => {
+  const toggleDarkMode = async () => {
+    if (!user) return;
+    
     const newMode = !darkMode;
     setDarkMode(newMode);
-    localStorage.setItem("darkMode", String(newMode));
+    
     if (newMode) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
+    }
+
+    // Save to database
+    try {
+      const { error } = await supabase
+        .from("user_preferences")
+        .update({ dark_mode: newMode, updated_at: new Date().toISOString() })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error("Failed to save dark mode preference:", error);
     }
   };
 
@@ -92,29 +114,47 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    // Validate file
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Error", description: "Image must be less than 5MB", variant: "destructive" });
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({ title: "Error", description: "Only JPEG, PNG, GIF, and WebP images allowed", variant: "destructive" });
+      return;
+    }
+
     setUploading(true);
     try {
-      // Upload to Supabase Storage
+      // Delete old avatar if exists
+      if (avatarUrl) {
+        const oldPath = avatarUrl.split('/').slice(-1)[0];
+        await supabase.storage.from('avatars').remove([`${user.id}/${oldPath}`]);
+      }
+
+      // Upload new avatar
       const fileExt = file.name.split('.').pop();
-      const filePath = `avatars/${user.id}-${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(fileName, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data } = supabase.storage
+      const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
-      setAvatarUrl(data.publicUrl);
+      setAvatarUrl(publicUrl);
 
       // Save to profile
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: data.publicUrl })
+        .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
         .eq('id', user.id);
 
       if (updateError) throw updateError;

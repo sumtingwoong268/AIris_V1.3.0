@@ -92,7 +92,7 @@ export default function Reports() {
         description: "Using Gemini AI to analyze your results",
       });
       
-      const aiReport = await generateAIReport(profile, latestByType);
+      const aiReport = await generateAIReport(profile, latestByType, results);
 
       // Create PDF
       const pdfDoc = await PDFDocument.create();

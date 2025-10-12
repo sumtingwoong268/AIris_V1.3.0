@@ -22,6 +22,36 @@ CREATE TABLE IF NOT EXISTS profiles (
   xp INTEGER DEFAULT 0,
   current_streak INTEGER DEFAULT 0,
   last_active_week TEXT,
+  
+  -- Extended profile fields
+  full_name TEXT,
+  date_of_birth DATE,
+  gender TEXT,
+  ethnicity TEXT,
+  
+  -- Vision information
+  wears_correction TEXT,
+  correction_type TEXT,
+  last_eye_exam TEXT,
+  
+  -- Lifestyle
+  screen_time_hours NUMERIC,
+  outdoor_time_hours NUMERIC,
+  symptoms TEXT[], -- array of symptoms
+  sleep_quality TEXT,
+  
+  -- Eye health history
+  eye_conditions TEXT[], -- array of conditions
+  eye_surgeries TEXT,
+  family_history TEXT[], -- array of family conditions
+  uses_eye_medication BOOLEAN DEFAULT false,
+  medication_details TEXT,
+  
+  -- Setup completion
+  setup_completed BOOLEAN DEFAULT false,
+  tos_accepted BOOLEAN DEFAULT false,
+  privacy_accepted BOOLEAN DEFAULT false,
+  
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -139,7 +169,41 @@ CREATE POLICY "Users can delete own friendships"
   USING (auth.uid() = user_id);
 
 -- =====================================================
--- 5. FRIEND REQUESTS TABLE
+-- 5. USER PREFERENCES TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS user_preferences (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  dark_mode BOOLEAN DEFAULT false,
+  notifications_enabled BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+DROP POLICY IF EXISTS "Users can view own preferences" ON user_preferences;
+CREATE POLICY "Users can view own preferences" 
+  ON user_preferences FOR SELECT 
+  TO authenticated 
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own preferences" ON user_preferences;
+CREATE POLICY "Users can update own preferences" 
+  ON user_preferences FOR UPDATE 
+  TO authenticated 
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own preferences" ON user_preferences;
+CREATE POLICY "Users can insert own preferences" 
+  ON user_preferences FOR INSERT 
+  TO authenticated 
+  WITH CHECK (auth.uid() = user_id);
+
+-- =====================================================
+-- 6. FRIEND REQUESTS TABLE
 -- =====================================================
 CREATE TABLE IF NOT EXISTS friend_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -187,10 +251,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to auto-create profile on user signup
+-- Function to auto-create profile and preferences on user signup
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Create profile
   INSERT INTO public.profiles (id, display_name, created_at, updated_at)
   VALUES (
     NEW.id,
@@ -198,6 +263,11 @@ BEGIN
     NOW(),
     NOW()
   );
+  
+  -- Create preferences
+  INSERT INTO public.user_preferences (user_id, created_at, updated_at)
+  VALUES (NEW.id, NOW(), NOW());
+  
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -259,11 +329,13 @@ CREATE POLICY "Users can delete own avatar"
 
 CREATE INDEX IF NOT EXISTS idx_test_results_user_id ON test_results(user_id);
 CREATE INDEX IF NOT EXISTS idx_test_results_created_at ON test_results(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_test_results_test_type ON test_results(test_type);
 CREATE INDEX IF NOT EXISTS idx_reports_user_id ON reports(user_id);
 CREATE INDEX IF NOT EXISTS idx_friendships_user_id ON friendships(user_id);
 CREATE INDEX IF NOT EXISTS idx_friendships_friend_id ON friendships(friend_id);
 CREATE INDEX IF NOT EXISTS idx_friend_requests_receiver_id ON friend_requests(receiver_id);
 CREATE INDEX IF NOT EXISTS idx_friend_requests_status ON friend_requests(status);
+CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences(user_id);
 
 -- =====================================================
 -- SETUP COMPLETE!

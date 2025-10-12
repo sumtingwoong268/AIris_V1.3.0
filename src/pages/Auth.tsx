@@ -19,9 +19,23 @@ export default function Auth() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
+    const checkSetupStatus = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("setup_completed")
+          .eq("id", user.id)
+          .single();
+        
+        if (data && !data.setup_completed) {
+          navigate("/setup");
+        } else {
+          navigate("/dashboard");
+        }
+      }
+    };
+    
+    checkSetupStatus();
   }, [user, navigate]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -37,15 +51,27 @@ export default function Auth() {
         if (error) throw error;
         toast({ title: "Welcome back!", description: "Successfully signed in." });
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}/setup`,
           },
         });
         if (error) throw error;
-        toast({ title: "Account created!", description: "Welcome to AIris." });
+        
+        if (data?.user?.identities?.length === 0) {
+          toast({ 
+            title: "Email already registered", 
+            description: "This email is already in use. Please login instead.", 
+            variant: "destructive" 
+          });
+        } else {
+          toast({ 
+            title: "Check your email!", 
+            description: "We sent you a verification link. Please check your inbox and spam folder.", 
+          });
+        }
       }
     } catch (error: any) {
       toast({
@@ -64,7 +90,7 @@ export default function Auth() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/setup`,
         },
       });
       if (error) throw error;
