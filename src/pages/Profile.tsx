@@ -22,15 +22,8 @@ export default function Profile() {
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    const isDark = localStorage.getItem("darkMode") === "true";
-    setDarkMode(isDark);
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    }
-  }, []);
+  const [savingTheme, setSavingTheme] = useState(false);
+  const { theme, loading: themeLoading, error: themeError, updateTheme } = useThemePreference(user?.id);
 
   useEffect(() => {
     if (user) {
