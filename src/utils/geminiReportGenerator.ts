@@ -1,6 +1,6 @@
 // Gemini AI Report Generator for AIris
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { openai } from "./openaiClient";
 
 interface TestResult {
   test_type: string;
@@ -48,17 +48,12 @@ export async function generateAIReport(
   testResults: Record<string, TestResult>,
   testHistory: TestResult[] = []
 ): Promise<AIReportData> {
-  // Get API key from environment
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   if (!apiKey) {
-    console.error("Gemini API key not found. Using fallback report.");
+    console.error("OpenAI API key not found. Using fallback report.");
     return generateFallbackReport(profile, testResults);
   }
   try {
-    // Initialize Gemini AI
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
     // Compose all user data for the prompt
     const demographics = `Demographics & Lifestyle:\n` +
       `- Name: ${profile.display_name || profile.full_name || 'User'}\n` +
@@ -100,15 +95,21 @@ export async function generateAIReport(
       return `${type}: ${history.length} tests, avg ${avgScore.toFixed(1)}%, trend: ${trend > 0 ? '+' : ''}${trend.toFixed(1)}%`;
     }).join("\n");
 
-  // --- USER PROMPT INJECTION ---
-  const userPrompt = `You are a digital eye-health assistant for the AIris platform. Generate a visually beautiful, modern, and branded report for the user, suitable for display in a web app.\n\n**Branding:**\n- The report should feature the AIris logo at the top (logo file: 'logo.png').\n- Use clear, elegant section headers and a visually pleasing layout.\n- Use color, whitespace, and visual hierarchy to make the report easy to read and aesthetically pleasing.\n- Use callout boxes or highlights for important findings or urgent recommendations.\n\n**Content:**\n- Use all the data provided: demographics, lifestyle, symptoms, test results, and history.\n- Write in clear, professional, and friendly English.\n- Avoid repetition and keep the tone modern and supportive.\n\n**Sections:**\n1. Cover Page\n   - AIris logo\n   - Report title: 'AIris Vision Health Report'\n   - User's name and date\n2. Summary Overview\n   - 2–3 crisp paragraphs summarizing vision status, risk, and trends\n3. Detailed Test Analysis\n   - For each test: score, interpretation, trend, and explanation\n   - Use visual cues (e.g., colored bars, icons, or highlights) for scores and risk\n4. Personalized Self-Care Guidance\n   - Eye exercises (3–5 routines, with instructions)\n   - Lifestyle tips (screen time, sleep, hydration, etc.)\n   - Nutrition advice (key nutrients, foods, and a sample meal plan)\n5. Medical Follow-Up\n   - When to see a professional, and what tests may be needed\n   - Short explanations for each\n6. Long-Term Improvement Plan\n   - Next steps for 3–6 months, habit tracking, and measurable targets\n7. Disclaimers\n   - Standard medical disclaimer\n\n**Format:**\n- Output in HTML5 markup, using semantic tags (section, h1-h3, p, ul, li, etc.)\n- Use inline styles for color, spacing, and highlights (no external CSS).\n- Include an <img> tag for the logo at the top: <img src='logo.png' alt='AIris Logo' style='height:60px;margin-bottom:24px;'>\n- Use <div> or <section> with background color or border for callouts/highlights.\n- Use <hr> to separate major sections.\n- Do NOT use emojis.\n- Make the report visually appealing and easy to scan.\n\n---\n\n### DATASET\n${demographics}${symptoms}\n${eyeConditions}\n${familyHistory}\n\nCurrent Test Results (Most Recent):\n${testSummary}\n\nHistorical Trends:\n${historicalTrends}`;
+    // --- USER PROMPT INJECTION ---
+    const userPrompt = `You are a digital eye-health assistant for the AIris platform. Generate a visually beautiful, modern, and branded report for the user, suitable for display in a web app.\n\n**Branding:**\n- The report should feature the AIris logo at the top (logo file: 'logo.png').\n- Use clear, elegant section headers and a visually pleasing layout.\n- Use color, whitespace, and visual hierarchy to make the report easy to read and aesthetically pleasing.\n- Use callout boxes or highlights for important findings or urgent recommendations.\n\n**Content:**\n- Use all the data provided: demographics, lifestyle, symptoms, test results, and history.\n- Write in clear, professional, and friendly English.\n- Avoid repetition and keep the tone modern and supportive.\n\n**Sections:**\n1. Cover Page\n   - AIris logo\n   - Report title: 'AIris Vision Health Report'\n   - User's name and date\n2. Summary Overview\n   - 2–3 crisp paragraphs summarizing vision status, risk, and trends\n3. Detailed Test Analysis\n   - For each test: score, interpretation, trend, and explanation\n   - Use visual cues (e.g., colored bars, icons, or highlights) for scores and risk\n4. Personalized Self-Care Guidance\n   - Eye exercises (3–5 routines, with instructions)\n   - Lifestyle tips (screen time, sleep, hydration, etc.)\n   - Nutrition advice (key nutrients, foods, and a sample meal plan)\n5. Medical Follow-Up\n   - When to see a professional, and what tests may be needed\n   - Short explanations for each\n6. Long-Term Improvement Plan\n   - Next steps for 3–6 months, habit tracking, and measurable targets\n7. Disclaimers\n   - Standard medical disclaimer\n\n**Format:**\n- Output in HTML5 markup, using semantic tags (section, h1-h3, p, ul, li, etc.)\n- Use inline styles for color, spacing, and highlights (no external CSS).\n- Include an <img> tag for the logo at the top: <img src='logo.png' alt='AIris Logo' style='height:60px;margin-bottom:24px;'>\n- Use <div> or <section> with background color or border for callouts/highlights.\n- Use <hr> to separate major sections.\n- Do NOT use emojis.\n- Make the report visually appealing and easy to scan.\n\n---\n\n### DATASET\n${demographics}${symptoms}\n${eyeConditions}\n${familyHistory}\n\nCurrent Test Results (Most Recent):\n${testSummary}\n\nHistorical Trends:\n${historicalTrends}`;
 
-    // Generate content with Gemini
-  const result = await model.generateContent(userPrompt);
-  const response = await result.response;
-  const text = await response.text();
-  // Parse the AI response
-  return parseAIResponse(text);
+    // Generate content with OpenAI
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4o", // or "gpt-4", "gpt-3.5-turbo"
+      messages: [
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: userPrompt }
+      ],
+      max_tokens: 4096,
+      temperature: 0.7
+    });
+    const text = completion.data.choices[0].message?.content || "";
+    return parseAIResponse(text);
   } catch (error) {
     console.error("Error generating AI report:", error);
     return generateFallbackReport(profile, testResults);
