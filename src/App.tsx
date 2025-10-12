@@ -13,6 +13,7 @@ import VisualAcuityTest from "./pages/tests/VisualAcuityTest";
 import AmslerTest from "./pages/tests/AmslerTest";
 import ReadingStressTest from "./pages/tests/ReadingStressTest";
 import NotFound from "./pages/NotFound";
+import { ThemeManager } from "./components/ThemeManager";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <ThemeManager />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Auth />} />
