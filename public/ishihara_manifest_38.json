@@ -19,120 +19,120 @@
       "id": 3,
       "image": "ishihara/plate_03.png",
       "analysis": {
-        "raw": "Normal view: 6",
-        "normal": "6"
+        "raw": "Normal view: 29",
+        "normal": "29"
       }
     },
     {
       "id": 4,
       "image": "ishihara/plate_04.png",
       "analysis": {
-        "raw": "Normal view: 29",
-        "normal": "29"
+        "raw": "Normal view: 5",
+        "normal": "5"
       }
     },
     {
       "id": 5,
       "image": "ishihara/plate_05.png",
       "analysis": {
-        "raw": "Normal view: 57",
-        "normal": "57"
+        "raw": "Normal view: 3",
+        "normal": "3"
       }
     },
     {
       "id": 6,
       "image": "ishihara/plate_06.png",
       "analysis": {
-        "raw": "Normal view: 5",
-        "normal": "5"
+        "raw": "Normal view: 15",
+        "normal": "15"
       }
     },
     {
       "id": 7,
       "image": "ishihara/plate_07.png",
       "analysis": {
-        "raw": "Normal view: 3",
-        "normal": "3"
+        "raw": "Normal view: 74",
+        "normal": "74"
       }
     },
     {
       "id": 8,
       "image": "ishihara/plate_08.png",
       "analysis": {
-        "raw": "Normal view: 15",
-        "normal": "15"
+        "raw": "Normal view: 6",
+        "normal": "6"
       }
     },
     {
       "id": 9,
       "image": "ishihara/plate_09.png",
       "analysis": {
-        "raw": "Normal view: 74",
-        "normal": "74"
+        "raw": "Normal view: 45",
+        "normal": "45"
       }
     },
     {
       "id": 10,
       "image": "ishihara/plate_10.png",
       "analysis": {
-        "raw": "Normal view: 2",
-        "normal": "2"
+        "raw": "Normal view: 5",
+        "normal": "5"
       }
     },
     {
       "id": 11,
       "image": "ishihara/plate_11.png",
       "analysis": {
-        "raw": "Normal view: 6",
-        "normal": "6"
+        "raw": "Normal view: 7",
+        "normal": "7"
       }
     },
     {
       "id": 12,
       "image": "ishihara/plate_12.png",
       "analysis": {
-        "raw": "Normal view: 97",
-        "normal": "97"
+        "raw": "Normal view: 16",
+        "normal": "16"
       }
     },
     {
       "id": 13,
       "image": "ishihara/plate_13.png",
       "analysis": {
-        "raw": "Normal view: 45",
-        "normal": "45"
+        "raw": "Normal view: 73",
+        "normal": "73"
       }
     },
     {
       "id": 14,
       "image": "ishihara/plate_14.png",
       "analysis": {
-        "raw": "Normal view: 5",
-        "normal": "5"
+        "raw": "Normal view: nothing",
+        "normal": "nothing"
       }
     },
     {
       "id": 15,
       "image": "ishihara/plate_15.png",
       "analysis": {
-        "raw": "Normal view: 7",
-        "normal": "7"
+        "raw": "Normal view: nothing",
+        "normal": "nothing"
       }
     },
     {
       "id": 16,
       "image": "ishihara/plate_16.png",
       "analysis": {
-        "raw": "Normal view: 16",
-        "normal": "16"
+        "raw": "Normal view: 26",
+        "normal": "26"
       }
     },
     {
       "id": 17,
       "image": "ishihara/plate_17.png",
       "analysis": {
-        "raw": "Normal view: 73",
-        "normal": "73"
+        "raw": "Normal view: 42",
+        "normal": "42"
       }
     },
     {
@@ -179,16 +179,16 @@
       "id": 23,
       "image": "ishihara/plate_23.png",
       "analysis": {
-        "raw": "Normal view: 42",
-        "normal": "42"
+        "raw": "Normal view: nothing",
+        "normal": "nothing"
       }
     },
     {
       "id": 24,
       "image": "ishihara/plate_24.png",
       "analysis": {
-        "raw": "Normal view: 35",
-        "normal": "35"
+        "raw": "Normal view: nothing",
+        "normal": "nothing"
       }
     }
   ]
