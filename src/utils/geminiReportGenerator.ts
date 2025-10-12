@@ -1,4 +1,5 @@
 // Gemini AI Report Generator for AIris
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface TestResult {
@@ -8,8 +9,27 @@ interface TestResult {
   created_at: string;
 }
 
+
+// Expanded profile type for all demographics/lifestyle/symptoms
 interface Profile {
   display_name: string | null;
+  full_name?: string | null;
+  date_of_birth?: string | null;
+  gender?: string | null;
+  ethnicity?: string | null;
+  wears_correction?: string | null;
+  correction_type?: string | null;
+  last_eye_exam?: string | null;
+  screen_time_hours?: string | null;
+  outdoor_time_hours?: string | null;
+  sleep_quality?: string | null;
+  symptoms?: string[] | null;
+  eye_conditions?: string[] | null;
+  family_history?: string[] | null;
+  eye_surgeries?: string | null;
+  uses_eye_medication?: boolean | null;
+  medication_details?: string | null;
+  bio?: string | null;
   xp: number;
   current_streak: number;
 }
@@ -22,190 +42,73 @@ interface AIReportData {
   urgencyLevel: 'low' | 'moderate' | 'high';
 }
 
+
 export async function generateAIReport(
   profile: Profile,
   testResults: Record<string, TestResult>,
   testHistory: TestResult[] = []
 ): Promise<AIReportData> {
-  
   // Get API key from environment
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  
   if (!apiKey) {
     console.error("Gemini API key not found. Using fallback report.");
     return generateFallbackReport(profile, testResults);
   }
-
   try {
     // Initialize Gemini AI
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    // Prepare current test data
-    const testSummary = Object.entries(testResults).map(([type, result]) => {
-      let details = "";
-      
-      switch (type) {
-        case 'ishihara':
-          details = result.details?.subtype 
-            ? `Color vision subtype: ${result.details.subtype}` 
-            : "No specific subtype detected";
-          break;
-        case 'acuity':
-          details = result.details?.level 
-            ? `Visual clarity level: ${result.details.level}` 
-            : "Visual clarity assessed";
-          break;
-        case 'amsler':
-          details = result.details?.distortions 
-            ? `Distortions detected: ${result.details.distortions.length} points` 
-            : "No significant distortions";
-          break;
-        case 'reading_stress':
-          details = result.details?.readabilityThreshold 
-            ? `Comfortable reading size: ${result.details.readabilityThreshold}px, Average difficulty: ${result.details.avgDifficulty}/5` 
-            : "Reading comfort assessed";
-          break;
-      }
-      
-      return `${type}: ${result.score || 0}% (${details}, Date: ${new Date(result.created_at).toLocaleDateString()})`;
-    }).join('\n');
+    // Compose all user data for the prompt
+    const demographics = `Demographics & Lifestyle:\n` +
+      `- Name: ${profile.display_name || profile.full_name || 'User'}\n` +
+      (profile.date_of_birth ? `- Date of Birth: ${profile.date_of_birth}\n` : "") +
+      (profile.gender ? `- Gender: ${profile.gender}\n` : "") +
+      (profile.ethnicity ? `- Ethnicity: ${profile.ethnicity}\n` : "") +
+      (profile.wears_correction ? `- Wears Correction: ${profile.wears_correction}\n` : "") +
+      (profile.correction_type ? `- Correction Type: ${profile.correction_type}\n` : "") +
+      (profile.last_eye_exam ? `- Last Eye Exam: ${profile.last_eye_exam}\n` : "") +
+      (profile.screen_time_hours ? `- Screen Time: ${profile.screen_time_hours} hours/day\n` : "") +
+      (profile.outdoor_time_hours ? `- Outdoor Time: ${profile.outdoor_time_hours} hours/day\n` : "") +
+      (profile.sleep_quality ? `- Sleep Quality: ${profile.sleep_quality}\n` : "") +
+      (profile.eye_surgeries ? `- Eye Surgeries: ${profile.eye_surgeries}\n` : "") +
+      (profile.uses_eye_medication ? `- Uses Eye Medication: Yes\n` : "") +
+      (profile.medication_details ? `- Medication Details: ${profile.medication_details}\n` : "") +
+      (profile.bio ? `- Bio: ${profile.bio}\n` : "");
 
-    // Prepare historical trend data
+    const symptoms = profile.symptoms && profile.symptoms.length
+      ? `Symptoms: ${profile.symptoms.join(", ")}`
+      : "Symptoms: None reported";
+    const eyeConditions = profile.eye_conditions && profile.eye_conditions.length
+      ? `Known Eye Conditions: ${profile.eye_conditions.join(", ")}`
+      : "Known Eye Conditions: None reported";
+    const familyHistory = profile.family_history && profile.family_history.length
+      ? `Family Eye History: ${profile.family_history.join(", ")}`
+      : "Family Eye History: None reported";
+
+    // Prepare test results and history
+    const testSummary = Object.entries(testResults).map(([type, result]) => {
+      let details = JSON.stringify(result.details || {});
+      return `${type}: ${result.score || 0}% (Details: ${details}, Date: ${new Date(result.created_at).toLocaleDateString()})`;
+    }).join("\n");
     const historicalTrends = Object.keys(testResults).map(type => {
       const history = testHistory.filter(t => t.test_type === type);
       if (history.length < 2) return `${type}: Insufficient historical data`;
-      
       const scores = history.map(t => t.score || 0);
       const trend = scores[scores.length - 1] - scores[scores.length - 2];
       const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-      
-      return `${type}: ${history.length} tests completed, avg ${avgScore.toFixed(1)}%, trend: ${trend > 0 ? '+' : ''}${trend.toFixed(1)}%`;
-    }).join('\n');
+      return `${type}: ${history.length} tests, avg ${avgScore.toFixed(1)}%, trend: ${trend > 0 ? '+' : ''}${trend.toFixed(1)}%`;
+    }).join("\n");
 
-    // Create prompt for Gemini
-    const prompt = `You are an expert optometrist and vision health specialist with 20+ years of clinical experience. You are creating a comprehensive, detailed personalized vision health report for a patient. This report should be 750-2000 words and provide actionable, evidence-based insights.
-
-**Patient Profile:**
-- Name: ${profile.display_name || 'User'}
-- Engagement Level: ${profile.current_streak} week testing streak, Level ${Math.floor(profile.xp / 100) + 1}
-- Total XP: ${profile.xp}
-
-**Current Test Results (Most Recent):**
-${testSummary}
-
-**Historical Trends:**
-${historicalTrends}
-
-**Instructions for Report Generation:**
-
-You MUST provide an extensive, detailed report (minimum 750 words, ideally 1000-2000 words) covering ALL of the following sections comprehensively:
-
-1. **DETAILED ANALYSIS (4-6 comprehensive paragraphs):**
-   - Explain EACH test result in detail with clinical context
-   - Describe what the specific scores indicate about eye function
-   - Compare results to normal population ranges
-   - Discuss any patterns or correlations between different tests
-   - Analyze historical trends if available (improving/declining/stable)
-   - Consider the patient's engagement and consistency
-   - Explain the physiological mechanisms behind any issues detected
-   - Discuss potential underlying causes for suboptimal scores
-   - Be thorough and educational - this is the main body of the report
-
-2. **CLINICAL RECOMMENDATIONS (6-10 detailed items):**
-   - Severity-based professional care recommendations:
-     * 90%+ scores: Maintain current eye health practices, annual checkups
-     * 70-89% scores: Schedule comprehensive eye examination within 3-6 months
-     * <70% scores: URGENT - Schedule professional evaluation within 2-4 weeks
-     * Amsler distortions: IMMEDIATE ophthalmologist consultation
-   - Lifestyle modifications specific to test results
-   - Workplace/environment adjustments
-   - Screen time management strategies
-   - Sleep and rest recommendations
-   - When to seek emergency care
-   - Follow-up testing timeline
-   - Preventive measures for family members if hereditary risks detected
-
-3. **PERSONALIZED EYE EXERCISES (8-12 exercises):**
-   For EACH exercise provide:
-   - Exercise name
-   - DETAILED step-by-step instructions (3-5 steps minimum)
-   - Exact duration and frequency (e.g., "10 repetitions, 3 times daily")
-   - Which specific test result/condition it targets
-   - Expected benefits and timeframe
-   - Precautions or contraindications
-   
-   Include exercises for: accommodation, convergence, tracking, peripheral awareness, focusing stamina, eye-hand coordination, relaxation
-
-4. **COMPREHENSIVE NUTRITION PLAN (8-12 nutrients):**
-   For EACH nutrient provide:
-   - Specific nutrient name and recommended daily amount
-   - Detailed explanation of WHY it's critical for eye health (mechanism of action)
-   - At least 4-5 specific food sources with serving sizes
-   - Supplementation guidance if dietary intake insufficient
-   - Which test result/condition it specifically addresses
-   
-   Cover: Vitamin A, Lutein, Zeaxanthin, Omega-3s, Zinc, Vitamin C, Vitamin E, Beta-carotene, B-complex vitamins, antioxidants
-
-5. **LIFESTYLE & ENVIRONMENTAL RECOMMENDATIONS (5-8 items):**
-   - Lighting optimization for different activities
-   - Screen ergonomics and blue light management
-   - Proper reading distance and posture
-   - Outdoor time recommendations
-   - UV protection strategies
-   - Humidity and air quality considerations
-   - Sleep hygiene for eye health
-
-6. **URGENCY ASSESSMENT:**
-   Rate as: low / moderate / high
-   Provide clear reasoning for the urgency level
-   Specify exact timeline for professional consultation
-
-**Formatting Requirements:**
-- Use clear section headers as shown below
-- Write in professional yet accessible language
-- Include specific measurements, percentages, and timelines
-- Provide evidence-based information
-- Be encouraging but honest about concerns
-- Total length: 750-2000 words (err on the longer side)
-
-**Response Format:**
-
-ANALYSIS:
-[Write 4-6 detailed, comprehensive paragraphs analyzing all test results, trends, and implications. Each paragraph should be 80-150 words. Total: 400-800 words]
-
-RECOMMENDATIONS:
-1. [Detailed recommendation with specific actions and timelines]
-2. [Next recommendation]
-[Continue for 6-10 items, each 40-60 words]
-
-EXERCISES:
-1. [Exercise Name]: [Detailed step-by-step instructions - 50-80 words including duration, frequency, and targeted condition]
-2. [Next exercise]
-[Continue for 8-12 exercises]
-
-NUTRITION:
-1. [Nutrient Name - Daily Amount]: [Detailed explanation of benefits and mechanism - 40-60 words] - Found in: [4-5 specific foods with serving sizes]
-2. [Next nutrient]
-[Continue for 8-12 nutrients]
-
-LIFESTYLE:
-1. [Detailed lifestyle recommendation with reasoning]
-2. [Next recommendation]
-[Continue for 5-8 items]
-
-URGENCY: [low/moderate/high] - [Explanation and recommended action timeline]
-
-Remember: This report will be given to the patient and potentially their doctor. Be thorough, professional, evidence-based, and compassionate. Aim for 1000-2000 words total.`;
+    // --- USER PROMPT INJECTION ---
+    const userPrompt = `You are a digital eye-health assistant that generates detailed, personalized reports from quantitative and qualitative vision-screening data.\n\nUse the complete dataset provided below, including:\n- current test results and scores,\n- previous test results and their trend,\n- demographic and lifestyle data (age, gender, screen time, outdoor time, nutrition habits, corrective lenses, etc.),\n- symptom responses (blurred vision, dryness, glare, headaches, color confusion, etc.).\n\nWrite a structured report in clear professional English. Do not use emojis or informal language. Keep tone objective, clinical, and easy to understand. Avoid repetition.\n\n---\n\n### DATASET\n${demographics}${symptoms}\n${eyeConditions}\n${familyHistory}\n\nCurrent Test Results (Most Recent):\n${testSummary}\n\nHistorical Trends:\n${historicalTrends}\n\n---\n\n### Report Requirements\n\n**1. Summary Overview**\n- Summarize the user's overall vision status in 2–3 crisp paragraphs.\n- Mention the total health score, risk level, and the direction of change from previous results (improved / stable / declined).\n- Explain briefly what the main findings indicate about visual acuity, color perception, macular or retinal health, and general eye function.\n\n**2. Detailed Test Analysis**\nFor each test completed (for example: visual_acuity, amsler_grid, color_vision, contrast_sensitivity, refraction, reaction_time, etc.):\n- State the current score and its interpretation.\n- Compare it with previous scores and highlight any improvement or deterioration.\n- Explain, in simple but precise language, what the score reveals about that specific visual function.\n- If abnormalities are found, describe possible causes or mechanisms (e.g., macular stress, uncorrected refractive error, eye-strain, early AMD patterns).\n\n**3. Personalised Self-Care Guidance**\nProvide actionable steps that the user can follow independently, tailored to their data:\n- **Eye exercises**: give 3–5 specific routines (palming, near-far focusing, figure-eight tracking, blinking intervals, etc.), each with short instructions and daily frequency.\n- **Lifestyle adjustments**: screen-time management, lighting, sleep, hydration, air quality, and UV protection.\n- **Nutrition**: list key vitamins and nutrients (A, C, E, lutein, zeaxanthin, omega-3) and foods containing them. Suggest a sample one-day meal plan supporting eye health.\n\n**4. Medical Follow-Up**\n- Clearly state whether a professional examination is advised (e.g., “routine check in 6 months” or “consult ophthalmologist soon”).\n- Describe what additional diagnostic tests or imaging (OCT, refraction, slit-lamp, etc.) may be useful based on current findings.\n- Provide a short explanation of what these tests assess and why they are relevant for this user.\n\n**5. Long-Term Improvement Plan**\n- Offer realistic next steps for the next 3–6 months, including re-testing frequency.\n- Recommend habit-tracking metrics (daily breaks, lighting setup, exercise frequency, nutrition adherence).\n- Summarize measurable targets (for example: maintain acuity ≥80%, reduce Amsler distortions, improve comfort score).\n\n**6. Disclaimers**\nEnd with a neutral statement clarifying that the report is informational and not a substitute for professional diagnosis or treatment.\n\n---\n\n### Output Format\nProduce a long, continuous text with section headings:\n1. Summary Overview  \n2. Detailed Test Analysis  \n3. Personalised Self-Care Guidance  \n4. Medical Follow-Up  \n5. Long-Term Improvement Plan  \n6. Disclaimers  \n\nNo bullet icons, emojis, or stylistic punctuation. Use plain text with standard capitalization.`;
 
     // Generate content with Gemini
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent(userPrompt);
     const response = await result.response;
     const text = response.text();
-
     // Parse the AI response
     return parseAIResponse(text);
-    
   } catch (error) {
     console.error("Error generating AI report:", error);
     return generateFallbackReport(profile, testResults);

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Moon, Sun, Upload } from "lucide-react";
+import { useDarkModePreference } from "@/hooks/useDarkModePreference";
 import logo from "@/assets/logo.png";
 
 export default function Profile() {
@@ -17,12 +18,30 @@ export default function Profile() {
   const { user, signOut } = useAuth();
   const { xp } = useXP(user?.id);
   const { toast } = useToast();
+
+  // Profile fields
   const [displayName, setDisplayName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [gender, setGender] = useState("");
+  const [ethnicity, setEthnicity] = useState("");
+  const [wearsCorrection, setWearsCorrection] = useState("");
+  const [correctionType, setCorrectionType] = useState("");
+  const [lastEyeExam, setLastEyeExam] = useState("");
+  const [screenTimeHours, setScreenTimeHours] = useState("");
+  const [outdoorTimeHours, setOutdoorTimeHours] = useState("");
+  const [sleepQuality, setSleepQuality] = useState("");
+  const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [eyeConditions, setEyeConditions] = useState<string[]>([]);
+  const [familyHistory, setFamilyHistory] = useState<string[]>([]);
+  const [eyeSurgeries, setEyeSurgeries] = useState("");
+  const [usesEyeMedication, setUsesEyeMedication] = useState(false);
+  const [medicationDetails, setMedicationDetails] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, setDarkMode, loading: darkLoading } = useDarkModePreference();
 
   useEffect(() => {
     if (user) {
@@ -34,24 +53,24 @@ export default function Profile() {
           .single();
         if (profile) {
           setDisplayName(profile.display_name || "");
+          setFullName(profile.full_name || "");
+          setDateOfBirth(profile.date_of_birth || "");
+          setGender(profile.gender || "");
+          setEthnicity(profile.ethnicity || "");
+          setWearsCorrection(profile.wears_correction || "");
+          setCorrectionType(profile.correction_type || "");
+          setLastEyeExam(profile.last_eye_exam || "");
+          setScreenTimeHours(profile.screen_time_hours || "");
+          setOutdoorTimeHours(profile.outdoor_time_hours || "");
+          setSleepQuality(profile.sleep_quality || "");
+          setSymptoms(profile.symptoms || []);
+          setEyeConditions(profile.eye_conditions || []);
+          setFamilyHistory(profile.family_history || []);
+          setEyeSurgeries(profile.eye_surgeries || "");
+          setUsesEyeMedication(!!profile.uses_eye_medication);
+          setMedicationDetails(profile.medication_details || "");
           setBio(profile.bio || "");
           setAvatarUrl(profile.avatar_url || "");
-        }
-
-        // Fetch dark mode preference
-        const { data: prefs } = await supabase
-          .from("user_preferences")
-          .select("dark_mode")
-          .eq("user_id", user.id)
-          .single();
-        
-        if (prefs) {
-          setDarkMode(prefs.dark_mode);
-          if (prefs.dark_mode) {
-            document.documentElement.classList.add("dark");
-          } else {
-            document.documentElement.classList.remove("dark");
-          }
         }
       };
       fetchProfile();
@@ -61,17 +80,32 @@ export default function Profile() {
   const handleSave = async () => {
     if (!user) return;
     setLoading(true);
-
     try {
       const { error } = await supabase
         .from("profiles")
         .update({
           display_name: displayName,
+          full_name: fullName,
+          date_of_birth: dateOfBirth,
+          gender,
+          ethnicity,
+          wears_correction: wearsCorrection,
+          correction_type: correctionType,
+          last_eye_exam: lastEyeExam,
+          screen_time_hours: screenTimeHours,
+          outdoor_time_hours: outdoorTimeHours,
+          sleep_quality: sleepQuality,
+          symptoms,
+          eye_conditions: eyeConditions,
+          family_history: familyHistory,
+          eye_surgeries: eyeSurgeries,
+          uses_eye_medication: usesEyeMedication,
+          medication_details: medicationDetails,
           bio,
           avatar_url: avatarUrl,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
-
       if (error) throw error;
       toast({ title: "Profile updated!", description: "Your changes have been saved." });
     } catch (error: any) {
@@ -86,27 +120,12 @@ export default function Profile() {
   };
 
   const toggleDarkMode = async () => {
-    if (!user) return;
-    
     const newMode = !darkMode;
     setDarkMode(newMode);
-    
     if (newMode) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
-    }
-
-    // Save to database
-    try {
-      const { error } = await supabase
-        .from("user_preferences")
-        .update({ dark_mode: newMode, updated_at: new Date().toISOString() })
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-    } catch (error: any) {
-      console.error("Failed to save dark mode preference:", error);
     }
   };
 
@@ -128,27 +147,29 @@ export default function Profile() {
 
     setUploading(true);
     try {
-      // Delete old avatar if exists
-      if (avatarUrl) {
-        const oldPath = avatarUrl.split('/').slice(-1)[0];
-        await supabase.storage.from('avatars').remove([`${user.id}/${oldPath}`]);
+      // Delete old avatar if exists and is a valid URL
+      if (avatarUrl && avatarUrl.includes(user.id)) {
+        const oldPath = avatarUrl.split(`${user.id}/`).pop();
+        if (oldPath) {
+          await supabase.storage.from('avatars').remove([`${user.id}/${oldPath}`]);
+        }
       }
 
       // Upload new avatar
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL (always use returned path)
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
+      if (!publicUrl) throw new Error("Failed to get public URL for avatar");
       setAvatarUrl(publicUrl);
 
       // Save to profile
@@ -223,7 +244,7 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Profile Info */}
+            {/* Profile Info - Expanded */}
             <div className="space-y-4">
               {/* Avatar Upload */}
               <div className="space-y-2">
@@ -279,7 +300,151 @@ export default function Profile() {
                   placeholder="Enter your name"
                 />
               </div>
-
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Enter your full name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gender">Gender</Label>
+                <Input
+                  id="gender"
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  placeholder="Enter your gender"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ethnicity">Ethnicity</Label>
+                <Input
+                  id="ethnicity"
+                  value={ethnicity}
+                  onChange={(e) => setEthnicity(e.target.value)}
+                  placeholder="Enter your ethnicity"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="wearsCorrection">Do you wear glasses/contacts?</Label>
+                <Input
+                  id="wearsCorrection"
+                  value={wearsCorrection}
+                  onChange={(e) => setWearsCorrection(e.target.value)}
+                  placeholder="e.g. glasses, contacts, none"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="correctionType">Correction Type</Label>
+                <Input
+                  id="correctionType"
+                  value={correctionType}
+                  onChange={(e) => setCorrectionType(e.target.value)}
+                  placeholder="e.g. distance, reading, bifocal"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastEyeExam">Last Eye Exam</Label>
+                <Input
+                  id="lastEyeExam"
+                  value={lastEyeExam}
+                  onChange={(e) => setLastEyeExam(e.target.value)}
+                  placeholder="e.g. never, less_1_year, 1_2_years, more_2_years"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="screenTimeHours">Screen Time (hours/day)</Label>
+                <Input
+                  id="screenTimeHours"
+                  type="number"
+                  value={screenTimeHours}
+                  onChange={(e) => setScreenTimeHours(e.target.value)}
+                  placeholder="e.g. 4"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="outdoorTimeHours">Outdoor Time (hours/day)</Label>
+                <Input
+                  id="outdoorTimeHours"
+                  type="number"
+                  value={outdoorTimeHours}
+                  onChange={(e) => setOutdoorTimeHours(e.target.value)}
+                  placeholder="e.g. 2"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sleepQuality">Sleep Quality</Label>
+                <Input
+                  id="sleepQuality"
+                  value={sleepQuality}
+                  onChange={(e) => setSleepQuality(e.target.value)}
+                  placeholder="e.g. good, average, poor"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Common Symptoms (comma separated)</Label>
+                <Input
+                  value={symptoms.join(", ")}
+                  onChange={e => setSymptoms(e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
+                  placeholder="e.g. blurred_distance, near_strain, headaches"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Known Eye Conditions (comma separated)</Label>
+                <Input
+                  value={eyeConditions.join(", ")}
+                  onChange={e => setEyeConditions(e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
+                  placeholder="e.g. myopia, glaucoma"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Family Eye History (comma separated)</Label>
+                <Input
+                  value={familyHistory.join(", ")}
+                  onChange={e => setFamilyHistory(e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
+                  placeholder="e.g. high_myopia, glaucoma"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="eyeSurgeries">Eye Surgeries or Trauma</Label>
+                <Input
+                  id="eyeSurgeries"
+                  value={eyeSurgeries}
+                  onChange={(e) => setEyeSurgeries(e.target.value)}
+                  placeholder="Describe any surgeries or eye injuries"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={usesEyeMedication}
+                  onChange={e => setUsesEyeMedication(e.target.checked)}
+                  id="usesEyeMedication"
+                />
+                <Label htmlFor="usesEyeMedication">I use eye drops or vision medication</Label>
+              </div>
+              {usesEyeMedication && (
+                <div className="space-y-2">
+                  <Label htmlFor="medicationDetails">Medication Details</Label>
+                  <Input
+                    id="medicationDetails"
+                    value={medicationDetails}
+                    onChange={(e) => setMedicationDetails(e.target.value)}
+                    placeholder="List medications"
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="bio">Bio</Label>
                 <Textarea
@@ -298,8 +463,8 @@ export default function Profile() {
                 {darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                 <span className="font-medium">Dark Mode</span>
               </div>
-              <Button variant="outline" size="sm" onClick={toggleDarkMode}>
-                {darkMode ? "Disable" : "Enable"}
+              <Button variant="outline" size="sm" onClick={toggleDarkMode} disabled={darkLoading}>
+                {darkLoading ? "Loading..." : darkMode ? "Disable" : "Enable"}
               </Button>
             </div>
 

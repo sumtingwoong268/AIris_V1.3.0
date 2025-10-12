@@ -46,6 +46,7 @@ export default function IshiharaTest() {
   const [userInput, setUserInput] = useState("");
   const [imageError, setImageError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     fetch("/ishihara_manifest_38.json")
@@ -83,19 +84,18 @@ export default function IshiharaTest() {
 
   const handleStart = () => {
     if (!manifest) return;
-    
     // Select initial 20 plates randomly
     const shuffled = [...manifest.plates].sort(() => Math.random() - 0.5);
     const initialPlates = shuffled.slice(0, 20);
-    
     setTestPlates(initialPlates);
     setStarted(true);
     setCurrentPlateIndex(0);
     setAnswers([]);
+    setCompleted(false);
   };
 
   const handleAnswer = () => {
-    if (!manifest || !userInput.trim()) return;
+    if (!manifest || !userInput.trim() || completed) return;
 
     const currentPlate = testPlates[currentPlateIndex];
     const normalizedInput = normalizeAnswer(userInput);
@@ -138,7 +138,8 @@ export default function IshiharaTest() {
   };
 
   const completeTest = async (testAnswers: TestAnswer[]) => {
-    if (!user) return;
+    if (!user || completed) return;
+    setCompleted(true);
 
     try {
       const correctCount = testAnswers.filter((a) => a.correct).length;
@@ -169,15 +170,21 @@ export default function IshiharaTest() {
         }
       }
 
-      const xpEarned = Math.round(50 * (score / 100)); // Scaled up from 30
+      // XP scaling: base 35, up to 55 for perfect score
+      const xpEarned = Math.round(35 + (score / 100) * 20);
 
       await supabase.from("test_results").insert({
         user_id: user.id,
         test_type: "ishihara",
         score,
         xp_earned: xpEarned,
-        details: { 
-          answers: testAnswers,
+        details: {
+          answers: testAnswers.map(a => ({
+            plateId: a.plateId,
+            answer: a.answer,
+            expected: a.expected,
+            correct: a.correct
+          })),
           subtype,
           totalPlates: testAnswers.length,
           correctCount,

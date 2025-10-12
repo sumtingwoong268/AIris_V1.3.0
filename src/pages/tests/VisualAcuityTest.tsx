@@ -19,6 +19,7 @@ export default function VisualAcuityTest() {
   const [level, setLevel] = useState(1);
   const [correct, setCorrect] = useState(0);
   const [direction, setDirection] = useState<"up" | "down" | "left" | "right">("up");
+  const [completed, setCompleted] = useState(false);
 
   const directions = ["up", "down", "left", "right"] as const;
 
@@ -26,6 +27,7 @@ export default function VisualAcuityTest() {
     setStarted(true);
     setLevel(1);
     setCorrect(0);
+    setCompleted(false);
     randomizeDirection();
   };
 
@@ -35,12 +37,12 @@ export default function VisualAcuityTest() {
   };
 
   const handleAnswer = (answer: typeof direction) => {
+    if (completed) return;
     if (answer === direction) {
-      setCorrect(correct + 1);
+      setCorrect((prev) => prev + 1);
     }
-
     if (level < 8) {
-      setLevel(level + 1);
+      setLevel((prev) => prev + 1);
       randomizeDirection();
     } else {
       completeTest();
@@ -48,12 +50,12 @@ export default function VisualAcuityTest() {
   };
 
   const completeTest = async () => {
-    if (!user) return;
-
+    if (!user || completed) return;
+    setCompleted(true);
     try {
       const score = (correct / 8) * 100;
-      const xpEarned = Math.floor((score / 100) * 25);
-
+      // XP scaling: base 30, up to 40 for perfect score
+      const xpEarned = Math.floor(30 + (score / 100) * 10);
       await supabase.from("test_results").insert({
         user_id: user.id,
         test_type: "visual_acuity",
@@ -61,17 +63,14 @@ export default function VisualAcuityTest() {
         xp_earned: xpEarned,
         details: { correct, total: 8 },
       });
-
       await supabase.rpc("update_user_xp", {
         p_user_id: user.id,
         p_xp_delta: xpEarned,
       });
-
       toast({
         title: "Test Complete!",
         description: `You earned ${xpEarned} XP!`,
       });
-
       navigate("/dashboard");
     } catch (error: any) {
       toast({
@@ -147,6 +146,7 @@ export default function VisualAcuityTest() {
                       size="lg"
                       onClick={() => handleAnswer("up")}
                       className="h-20"
+                      disabled={completed}
                     >
                       <ArrowUp className="h-6 w-6" />
                     </Button>
@@ -155,6 +155,7 @@ export default function VisualAcuityTest() {
                       size="lg"
                       onClick={() => handleAnswer("down")}
                       className="h-20"
+                      disabled={completed}
                     >
                       <ArrowDown className="h-6 w-6" />
                     </Button>
@@ -163,6 +164,7 @@ export default function VisualAcuityTest() {
                       size="lg"
                       onClick={() => handleAnswer("left")}
                       className="h-20"
+                      disabled={completed}
                     >
                       <ArrowLeft className="h-6 w-6" />
                     </Button>
@@ -171,6 +173,7 @@ export default function VisualAcuityTest() {
                       size="lg"
                       onClick={() => handleAnswer("right")}
                       className="h-20"
+                      disabled={completed}
                     >
                       <ArrowRight className="h-6 w-6" />
                     </Button>

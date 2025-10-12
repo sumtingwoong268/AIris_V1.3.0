@@ -85,8 +85,7 @@ export default function Setup() {
       if (avatarFile && user) {
         const fileExt = avatarFile.name.split(".").pop();
         const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from("avatars")
           .upload(fileName, avatarFile, { upsert: true });
 
@@ -96,6 +95,7 @@ export default function Setup() {
           .from("avatars")
           .getPublicUrl(fileName);
 
+        if (!publicUrl) throw new Error("Failed to get public URL for avatar");
         avatar_url = publicUrl;
       }
 

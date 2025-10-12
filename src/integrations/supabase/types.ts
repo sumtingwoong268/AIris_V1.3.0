@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      user_preferences: {
+        Row: {
+          id: string;
+          user_id: string;
+          dark_mode: boolean;
+          notifications_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          dark_mode?: boolean;
+          notifications_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          dark_mode?: boolean;
+          notifications_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       friend_requests: {
         Row: {
           created_at: string
@@ -91,39 +126,96 @@ export type Database = {
       }
       profiles: {
         Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string
-          current_streak: number
-          display_name: string | null
-          id: string
-          last_active_week: string | null
-          updated_at: string
-          xp: number
-        }
+          id: string;
+          display_name: string | null;
+          full_name: string | null;
+          date_of_birth: string | null;
+          gender: string | null;
+          ethnicity: string | null;
+          wears_correction: string | null;
+          correction_type: string | null;
+          last_eye_exam: string | null;
+          screen_time_hours: string | null;
+          outdoor_time_hours: string | null;
+          sleep_quality: string | null;
+          symptoms: string[] | null;
+          eye_conditions: string[] | null;
+          family_history: string[] | null;
+          eye_surgeries: string | null;
+          uses_eye_medication: boolean | null;
+          medication_details: string | null;
+          setup_completed: boolean | null;
+          tos_accepted: boolean | null;
+          privacy_accepted: boolean | null;
+          avatar_url: string | null;
+          bio: string | null;
+          created_at: string;
+          updated_at: string;
+          current_streak: number;
+          last_active_week: string | null;
+          xp: number;
+        };
         Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          current_streak?: number
-          display_name?: string | null
-          id: string
-          last_active_week?: string | null
-          updated_at?: string
-          xp?: number
-        }
+          id: string;
+          display_name?: string | null;
+          full_name?: string | null;
+          date_of_birth?: string | null;
+          gender?: string | null;
+          ethnicity?: string | null;
+          wears_correction?: string | null;
+          correction_type?: string | null;
+          last_eye_exam?: string | null;
+          screen_time_hours?: string | null;
+          outdoor_time_hours?: string | null;
+          sleep_quality?: string | null;
+          symptoms?: string[] | null;
+          eye_conditions?: string[] | null;
+          family_history?: string[] | null;
+          eye_surgeries?: string | null;
+          uses_eye_medication?: boolean | null;
+          medication_details?: string | null;
+          setup_completed?: boolean | null;
+          tos_accepted?: boolean | null;
+          privacy_accepted?: boolean | null;
+          avatar_url?: string | null;
+          bio?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          current_streak?: number;
+          last_active_week?: string | null;
+          xp?: number;
+        };
         Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          current_streak?: number
-          display_name?: string | null
-          id?: string
-          last_active_week?: string | null
-          updated_at?: string
-          xp?: number
-        }
-        Relationships: []
+          id?: string;
+          display_name?: string | null;
+          full_name?: string | null;
+          date_of_birth?: string | null;
+          gender?: string | null;
+          ethnicity?: string | null;
+          wears_correction?: string | null;
+          correction_type?: string | null;
+          last_eye_exam?: string | null;
+          screen_time_hours?: string | null;
+          outdoor_time_hours?: string | null;
+          sleep_quality?: string | null;
+          symptoms?: string[] | null;
+          eye_conditions?: string[] | null;
+          family_history?: string[] | null;
+          eye_surgeries?: string | null;
+          uses_eye_medication?: boolean | null;
+          medication_details?: string | null;
+          setup_completed?: boolean | null;
+          tos_accepted?: boolean | null;
+          privacy_accepted?: boolean | null;
+          avatar_url?: string | null;
+          bio?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          current_streak?: number;
+          last_active_week?: string | null;
+          xp?: number;
+        };
+        Relationships: [];
       }
       reports: {
         Row: {

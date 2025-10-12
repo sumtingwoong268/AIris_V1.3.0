@@ -179,22 +179,28 @@ export default function Reports() {
       const testLabels: Record<string, string> = {
         ishihara: "Ishihara Color Test",
         acuity: "Visual Acuity Test",
+        visual_acuity: "Visual Acuity Test",
         amsler: "Amsler Grid Test",
         reading_stress: "Reading Stress Test",
       };
 
+      // To avoid duplicate rows for visual acuity, track which label keys have been shown
+      const shownLabels = new Set<string>();
       Object.entries(testLabels).forEach(([key, label]) => {
-        const result = latestByType[key];
+        if (shownLabels.has(label)) return;
+        // Prefer 'visual_acuity' if present, else 'acuity'
+        let result = latestByType[key];
+        if (label === "Visual Acuity Test") {
+          result = latestByType["visual_acuity"] || latestByType["acuity"];
+        }
         const scoreText = result ? `${result.score || 0}%` : "Not taken";
         const dateText = result ? new Date(result.created_at).toLocaleDateString() : "";
-        
         page.drawText(`${label}:`, {
           x: 60,
           y: yPosition,
           size: 12,
           font,
         });
-        
         page.drawText(scoreText, {
           x: 250,
           y: yPosition,
@@ -202,7 +208,6 @@ export default function Reports() {
           font: result ? font : undefined,
           color: result ? (result.score >= 80 ? rgb(0, 0.6, 0) : result.score >= 60 ? rgb(0.8, 0.6, 0) : rgb(0.8, 0, 0)) : rgb(0.6, 0.6, 0.6),
         });
-        
         if (dateText) {
           page.drawText(dateText, {
             x: 350,
@@ -212,8 +217,8 @@ export default function Reports() {
             color: rgb(0.5, 0.5, 0.5),
           });
         }
-        
         yPosition -= 18;
+        shownLabels.add(label);
       });
       yPosition -= 30;
 

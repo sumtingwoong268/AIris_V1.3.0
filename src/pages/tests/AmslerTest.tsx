@@ -19,17 +19,19 @@ export default function AmslerTest() {
   const [eye, setEye] = useState<"left" | "right" | null>(null);
   const [leftClicks, setLeftClicks] = useState<{ x: number; y: number }[]>([]);
   const [rightClicks, setRightClicks] = useState<{ x: number; y: number }[]>([]);
+  const [completed, setCompleted] = useState(false);
 
   const handleStart = () => {
     setStarted(true);
     setEye("left");
+    setCompleted(false);
   };
 
   const handleGridClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (completed) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-
     if (eye === "left") {
       setLeftClicks([...leftClicks, { x, y }]);
     } else if (eye === "right") {
@@ -46,10 +48,12 @@ export default function AmslerTest() {
   };
 
   const completeTest = async () => {
-    if (!user) return;
+    if (!user || completed) return;
+    setCompleted(true);
 
     try {
-      const xpEarned = 20;
+      // XP scaling: base 28 for completion
+      const xpEarned = 28;
 
       await supabase.from("test_results").insert({
         user_id: user.id,

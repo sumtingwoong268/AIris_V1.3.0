@@ -39,6 +39,7 @@ export default function ReadingStressTest() {
   const [trialStartTime, setTrialStartTime] = useState<number | null>(null);
   const [difficulty, setDifficulty] = useState(1);
   const [trialResults, setTrialResults] = useState<TrialResult[]>([]);
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     if (started && !trialStartTime) {
@@ -51,11 +52,11 @@ export default function ReadingStressTest() {
     setCurrentTrial(0);
     setTrialResults([]);
     setTrialStartTime(Date.now());
+    setCompleted(false);
   };
 
   const handleNextTrial = () => {
-    if (!trialStartTime) return;
-
+    if (!trialStartTime || completed) return;
     const duration = Math.floor((Date.now() - trialStartTime) / 1000);
     const newResult: TrialResult = {
       fontSize: FONT_SIZES[currentTrial],
@@ -63,10 +64,8 @@ export default function ReadingStressTest() {
       difficulty,
       text: READING_TEXTS[currentTrial],
     };
-
     const newResults = [...trialResults, newResult];
     setTrialResults(newResults);
-
     if (currentTrial < FONT_SIZES.length - 1) {
       setCurrentTrial(currentTrial + 1);
       setDifficulty(1);
@@ -77,7 +76,8 @@ export default function ReadingStressTest() {
   };
 
   const completeTest = async (results: TrialResult[]) => {
-    if (!user) return;
+    if (!user || completed) return;
+    setCompleted(true);
 
     try {
       // Calculate readability threshold (smallest comfortable font)
@@ -92,16 +92,21 @@ export default function ReadingStressTest() {
       // Calculate score based on comfort level
       const score = Math.round(Math.max(0, 100 - (avgDifficulty - 1) * 12.5));
       
-      // XP based on completion and performance
-      const xpEarned = Math.round(15 * (score / 100));
+      // XP scaling: base 18, up to 28 for perfect score
+      const xpEarned = Math.round(18 + (score / 100) * 10);
 
       await supabase.from("test_results").insert({
         user_id: user.id,
         test_type: "reading_stress",
         score,
         xp_earned: xpEarned,
-        details: { 
-          trials: results,
+        details: {
+          trials: results.map(r => ({
+            fontSize: r.fontSize,
+            duration: r.duration,
+            difficulty: r.difficulty,
+            text: r.text
+          })),
           readabilityThreshold,
           avgDifficulty: Number(avgDifficulty.toFixed(2)),
           totalTrials: results.length,
