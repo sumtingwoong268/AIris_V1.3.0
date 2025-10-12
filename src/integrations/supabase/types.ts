@@ -91,36 +91,63 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accepted_privacy_at: string | null
+          accepted_terms_at: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
           current_streak: number
+          date_of_birth: string | null
           display_name: string | null
+          first_name: string | null
+          gender: string | null
           id: string
           last_active_week: string | null
+          last_name: string | null
+          location: string | null
+          onboarding_completed_at: string | null
           updated_at: string
+          username: string | null
           xp: number
         }
         Insert: {
+          accepted_privacy_at?: string | null
+          accepted_terms_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           current_streak?: number
+          date_of_birth?: string | null
           display_name?: string | null
+          first_name?: string | null
+          gender?: string | null
           id: string
           last_active_week?: string | null
+          last_name?: string | null
+          location?: string | null
+          onboarding_completed_at?: string | null
           updated_at?: string
+          username?: string | null
           xp?: number
         }
         Update: {
+          accepted_privacy_at?: string | null
+          accepted_terms_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           current_streak?: number
+          date_of_birth?: string | null
           display_name?: string | null
+          first_name?: string | null
+          gender?: string | null
           id?: string
           last_active_week?: string | null
+          last_name?: string | null
+          location?: string | null
+          onboarding_completed_at?: string | null
           updated_at?: string
+          username?: string | null
           xp?: number
         }
         Relationships: []
