@@ -91,6 +91,12 @@ export function useThemePreference(userId?: string | null) {
   }, [userId]);
 
   const updateTheme = async (nextTheme: ThemePreference) => {
+    if (nextTheme === theme) {
+      return;
+    }
+
+    const previousTheme = theme;
+
     setTheme(nextTheme);
     setError(null);
 
@@ -111,6 +117,7 @@ export function useThemePreference(userId?: string | null) {
       );
 
     if (error) {
+      setTheme(previousTheme);
       setError(error.message);
       throw error;
     }
