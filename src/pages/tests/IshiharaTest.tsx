@@ -45,6 +45,7 @@ export default function IshiharaTest() {
   const [manifest, setManifest] = useState<ManifestData | null>(null);
   const [userInput, setUserInput] = useState("");
   const [imageError, setImageError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetch("/ishihara_manifest_38.json")
@@ -65,7 +66,19 @@ export default function IshiharaTest() {
   }, [currentPlateIndex, testPlates]);
 
   const normalizeAnswer = (answer: string): string => {
-    return answer.toLowerCase().trim().replace(/[^\w\s-]/g, '');
+    // Convert to lowercase and trim
+    let normalized = answer.toLowerCase().trim();
+    
+    // Handle common variations of "nothing"
+    const nothingVariations = ['nothing', 'none', 'no', 'n/a', 'na', 'blank', 'empty', '0'];
+    if (nothingVariations.includes(normalized)) {
+      normalized = 'nothing';
+    }
+    
+    // Remove punctuation and extra spaces
+    normalized = normalized.replace(/[^\w\s-]/g, '').replace(/\s+/g, ' ');
+    
+    return normalized;
   };
 
   const handleStart = () => {
@@ -156,7 +169,7 @@ export default function IshiharaTest() {
         }
       }
 
-      const xpEarned = Math.round(30 * (score / 100));
+      const xpEarned = Math.round(50 * (score / 100)); // Scaled up from 30
 
       await supabase.from("test_results").insert({
         user_id: user.id,
@@ -212,6 +225,8 @@ export default function IshiharaTest() {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
