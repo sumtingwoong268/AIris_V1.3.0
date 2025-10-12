@@ -43,6 +43,16 @@ export default function Profile() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (themeError) {
+      toast({
+        title: "Unable to update theme",
+        description: themeError,
+        variant: "destructive",
+      });
+    }
+  }, [themeError, toast]);
+
   const handleSave = async () => {
     if (!user) return;
     setLoading(true);
