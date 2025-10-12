@@ -195,48 +195,11 @@ function generateFallbackReport(
   testResults: Record<string, TestResult>
 ): AIReportData {
   // Fallback report when AI is unavailable
-  const scores = Object.values(testResults).map(r => r.score || 0);
-  const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length || 0;
-  
-  let urgencyLevel: 'low' | 'moderate' | 'high' = 'low';
-  if (avgScore < 60) urgencyLevel = 'high';
-  else if (avgScore < 80) urgencyLevel = 'moderate';
-
   return {
-    analysis: `Based on your comprehensive vision screening results (average score: ${avgScore.toFixed(1)}%), your eye health shows ${
-      avgScore >= 85 ? 'excellent' : avgScore >= 70 ? 'good' : 'concerning'
-    } performance across multiple metrics. You've maintained a ${profile.current_streak}-week testing streak, demonstrating strong commitment to monitoring your vision health.`,
-    
-    recommendations: [
-      avgScore >= 85 
-        ? "Continue your excellent eye health maintenance routine with regular screenings."
-        : avgScore >= 70
-        ? "Consider scheduling a comprehensive eye examination with an optometrist."
-        : "We recommend seeking professional evaluation soon to address potential vision concerns.",
-      "Practice the 20-20-20 rule: every 20 minutes, look at something 20 feet away for 20 seconds.",
-      "Ensure adequate lighting for reading and screen work (500-1000 lux recommended).",
-      "Maintain a balanced diet rich in eye-healthy nutrients.",
-      "Get 7-8 hours of quality sleep to allow eyes to rest and repair.",
-    ],
-    
-    exercises: [
-      "Palming: Cup hands over closed eyes for 30 seconds, 3 times daily.",
-      "Focus Shifts: Hold finger at arm's length, focus on it, then on distant object. Repeat 10 times.",
-      "Figure-8 Tracing: Imagine a large figure-8, trace it with eyes only. 2 minutes, twice daily.",
-      "Blink Training: Consciously blink every 3-4 seconds during screen time to prevent dry eyes.",
-      "Eye Rolling: Slowly roll eyes in complete circles, 5 times clockwise, 5 times counterclockwise.",
-      "Near-Far Focus: Hold object 6 inches from nose, focus for 5 seconds, then switch to distant object for 5 seconds. Repeat 10 times.",
-    ],
-    
-    nutrition: [
-      "Vitamin A: Critical for night vision and retinal health - Found in: carrots, sweet potatoes, spinach, liver",
-      "Lutein & Zeaxanthin: Protect against macular degeneration - Found in: kale, spinach, eggs, corn, orange peppers",
-      "Omega-3 Fatty Acids: Reduce inflammation and dry eye - Found in: salmon, sardines, flaxseed, walnuts, chia seeds",
-      "Zinc: Supports vitamin A absorption - Found in: oysters, beef, pumpkin seeds, chickpeas, cashews",
-      "Vitamin C: Powerful antioxidant - Found in: citrus fruits, bell peppers, strawberries, broccoli, tomatoes",
-      "Vitamin E: Protects eye cells - Found in: almonds, sunflower seeds, avocados, spinach, olive oil",
-    ],
-    
-    urgencyLevel
+    analysis: "AI report generation is currently unavailable. Please try again later for a personalized, in-depth analysis and recommendations.",
+    recommendations: [],
+    exercises: [],
+    nutrition: [],
+    urgencyLevel: 'moderate'
   };
 }
