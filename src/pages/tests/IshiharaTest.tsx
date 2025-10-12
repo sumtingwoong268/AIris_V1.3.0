@@ -65,7 +65,19 @@ export default function IshiharaTest() {
   }, [currentPlateIndex, testPlates]);
 
   const normalizeAnswer = (answer: string): string => {
-    return answer.toLowerCase().trim().replace(/[^\w\s-]/g, '');
+    // Convert to lowercase and trim
+    let normalized = answer.toLowerCase().trim();
+    
+    // Handle common variations of "nothing"
+    const nothingVariations = ['nothing', 'none', 'no', 'n/a', 'na', 'blank', 'empty', '0'];
+    if (nothingVariations.includes(normalized)) {
+      normalized = 'nothing';
+    }
+    
+    // Remove punctuation and extra spaces
+    normalized = normalized.replace(/[^\w\s-]/g, '').replace(/\s+/g, ' ');
+    
+    return normalized;
   };
 
   const handleStart = () => {
