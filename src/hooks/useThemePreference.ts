@@ -21,7 +21,7 @@ export const applyTheme = (theme: ThemePreference) => {
   }
 };
 
-const resolveInitialTheme = (): ThemePreference => {
+export const resolveInitialTheme = (): ThemePreference => {
   if (typeof window === "undefined") {
     return "light";
   }
