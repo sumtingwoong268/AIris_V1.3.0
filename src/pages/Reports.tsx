@@ -16,7 +16,7 @@ function OpenAIReportHTML({ html }: { html: string }) {
   if (!html) return null;
   return (
     <div
-      className="prose max-w-none border rounded-lg bg-white/90 shadow-lg p-6 my-8"
+      className="prose max-w-none my-8 rounded-3xl border border-white/60 bg-white/80 p-6 shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/70"
       style={{ overflowX: "auto" }}
       dangerouslySetInnerHTML={{ __html: html }}
     />
@@ -45,6 +45,10 @@ export default function Reports() {
   const { toast } = useToast();
   const [reports, setReports] = useState<any[]>([]);
   const [generating, setGenerating] = useState(false);
+  const latestReport = reports[0];
+  const lastGeneratedAt = latestReport?.created_at
+    ? new Date(latestReport.created_at).toLocaleString()
+    : null;
 
   useEffect(() => {
     if (user) void fetchReports();
@@ -299,13 +303,13 @@ saveAs(blob, fileName);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary-lighter/10 to-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto flex items-center gap-3 px-4 py-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/dashboard")}>
+          <div className="flex cursor-pointer items-center gap-3" onClick={() => navigate("/dashboard")}>
             <img src={logo} alt="AIris" className="h-10" />
             <div className="flex flex-col">
               <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
@@ -317,54 +321,77 @@ saveAs(blob, fileName);
         </div>
       </header>
 
-      <main className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Your Reports</h1>
-            <p className="mt-2 text-muted-foreground">View and download your vision screening reports</p>
-          </div>
-          <Button onClick={generatePDF} disabled={generating}>
-            <Plus className="mr-2 h-4 w-4" />
-            {generating ? "Generating..." : "Generate New Report"}
-          </Button>
-        </div>
+      <main className="container mx-auto max-w-6xl space-y-10 px-4 py-10">
+        <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
+          <span className="pointer-events-none absolute -left-12 top-1/3 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
+          <span className="pointer-events-none absolute -right-10 bottom-0 h-40 w-40 rounded-full bg-sky-400/30 blur-3xl" />
+          <CardContent className="relative z-10 flex flex-col gap-6 p-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-3">
+              <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Vision reports</p>
+              <h1 className="text-4xl font-bold">Download and share your personalized AIris assessments</h1>
+              <p className="max-w-2xl text-sm text-white/80">
+                Each report condenses your latest test data into an optometrist-friendly summary. Keep them handy for
+                checkups or track your progress over time.
+              </p>
+            </div>
+            <div className="flex w-full flex-col items-start gap-3 rounded-2xl bg-white/15 p-5 shadow-lg backdrop-blur lg:max-w-sm">
+              <p className="text-xs uppercase tracking-wide text-white/70">Last generated</p>
+              <p className="text-lg font-semibold">{lastGeneratedAt ?? "No reports yet"}</p>
+              <Button
+                className="w-full bg-white/20 text-white hover:bg-white/30"
+                onClick={generatePDF}
+                disabled={generating}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {generating ? "Generating..." : "Generate New Report"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Preview latest AI HTML report if present */}
-        {reports.length > 0 && reports[0]?.analysis && String(reports[0].analysis).startsWith("<") && (
-          <>
-            <h2 className="text-2xl font-semibold mb-2 mt-8">Latest AIris Report Preview</h2>
-            <OpenAIReportHTML html={String(reports[0].analysis)} />
-          </>
+        {reports.length > 0 && latestReport?.analysis && String(latestReport.analysis).startsWith("<") && (
+          <section className="space-y-4">
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Latest AIris report preview</h2>
+            <OpenAIReportHTML html={String(latestReport.analysis)} />
+          </section>
         )}
 
         {reports.length === 0 ? (
-          <Card className="shadow-card">
+          <Card>
             <CardContent className="py-16 text-center">
               <FileText className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-              <h3 className="mb-2 text-xl font-semibold">No Reports Yet</h3>
-              <p className="text-muted-foreground mb-4">Generate your first comprehensive vision health report</p>
-              <Button onClick={generatePDF} disabled={generating}>
+              <h3 className="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-50">No reports yet</h3>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Generate your first comprehensive vision health report to unlock tailored recommendations.
+              </p>
+              <Button
+                className="bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
+                onClick={generatePDF}
+                disabled={generating}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 {generating ? "Generating..." : "Generate Report"}
               </Button>
-              <p className="mt-6 text-sm text-muted-foreground">Or complete tests first to get personalized insights</p>
+              <p className="mt-6 text-sm text-muted-foreground">
+                Or complete tests first to get additional insights before generating.
+              </p>
               <Button variant="outline" className="mt-2" onClick={() => navigate("/dashboard")}>
                 Start a Test
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <section className="space-y-4">
             {reports.map((report) => (
-              <Card key={report.id} className="shadow-card transition-all hover:shadow-elevated">
+              <Card key={report.id} className="transition-transform hover:-translate-y-0.5 hover:shadow-2xl">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <CardTitle className="flex items-center gap-2">
+                      <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-50">
                         <FileText className="h-5 w-5 text-primary" />
                         {report.title}
                       </CardTitle>
-                      <CardDescription className="mt-2">{report.summary}</CardDescription>
+                      <CardDescription className="mt-2 text-sm leading-relaxed">{report.summary}</CardDescription>
                     </div>
                     <Button size="sm" variant="outline" onClick={generatePDF} disabled={generating}>
                       <Download className="mr-2 h-4 w-4" />
@@ -379,7 +406,7 @@ saveAs(blob, fileName);
                 </CardContent>
               </Card>
             ))}
-          </div>
+          </section>
         )}
       </main>
     </div>

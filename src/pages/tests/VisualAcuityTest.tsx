@@ -84,8 +84,8 @@ export default function VisualAcuityTest() {
   const iconSize = Math.max(32, 128 - level * 12);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary-lighter/10 to-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto flex items-center gap-3 px-4 py-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-5 w-5" />
@@ -94,94 +94,112 @@ export default function VisualAcuityTest() {
         </div>
       </header>
 
-      <main className="container mx-auto max-w-2xl px-4 py-8">
-        {!started ? (
-          <Card className="shadow-elevated">
-            <CardContent className="space-y-6 p-8 text-center">
-              <h1 className="text-3xl font-bold">Visual Acuity Test</h1>
-              <p className="text-muted-foreground">
-                This test measures your visual sharpness. You'll see arrows pointing in different
-                directions that get progressively smaller.
+      <main className="container mx-auto max-w-3xl space-y-8 px-4 py-10">
+        <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
+          <span className="pointer-events-none absolute -left-12 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-white/25 blur-3xl" />
+          <span className="pointer-events-none absolute -right-10 bottom-0 h-36 w-36 rounded-full bg-sky-400/30 blur-3xl" />
+          <CardContent className="relative z-10 space-y-6 p-8">
+            <div className="space-y-3">
+              <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Visual acuity</p>
+              <h1 className="text-3xl font-semibold">Measure how sharply you can recognize directional cues</h1>
+              <p className="text-sm text-white/80">
+                Work through eight stages of gradually shrinking arrows. Stay focused to maximize your score and earn up
+                to 25 XP.
               </p>
-              <div className="space-y-2 text-left">
-                <p className="font-semibold">Instructions:</p>
-                <ul className="list-disc space-y-1 pl-6 text-sm text-muted-foreground">
-                  <li>Identify which direction the arrow is pointing</li>
-                  <li>The arrows will get smaller as you progress</li>
-                  <li>Complete 8 levels to earn up to 25 XP</li>
+            </div>
+            <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
+              <p className="text-xs uppercase tracking-wide text-white/70">Your current XP</p>
+              <div className="mt-3">
+                <XPBar xp={xp} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {!started ? (
+          <Card>
+            <CardContent className="space-y-6 p-8 text-center">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Before you begin</h2>
+              <p className="text-sm text-muted-foreground">
+                Make sure your screen brightness is comfortable and you’re seated about arm’s length from the display.
+              </p>
+              <div className="space-y-2 rounded-2xl border border-white/60 bg-white/70 p-6 text-left text-sm text-muted-foreground shadow-sm dark:border-white/10 dark:bg-slate-900/60">
+                <p className="font-semibold text-slate-900 dark:text-slate-100">Instructions</p>
+                <ul className="list-disc space-y-1 pl-6">
+                  <li>Identify which direction the arrow is pointing.</li>
+                  <li>Arrows shrink at each level to challenge your acuity.</li>
+                  <li>Complete all 8 rounds to earn the full XP reward.</li>
                 </ul>
               </div>
-              <Button size="lg" onClick={handleStart} className="w-full">
+              <Button
+                size="lg"
+                onClick={handleStart}
+                className="w-full bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
+              >
                 Start Test
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="p-4">
-                <XPBar xp={xp} />
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-elevated">
-              <CardContent className="space-y-8 p-8">
-                <div className="text-center">
-                  <p className="mb-4 text-sm text-muted-foreground">
-                    Level {level} of 8
-                  </p>
-                  <div className="flex items-center justify-center py-12">
-                    {direction === "up" && <ArrowUp size={iconSize} className="text-primary" />}
-                    {direction === "down" && <ArrowDown size={iconSize} className="text-primary" />}
-                    {direction === "left" && <ArrowLeft size={iconSize} className="text-primary" />}
-                    {direction === "right" && <ArrowRight size={iconSize} className="text-primary" />}
-                  </div>
+          <Card>
+            <CardContent className="space-y-8 p-8">
+              <div className="text-center">
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Level {level} of 8 • Correct answers {correct} / 8
+                </p>
+                <div className="flex items-center justify-center py-12">
+                  {direction === "up" && <ArrowUp size={iconSize} className="text-primary" />}
+                  {direction === "down" && <ArrowDown size={iconSize} className="text-primary" />}
+                  {direction === "left" && <ArrowLeft size={iconSize} className="text-primary" />}
+                  {direction === "right" && <ArrowRight size={iconSize} className="text-primary" />}
                 </div>
+              </div>
 
-                <div className="space-y-3">
-                  <p className="text-center font-medium">Which direction is the arrow pointing?</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => handleAnswer("up")}
-                      className="h-20"
-                      disabled={completed}
-                    >
-                      <ArrowUp className="h-6 w-6" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => handleAnswer("down")}
-                      className="h-20"
-                      disabled={completed}
-                    >
-                      <ArrowDown className="h-6 w-6" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => handleAnswer("left")}
-                      className="h-20"
-                      disabled={completed}
-                    >
-                      <ArrowLeft className="h-6 w-6" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => handleAnswer("right")}
-                      className="h-20"
-                      disabled={completed}
-                    >
-                      <ArrowRight className="h-6 w-6" />
-                    </Button>
-                  </div>
+              <div className="space-y-3">
+                <p className="text-center font-medium text-slate-900 dark:text-slate-100">
+                  Which direction is the arrow pointing?
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => handleAnswer("up")}
+                    className="h-20 rounded-2xl border border-primary/20 bg-white/70 text-slate-900 hover:border-primary hover:bg-primary/10 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-100"
+                    disabled={completed}
+                  >
+                    <ArrowUp className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => handleAnswer("down")}
+                    className="h-20 rounded-2xl border border-primary/20 bg-white/70 text-slate-900 hover:border-primary hover:bg-primary/10 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-100"
+                    disabled={completed}
+                  >
+                    <ArrowDown className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => handleAnswer("left")}
+                    className="h-20 rounded-2xl border border-primary/20 bg-white/70 text-slate-900 hover:border-primary hover:bg-primary/10 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-100"
+                    disabled={completed}
+                  >
+                    <ArrowLeft className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => handleAnswer("right")}
+                    className="h-20 rounded-2xl border border-primary/20 bg-white/70 text-slate-900 hover:border-primary hover:bg-primary/10 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-100"
+                    disabled={completed}
+                  >
+                    <ArrowRight className="h-6 w-6" />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </main>
     </div>

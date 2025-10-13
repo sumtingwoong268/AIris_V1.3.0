@@ -17,6 +17,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { xp } = useXP(user?.id);
+  const level = Math.floor(xp / 100) + 1;
   const { toast } = useToast();
 
   // Profile fields
@@ -198,18 +199,16 @@ export default function Profile() {
     navigate("/auth");
   };
 
-  const level = Math.floor(xp / 100) + 1;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary-lighter/10 to-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div 
-              className="flex items-center gap-3 cursor-pointer"
+            <div
+              className="flex cursor-pointer items-center gap-3"
               onClick={() => navigate("/dashboard")}
             >
               <img src={logo} alt="AIris" className="h-10" />
@@ -217,32 +216,56 @@ export default function Profile() {
                 <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
                   AIris
                 </span>
-                <span className="text-[10px] text-muted-foreground -mt-1">
-                  the future of eyecare
-                </span>
+                <span className="text-[10px] text-muted-foreground -mt-1">the future of eyecare</span>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto max-w-2xl px-4 py-8">
-        <Card className="shadow-elevated">
-          <CardHeader>
-            <CardTitle className="text-2xl">Profile Settings</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 rounded-lg bg-gradient-primary p-6 text-white">
-              <div>
-                <p className="text-sm opacity-90">Total XP</p>
-                <p className="text-3xl font-bold">{xp}</p>
+      <main className="container mx-auto max-w-5xl space-y-10 px-4 py-10">
+        <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
+          <span className="pointer-events-none absolute -left-16 top-1/4 h-56 w-56 rounded-full bg-white/25 blur-3xl" />
+          <span className="pointer-events-none absolute -right-12 bottom-0 h-48 w-48 rounded-full bg-sky-400/30 blur-3xl" />
+          <CardContent className="relative z-10 flex flex-col gap-6 p-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-3">
+              <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Personal profile</p>
+              <h1 className="text-4xl font-bold">
+                {displayName ? `Hey ${displayName},` : "Complete your profile,"} keep your details current
+              </h1>
+              <p className="max-w-xl text-sm text-white/80">
+                Review your vision history, update lifestyle habits, and manage preferences so AIris can tailor insights
+                for you.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
+                <p className="text-xs uppercase tracking-wide text-white/70">Total XP</p>
+                <p className="mt-2 text-3xl font-semibold">{xp}</p>
               </div>
-              <div>
-                <p className="text-sm opacity-90">Level</p>
-                <p className="text-3xl font-bold">{level}</p>
+              <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
+                <p className="text-xs uppercase tracking-wide text-white/70">Level</p>
+                <p className="mt-2 text-3xl font-semibold">{level}</p>
+              </div>
+              <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
+                <p className="text-xs uppercase tracking-wide text-white/70">Dark Mode</p>
+                <p className="mt-2 text-lg font-semibold">{darkMode ? "Enabled" : "Disabled"}</p>
+              </div>
+              <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
+                <p className="text-xs uppercase tracking-wide text-white/70">Last Sync</p>
+                <p className="mt-2 text-lg font-semibold">
+                  {lastEyeExam ? lastEyeExam.replace(/_/g, " ") : "Update your exam date"}
+                </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl text-slate-900 dark:text-slate-50">Profile Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
 
             {/* Profile Info - Expanded */}
             <div className="space-y-4">
@@ -257,7 +280,7 @@ export default function Profile() {
                       className="h-20 w-20 rounded-full object-cover border-2 border-primary"
                     />
                   ) : (
-                    <div className="h-20 w-20 rounded-full bg-gradient-primary flex items-center justify-center text-white text-2xl font-bold">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-blue-500 text-2xl font-bold text-white">
                       {displayName ? displayName[0].toUpperCase() : "?"}
                     </div>
                   )}
@@ -291,106 +314,108 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name</Label>
-                <Input
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Enter your name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Enter your full name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                <Input
-                  id="dateOfBirth"
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gender">Gender</Label>
-                <Input
-                  id="gender"
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
-                  placeholder="Enter your gender"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ethnicity">Ethnicity</Label>
-                <Input
-                  id="ethnicity"
-                  value={ethnicity}
-                  onChange={(e) => setEthnicity(e.target.value)}
-                  placeholder="Enter your ethnicity"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="wearsCorrection">Do you wear glasses/contacts?</Label>
-                <Input
-                  id="wearsCorrection"
-                  value={wearsCorrection}
-                  onChange={(e) => setWearsCorrection(e.target.value)}
-                  placeholder="e.g. glasses, contacts, none"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="correctionType">Correction Type</Label>
-                <Input
-                  id="correctionType"
-                  value={correctionType}
-                  onChange={(e) => setCorrectionType(e.target.value)}
-                  placeholder="e.g. distance, reading, bifocal"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastEyeExam">Last Eye Exam</Label>
-                <Input
-                  id="lastEyeExam"
-                  value={lastEyeExam}
-                  onChange={(e) => setLastEyeExam(e.target.value)}
-                  placeholder="e.g. never, less_1_year, 1_2_years, more_2_years"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="screenTimeHours">Screen Time (hours/day)</Label>
-                <Input
-                  id="screenTimeHours"
-                  type="number"
-                  value={screenTimeHours}
-                  onChange={(e) => setScreenTimeHours(e.target.value)}
-                  placeholder="e.g. 4"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="outdoorTimeHours">Outdoor Time (hours/day)</Label>
-                <Input
-                  id="outdoorTimeHours"
-                  type="number"
-                  value={outdoorTimeHours}
-                  onChange={(e) => setOutdoorTimeHours(e.target.value)}
-                  placeholder="e.g. 2"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sleepQuality">Sleep Quality</Label>
-                <Input
-                  id="sleepQuality"
-                  value={sleepQuality}
-                  onChange={(e) => setSleepQuality(e.target.value)}
-                  placeholder="e.g. good, average, poor"
-                />
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Display Name</Label>
+                  <Input
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Enter your name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Gender</Label>
+                  <Input
+                    id="gender"
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    placeholder="Enter your gender"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ethnicity">Ethnicity</Label>
+                  <Input
+                    id="ethnicity"
+                    value={ethnicity}
+                    onChange={(e) => setEthnicity(e.target.value)}
+                    placeholder="Enter your ethnicity"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wearsCorrection">Do you wear glasses/contacts?</Label>
+                  <Input
+                    id="wearsCorrection"
+                    value={wearsCorrection}
+                    onChange={(e) => setWearsCorrection(e.target.value)}
+                    placeholder="e.g. glasses, contacts, none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="correctionType">Correction Type</Label>
+                  <Input
+                    id="correctionType"
+                    value={correctionType}
+                    onChange={(e) => setCorrectionType(e.target.value)}
+                    placeholder="e.g. distance, reading, bifocal"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastEyeExam">Last Eye Exam</Label>
+                  <Input
+                    id="lastEyeExam"
+                    value={lastEyeExam}
+                    onChange={(e) => setLastEyeExam(e.target.value)}
+                    placeholder="e.g. within 1 year"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="screenTimeHours">Screen Time (hours/day)</Label>
+                  <Input
+                    id="screenTimeHours"
+                    type="number"
+                    value={screenTimeHours}
+                    onChange={(e) => setScreenTimeHours(e.target.value)}
+                    placeholder="e.g. 4"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="outdoorTimeHours">Outdoor Time (hours/day)</Label>
+                  <Input
+                    id="outdoorTimeHours"
+                    type="number"
+                    value={outdoorTimeHours}
+                    onChange={(e) => setOutdoorTimeHours(e.target.value)}
+                    placeholder="e.g. 2"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sleepQuality">Sleep Quality</Label>
+                  <Input
+                    id="sleepQuality"
+                    value={sleepQuality}
+                    onChange={(e) => setSleepQuality(e.target.value)}
+                    placeholder="e.g. good, average, poor"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Common Symptoms (comma separated)</Label>
@@ -431,6 +456,7 @@ export default function Profile() {
                   checked={usesEyeMedication}
                   onChange={e => setUsesEyeMedication(e.target.checked)}
                   id="usesEyeMedication"
+                  className="h-4 w-4 rounded border-primary accent-primary"
                 />
                 <Label htmlFor="usesEyeMedication">I use eye drops or vision medication</Label>
               </div>
@@ -458,8 +484,8 @@ export default function Profile() {
             </div>
 
             {/* Dark Mode Toggle */}
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
+              <div className="flex items-center gap-3 text-slate-900 dark:text-slate-100">
                 {darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                 <span className="font-medium">Dark Mode</span>
               </div>
@@ -469,8 +495,8 @@ export default function Profile() {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3">
-              <Button onClick={handleSave} disabled={loading} className="flex-1">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button onClick={handleSave} disabled={loading} className="flex-1 bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary">
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
               <Button variant="destructive" onClick={handleSignOut}>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { XPBar } from "@/components/XPBar";
@@ -20,7 +20,7 @@ const READING_TEXTS = [
   `Font size and spacing play crucial roles in reading comfort. What feels comfortable varies from person to person.`,
 ];
 
-const FONT_SIZES = [18, 16, 14, 12, 10, 9, 8]; // px
+const FONT_SIZES = [18, 16, 14, 12, 10, 9, 8] as const;
 
 interface TrialResult {
   fontSize: number;
@@ -34,6 +34,7 @@ export default function ReadingStressTest() {
   const { user } = useAuth();
   const { xp, refetch: refetchXP } = useXP(user?.id);
   const { toast } = useToast();
+
   const [started, setStarted] = useState(false);
   const [currentTrial, setCurrentTrial] = useState(0);
   const [trialStartTime, setTrialStartTime] = useState<number | null>(null);
@@ -42,57 +43,63 @@ export default function ReadingStressTest() {
   const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
-    if (started && !trialStartTime) {
+    if (started && trialStartTime === null) {
       setTrialStartTime(Date.now());
     }
-  }, [started, currentTrial]);
+  }, [started, currentTrial, trialStartTime]);
 
   const handleStart = () => {
     setStarted(true);
     setCurrentTrial(0);
     setTrialResults([]);
     setTrialStartTime(Date.now());
+    setDifficulty(1);
     setCompleted(false);
   };
 
   const handleNextTrial = () => {
-    if (!trialStartTime || completed) return;
+    if (!trialStartTime || completed) {
+      return;
+    }
+
     const duration = Math.floor((Date.now() - trialStartTime) / 1000);
-    const newResult: TrialResult = {
+    const result: TrialResult = {
       fontSize: FONT_SIZES[currentTrial],
       duration,
       difficulty,
       text: READING_TEXTS[currentTrial],
     };
-    const newResults = [...trialResults, newResult];
-    setTrialResults(newResults);
+
+    const updatedResults = [...trialResults, result];
+    setTrialResults(updatedResults);
+
     if (currentTrial < FONT_SIZES.length - 1) {
       setCurrentTrial(currentTrial + 1);
       setDifficulty(1);
       setTrialStartTime(Date.now());
     } else {
-      completeTest(newResults);
+      completeTest(updatedResults);
     }
   };
 
   const completeTest = async (results: TrialResult[]) => {
-    if (!user || completed) return;
+    if (!user || completed) {
+      return;
+    }
+
     setCompleted(true);
 
     try {
-      // Calculate readability threshold (smallest comfortable font)
       const comfortableTrials = results.filter((r) => r.difficulty <= 3);
-      const readabilityThreshold = comfortableTrials.length > 0 
-        ? Math.min(...comfortableTrials.map((r) => r.fontSize))
-        : FONT_SIZES[0];
+      const readabilityThreshold =
+        comfortableTrials.length > 0
+          ? Math.min(...comfortableTrials.map((r) => r.fontSize))
+          : FONT_SIZES[0];
 
-      // Calculate average difficulty
-      const avgDifficulty = results.reduce((sum, r) => sum + r.difficulty, 0) / results.length;
-      
-      // Calculate score based on comfort level
+      const avgDifficulty =
+        results.reduce((sum, r) => sum + r.difficulty, 0) / results.length;
+
       const score = Math.round(Math.max(0, 100 - (avgDifficulty - 1) * 12.5));
-      
-      // XP scaling: base 18, up to 28 for perfect score
       const xpEarned = Math.round(18 + (score / 100) * 10);
 
       await supabase.from("test_results").insert({
@@ -101,11 +108,11 @@ export default function ReadingStressTest() {
         score,
         xp_earned: xpEarned,
         details: {
-          trials: results.map(r => ({
+          trials: results.map((r) => ({
             fontSize: r.fontSize,
             duration: r.duration,
             difficulty: r.difficulty,
-            text: r.text
+            text: r.text,
           })),
           readabilityThreshold,
           avgDifficulty: Number(avgDifficulty.toFixed(2)),
@@ -118,10 +125,11 @@ export default function ReadingStressTest() {
         p_xp_delta: xpEarned,
       });
 
-      // Update streak
       const now = new Date();
-      const currentWeek = `${now.getFullYear()}-W${String(Math.ceil((now.getDate() + new Date(now.getFullYear(), 0, 1).getDay()) / 7)).padStart(2, '0')}`;
-      
+      const currentWeek = `${now.getFullYear()}-W${String(
+        Math.ceil((now.getDate() + new Date(now.getFullYear(), 0, 1).getDay()) / 7),
+      ).padStart(2, "0")}`;
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("last_active_week, current_streak")
@@ -142,7 +150,7 @@ export default function ReadingStressTest() {
 
       toast({
         title: "Test Complete!",
-        description: `Readability: ${readabilityThreshold}px | +${xpEarned} XP`,
+        description: `Comfortable size ≈ ${readabilityThreshold}px • +${xpEarned} XP`,
         duration: 5000,
       });
 
@@ -158,114 +166,116 @@ export default function ReadingStressTest() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary-lighter/10 to-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto flex items-center gap-3 px-4 py-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div 
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={() => navigate("/dashboard")}
-          >
-            <img src={logo} alt="AIris" className="h-10" />
-            <div className="flex flex-col">
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                AIris
-              </span>
-              <span className="text-[10px] text-muted-foreground -mt-1">
-                the future of eyecare
-              </span>
-            </div>
-          </div>
+          <img src={logo} alt="AIris" className="h-10" />
         </div>
       </header>
 
-      <main className="container mx-auto max-w-2xl px-4 py-8">
-        {!started ? (
-          <Card className="shadow-elevated">
-            <CardContent className="space-y-6 p-8 text-center">
-              <h1 className="text-3xl font-bold">Reading Stress Test</h1>
-              <p className="text-muted-foreground">
-                This test evaluates your reading comfort across different font sizes. 
-                You'll read {FONT_SIZES.length} passages with progressively smaller text.
+      <main className="container mx-auto max-w-4xl space-y-8 px-4 py-10">
+        <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
+          <span className="pointer-events-none absolute -left-12 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-white/25 blur-3xl" />
+          <span className="pointer-events-none absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-sky-400/30 blur-3xl" />
+          <CardContent className="relative z-10 space-y-6 p-8">
+            <div className="space-y-3">
+              <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Reading comfort</p>
+              <h1 className="text-3xl font-semibold">Find the smallest font size that still feels effortless</h1>
+              <p className="text-sm text-white/80">
+                Read short passages that shrink each round and rate how comfortable they feel. AIris uses your feedback
+                to estimate an ideal reading size and measure fatigue.
               </p>
-              <div className="space-y-2 text-left">
-                <p className="font-semibold">Instructions:</p>
-                <ul className="list-disc space-y-1 pl-6 text-sm text-muted-foreground">
-                  <li>Read each passage at your normal pace</li>
-                  <li>Rate difficulty: 1 = easy, 5 = hard/uncomfortable</li>
-                  <li>Font sizes range from 18px down to 8px</li>
-                  <li>Complete all trials to earn up to 15 XP</li>
-                  <li>Determines your optimal reading font size</li>
+            </div>
+            <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
+              <p className="text-xs uppercase tracking-wide text-white/70">Current XP</p>
+              <div className="mt-3">
+                <XPBar xp={xp} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {!started ? (
+          <Card>
+            <CardContent className="space-y-6 p-8 text-center">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Before you begin</h2>
+              <p className="text-sm text-muted-foreground">
+                Sit comfortably with good lighting and hold the screen at your normal reading distance. Wear any
+                corrective lenses you use for daily reading.
+              </p>
+              <div className="space-y-2 rounded-2xl border border-white/60 bg-white/70 p-6 text-left text-sm text-muted-foreground shadow-sm dark:border-white/10 dark:bg-slate-900/60">
+                <p className="font-semibold text-slate-900 dark:text-slate-100">Instructions</p>
+                <ul className="list-disc space-y-1 pl-6">
+                  <li>Read each passage at your regular pace.</li>
+                  <li>Rate difficulty from 1 (easy) to 5 (very hard).</li>
+                  <li>Font sizes shrink from 18px down to 8px.</li>
+                  <li>Complete all trials to earn up to 28 XP.</li>
                 </ul>
               </div>
-              <Button size="lg" onClick={handleStart} className="w-full">
+              <Button
+                size="lg"
+                onClick={handleStart}
+                className="w-full bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
+              >
                 Start Test
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="p-4">
-                <XPBar xp={xp} />
-              </CardContent>
-            </Card>
+          <Card>
+            <CardContent className="space-y-6 p-8">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Trial {currentTrial + 1} of {FONT_SIZES.length}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Font size: {FONT_SIZES[currentTrial]}px</p>
+                </div>
+                <Button variant="outline" onClick={() => navigate("/dashboard")}>
+                  Stop Test
+                </Button>
+              </div>
 
-            <Card className="shadow-elevated">
-              <CardContent className="space-y-6 p-8">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold">
-                      Trial {currentTrial + 1} of {FONT_SIZES.length}
-                    </h2>
-                    <span className="text-sm font-medium text-primary">
-                      Font size: {FONT_SIZES[currentTrial]}px
-                    </span>
-                  </div>
-                  
-                  <div className="rounded-lg bg-muted p-6">
-                    <p 
-                      style={{ fontSize: `${FONT_SIZES[currentTrial]}px` }}
-                      className="leading-relaxed"
+              <div
+                className="rounded-2xl border border-primary/20 bg-white/80 p-6 text-slate-900 shadow-inner dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-100"
+                style={{ fontSize: `${FONT_SIZES[currentTrial]}px`, lineHeight: 1.5 }}
+              >
+                {READING_TEXTS[currentTrial]}
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">How easy was this to read?</p>
+                <div className="grid grid-cols-5 gap-3">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <Button
+                      key={value}
+                      type="button"
+                      variant={difficulty === value ? "default" : "outline"}
+                      className="rounded-2xl"
+                      onClick={() => setDifficulty(value)}
                     >
-                      {READING_TEXTS[currentTrial]}
-                    </p>
-                  </div>
+                      {value}
+                    </Button>
+                  ))}
                 </div>
+                <p className="flex justify-between text-xs text-muted-foreground">
+                  <span>1 = very easy</span>
+                  <span>5 = very difficult</span>
+                </p>
+              </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <p className="mb-3 font-medium text-center">
-                      How difficult was this to read?
-                    </p>
-                    <div className="flex items-center justify-center gap-2">
-                      {[1, 2, 3, 4, 5].map((level) => (
-                        <Button
-                          key={level}
-                          variant={difficulty === level ? "default" : "outline"}
-                          size="lg"
-                          onClick={() => setDifficulty(level)}
-                          className="w-16 h-16 text-lg font-bold"
-                        >
-                          {level}
-                        </Button>
-                      ))}
-                    </div>
-                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground px-2">
-                      <span>Easy</span>
-                      <span>Hard</span>
-                    </div>
-                  </div>
-
-                  <Button onClick={handleNextTrial} className="w-full" size="lg">
-                    {currentTrial < FONT_SIZES.length - 1 ? "Next Trial" : "Complete Test"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              <Button
+                onClick={handleNextTrial}
+                className="w-full rounded-2xl bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
+                disabled={completed}
+              >
+                {currentTrial === FONT_SIZES.length - 1 ? "Complete Test" : "Next Passage"}
+              </Button>
+            </CardContent>
+          </Card>
         )}
       </main>
     </div>

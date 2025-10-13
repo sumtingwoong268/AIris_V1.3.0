@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 export default function Setup() {
   const { user } = useAuth();
@@ -146,12 +147,58 @@ export default function Setup() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
-      <div className="max-w-4xl mx-auto py-8">
-        <Card className="shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+        <div className="container mx-auto flex items-center gap-3 px-4 py-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex cursor-pointer items-center gap-3" onClick={() => navigate("/dashboard")}>
+            <img src={logo} alt="AIris" className="h-10" />
+            <div className="flex flex-col">
+              <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                AIris
+              </span>
+              <span className="text-[10px] text-muted-foreground -mt-1">the future of eyecare</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto max-w-5xl space-y-10 px-4 py-10">
+        <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
+          <span className="pointer-events-none absolute -left-14 top-1/3 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
+          <span className="pointer-events-none absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-sky-400/30 blur-3xl" />
+          <CardContent className="relative z-10 space-y-4 p-8 lg:p-10">
+            <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Quick onboarding</p>
+            <h1 className="text-4xl font-bold">Tell us about your vision habits so we can tailor AIris for you</h1>
+            <p className="max-w-3xl text-sm text-white/80">
+              The more we know about your lifestyle, the better we can personalize reminders, eye health tips, and test
+              insights. You can always fine-tune these settings later inside your profile.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl bg-white/15 p-4 text-sm backdrop-blur">
+                <span className="text-xs uppercase tracking-wide text-white/70">Step</span>
+                <p className="mt-2 text-lg font-semibold">1 of 1 — Profile setup</p>
+              </div>
+              <div className="rounded-2xl bg-white/15 p-4 text-sm backdrop-blur">
+                <span className="text-xs uppercase tracking-wide text-white/70">Estimated time</span>
+                <p className="mt-2 text-lg font-semibold">~3 minutes</p>
+              </div>
+              <div className="rounded-2xl bg-white/15 p-4 text-sm backdrop-blur">
+                <span className="text-xs uppercase tracking-wide text-white/70">Required</span>
+                <p className="mt-2 text-lg font-semibold">Accept policies</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader>
-            <CardTitle className="text-3xl">Complete Your Profile</CardTitle>
-            <CardDescription>Help us personalize your eye care experience</CardDescription>
+            <CardTitle className="text-2xl text-slate-900 dark:text-slate-50">Complete Your Profile</CardTitle>
+            <CardDescription className="text-sm text-slate-600 dark:text-slate-300">
+              Help us personalize your eye care experience with a few quick questions.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-8">
@@ -356,13 +403,24 @@ export default function Setup() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <><Loader2 className="animate-spin mr-2" /> Saving...</> : "Complete Setup"}
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Complete Setup"
+                )}
               </Button>
             </form>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 }

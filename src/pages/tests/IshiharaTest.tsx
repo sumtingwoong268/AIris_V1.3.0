@@ -251,116 +251,122 @@ export default function IshiharaTest() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary-lighter/10 to-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto flex items-center gap-3 px-4 py-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div 
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={() => navigate("/dashboard")}
-          >
-            <img src={logo} alt="AIris" className="h-10" />
-            <div className="flex flex-col">
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                AIris
-              </span>
-              <span className="text-[10px] text-muted-foreground -mt-1">
-                the future of eyecare
-              </span>
-            </div>
-          </div>
+          <img src={logo} alt="AIris" className="h-10" />
         </div>
       </header>
 
-      <main className="container mx-auto max-w-2xl px-4 py-8">
-        {!started ? (
-          <Card className="shadow-elevated">
-            <CardContent className="space-y-6 p-8 text-center">
-              <h1 className="text-3xl font-bold">Ishihara Color Test</h1>
-              <p className="text-muted-foreground">
-                This test checks for color vision deficiencies. You'll be shown a series of colored
-                plates. Enter what you see in each plate.
+      <main className="container mx-auto max-w-4xl space-y-8 px-4 py-10">
+        <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
+          <span className="pointer-events-none absolute -left-12 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-white/25 blur-3xl" />
+          <span className="pointer-events-none absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-sky-400/30 blur-3xl" />
+          <CardContent className="relative z-10 space-y-6 p-8">
+            <div className="space-y-3">
+              <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Ishihara color test</p>
+              <h1 className="text-3xl font-semibold">Gauge red-green perception with adaptive Ishihara plates</h1>
+              <p className="text-sm text-white/80">
+                Enter the numbers you see—or mark “nothing” when no digits are visible. AIris adapts the sequence to
+                explore color differences and refine your results.
               </p>
-              <div className="space-y-2 text-left">
-                <p className="font-semibold">Instructions:</p>
-                <ul className="list-disc space-y-1 pl-6 text-sm text-muted-foreground">
-                  <li>Look at each plate carefully</li>
-                  <li>Enter the number, text, or pattern you see</li>
-                  <li>Type "nothing" if you see no pattern</li>
-                  <li>Complete all plates to earn up to 30 XP</li>
-                  <li>Adaptive test: incorrect answers may trigger follow-up plates</li>
+            </div>
+            <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
+              <p className="text-xs uppercase tracking-wide text-white/70">Current XP</p>
+              <div className="mt-3">
+                <XPBar xp={xp} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {!started ? (
+          <Card>
+            <CardContent className="space-y-6 p-8 text-center">
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Before you begin</h2>
+              <p className="text-sm text-muted-foreground">
+                Make sure your display shows crisp colors with comfortable brightness. If you normally wear glasses or
+                contacts for everyday tasks, keep them on.
+              </p>
+              <div className="space-y-2 rounded-2xl border border-white/60 bg-white/70 p-6 text-left text-sm text-muted-foreground shadow-sm dark:border-white/10 dark:bg-slate-900/60">
+                <p className="font-semibold text-slate-900 dark:text-slate-100">Instructions</p>
+                <ul className="list-disc space-y-1 pl-6">
+                  <li>Enter the number or pattern you see on each plate.</li>
+                  <li>Type “nothing” if no number is visible.</li>
+                  <li>Plates may adapt to your answers to explore color perception.</li>
+                  <li>Complete the sequence to earn up to 45 XP.</li>
                 </ul>
               </div>
-              <Button size="lg" onClick={handleStart} className="w-full">
+              <Button
+                size="lg"
+                onClick={handleStart}
+                className="w-full bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
+              >
                 Start Test
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="p-4">
-                <XPBar xp={xp} />
-              </CardContent>
-            </Card>
+          <Card>
+            <CardContent className="space-y-8 p-8">
+              <div className="text-center space-y-2">
+                <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
+                  Plate {currentPlateIndex + 1} / {testPlates.length}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Enter the number you see or type “nothing” if none is visible.
+                </p>
+              </div>
 
-            <Card className="shadow-elevated">
-              <CardContent className="space-y-6 p-8">
-                <div className="text-center">
-                  <p className="mb-4 text-sm text-muted-foreground">
-                    Plate {currentPlateIndex + 1} of {testPlates.length}
-                  </p>
-                  <div className="mx-auto w-full max-w-md">
-                    {imageError ? (
-                      <div className="aspect-square rounded-lg bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
-                        <div className="text-center p-4">
-                          <p className="text-sm text-muted-foreground">
-                            Image failed to load
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Plate {currentPlate?.id}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <img
-                        src={`/${currentPlate?.image}`}
-                        alt={`Ishihara Plate ${currentPlate?.id}`}
-                        className="w-full h-auto rounded-lg shadow-lg"
-                        onError={() => {
-                          console.error(`Failed to load image: /${currentPlate?.image}`);
-                          setImageError(true);
-                        }}
-                        onLoad={() => setImageError(false)}
-                      />
-                    )}
-                  </div>
+              <div className="flex flex-col items-center gap-6">
+                <div className="relative w-full max-w-md">
+                  <img
+                    src={`/${currentPlate?.image}`}
+                    alt={`Ishihara Plate ${currentPlate?.id}`}
+                    className="mx-auto w-full max-w-md rounded-2xl border border-white/60 bg-white shadow-lg dark:border-white/10 dark:bg-slate-900/60"
+                    onError={() => setImageError(true)}
+                    onLoad={() => setImageError(false)}
+                  />
+                  {imageError && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-muted/80 text-sm text-muted-foreground">
+                      Image failed to load. Try refreshing.
+                    </div>
+                  )}
                 </div>
 
-                <div className="space-y-3">
-                  <p className="text-center font-medium">What do you see?</p>
-                  <div className="flex gap-2">
-                    <Input
-                      value={userInput}
-                      onChange={(e) => setUserInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleAnswer()}
-                      placeholder="Type number, text, or 'nothing'"
-                      className="text-lg"
-                      autoFocus
-                    />
-                    <Button onClick={handleAnswer} disabled={!userInput.trim()}>
-                      Submit
+                <div className="w-full max-w-md space-y-4">
+                  <Input
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAnswer()}
+                    placeholder="Type the number you see (or 'nothing')"
+                    className="rounded-2xl border border-primary/20 bg-white/80 text-center text-lg dark:border-white/10 dark:bg-slate-900/70"
+                    autoFocus
+                  />
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button variant="outline" onClick={() => setUserInput("nothing")} className="flex-1 rounded-2xl">
+                      Mark as Nothing
+                    </Button>
+                    <Button
+                      onClick={handleAnswer}
+                      disabled={!userInput.trim() || submitting}
+                      className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
+                    >
+                      {currentPlateIndex === testPlates.length - 1 ? "Finish" : "Next"}
                     </Button>
                   </div>
-                  <p className="text-xs text-center text-muted-foreground">
-                    Press Enter to submit
-                  </p>
+                  <p className="text-xs text-center text-muted-foreground">Press Enter to submit</p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+
+                <div className="text-sm text-muted-foreground">
+                  Correct so far: {answers.filter((a) => a.correct).length} / {answers.length}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </main>
     </div>

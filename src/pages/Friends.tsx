@@ -220,8 +220,8 @@ export default function Friends() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary-lighter/10 to-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto flex items-center gap-3 px-4 py-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-5 w-5" />
@@ -243,22 +243,29 @@ export default function Friends() {
         </div>
       </header>
 
-      <main className="container mx-auto max-w-4xl px-4 py-8">
-        <h1 className="mb-6 text-3xl font-bold">Friends & Leaderboard</h1>
+      <main className="container mx-auto max-w-5xl space-y-8 px-4 py-10">
+        <div className="rounded-[28px] border border-primary/15 bg-gradient-to-br from-white via-slate-50 to-primary/10 p-6 shadow-xl dark:from-slate-900 dark:via-slate-900/70 dark:to-primary/10">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Friends & Leaderboard</h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            Celebrate your streaks, connect with friends, and send requests to keep one another accountable.
+          </p>
+        </div>
 
         <Tabs defaultValue="leaderboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-            <TabsTrigger value="friends">
+          <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white/60 p-1 shadow-inner backdrop-blur dark:bg-slate-900/60">
+            <TabsTrigger className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-500 data-[state=active]:text-white" value="leaderboard">
+              Leaderboard
+            </TabsTrigger>
+            <TabsTrigger className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-500 data-[state=active]:text-white" value="friends">
               My Friends ({friends.length})
             </TabsTrigger>
-            <TabsTrigger value="requests">
+            <TabsTrigger className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-500 data-[state=active]:text-white" value="requests">
               Requests {requests.length > 0 && `(${requests.length})`}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="leaderboard" className="space-y-4">
-            <Card className="shadow-card">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Trophy className="h-5 w-5 text-level" />
@@ -269,7 +276,7 @@ export default function Friends() {
                 {leaderboard.map((profile, index) => (
                   <div
                     key={profile.id}
-                    className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent"
+                    className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 transition-transform hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-slate-900/60"
                   >
                     <div className="flex items-center gap-4">
                       <div
@@ -286,7 +293,7 @@ export default function Friends() {
                         {index + 1}
                       </div>
                       <div>
-                        <p className="font-semibold">{profile.display_name || "User"}</p>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">{profile.display_name || "User"}</p>
                         <p className="text-sm text-muted-foreground">Level {Math.floor(profile.xp / 100) + 1}</p>
                       </div>
                     </div>
@@ -302,7 +309,7 @@ export default function Friends() {
 
           <TabsContent value="friends" className="space-y-4">
             {/* Add Friend Section */}
-            <Card className="shadow-card">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <UserPlus className="h-5 w-5" />
@@ -331,20 +338,20 @@ export default function Friends() {
             </Card>
 
             {/* Friends List */}
-            <Card className="shadow-card">
+            <Card>
               <CardHeader>
                 <CardTitle>My Friends ({friends.length})</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {friends.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
+                  <p className="rounded-2xl border border-dashed border-muted py-8 text-center text-muted-foreground">
                     You haven't added any friends yet. Send a friend request above!
                   </p>
                 ) : (
                   friends.map((friend) => (
                     <div
                       key={friend.id}
-                      className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors"
+                      className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-slate-900/60"
                     >
                       <div className="flex items-center gap-3">
                         {friend.avatar_url ? (
@@ -377,20 +384,20 @@ export default function Friends() {
           </TabsContent>
 
           <TabsContent value="requests" className="space-y-4">
-            <Card className="shadow-card">
+            <Card>
               <CardHeader>
                 <CardTitle>Friend Requests</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {requests.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
+                  <p className="rounded-2xl border border-dashed border-muted py-8 text-center text-muted-foreground">
                     No pending friend requests
                   </p>
                 ) : (
                   requests.map((request: any) => (
                     <div
                       key={request.id}
-                      className="flex items-center justify-between rounded-lg border p-4"
+                      className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm dark:border-white/10 dark:bg-slate-900/60"
                     >
                       <div className="flex items-center gap-3">
                         {request.profiles?.avatar_url ? (
