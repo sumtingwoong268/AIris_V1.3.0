@@ -1,5 +1,5 @@
-// src/utils/openaiClient.ts
-export async function generateReport(payload: { prompt: string; userData?: unknown }) {
+// src/utils/geminiClient.ts
+export async function generateReport(payload: { prompt?: string; userData?: unknown }) {
   const res = await fetch("/api/generate-report", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

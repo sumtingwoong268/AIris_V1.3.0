@@ -263,6 +263,10 @@ export default function Dashboard() {
   const todayIdx = new Date().getDate() % EYE_TIPS.length;
   const dailyTip = EYE_TIPS[todayIdx];
   const topCategory = testTypeStats[0];
+  const latestPerformanceScore =
+    performanceData.length > 0
+      ? performanceData[performanceData.length - 1].score
+      : testStats.avgScore;
 
   const highlightStats = [
     {
@@ -467,7 +471,7 @@ export default function Dashboard() {
                   </div>
                   <div className="rounded-2xl bg-white/15 p-4 text-center shadow-lg backdrop-blur">
                     <span className="text-xs uppercase tracking-wide text-white/70">Latest score</span>
-                    <div className="mt-2 text-3xl font-semibold">{performanceData.at(-1)?.score ?? testStats.avgScore}%</div>
+                    <div className="mt-2 text-3xl font-semibold">{latestPerformanceScore}%</div>
                     <p className="text-xs text-white/70">Most recent session</p>
                   </div>
                 </div>

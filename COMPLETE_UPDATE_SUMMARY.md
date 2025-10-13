@@ -57,7 +57,7 @@
   - Color-coded by test type
 - **Recent History**: Last 15 tests with scores and XP
 
-### 4. OpenAI Reports - FULLY ENHANCED ✅
+### 4. Gemini Reports - FULLY ENHANCED ✅
 - **750-2000 word comprehensive reports**
 - Passes ALL user data: profile, current scores, historical trends
 - **Detailed Prompt Structure**:
@@ -68,8 +68,8 @@
   - 5-8 lifestyle recommendations
   - Urgency assessment with reasoning
 - **Historical Trends**: Compares previous scores, calculates trends
-- **Fallback**: If OpenAI unavailable, uses intelligent fallback
-- **Setup Required**: Add `VITE_OPENAI_API_KEY` to `.env`
+- **Fallback**: If Gemini is unavailable, uses intelligent fallback
+- **Setup Required**: Add `GEMINI_API_KEY` to `.env`
 
 ### 5. Visual Acuity in Reports ✅
 - Fixed: Acuity test now appears in PDF reports
@@ -125,7 +125,7 @@ Added 20+ new fields for comprehensive user profiling:
 2. **src/pages/Statistics.tsx** - Gamified stats dashboard
 3. **.env.example** - Environment variable template
 4. **supabase/setup.sql** - Complete database setup script
-5. **OPENAI_SETUP_GUIDE.md** - Detailed OpenAI API setup
+5. **GEMINI_SETUP_GUIDE.md** - Gemini API setup for AI reports
 6. **SUPABASE_SETUP_GUIDE.md** - Complete Supabase instructions
 
 ---
@@ -143,7 +143,7 @@ Added 20+ new fields for comprehensive user profiling:
 # Create/update .env file:
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbG...
-VITE_OPENAI_API_KEY=sk-...  # Get from https://platform.openai.com/api-keys
+GEMINI_API_KEY=your-google-gemini-key
 ```
 
 ### Step 3: Restart Dev Server
@@ -159,7 +159,7 @@ bun run dev
 3. Toggle dark mode → Should persist on refresh
 4. Upload avatar → Should work in Setup & Profile
 5. Complete tests → XP should not duplicate
-6. Generate report → Should use OpenAI (if key present)
+6. Generate report → Uses Gemini (if key present)
 7. View statistics → Should show all test history
 
 ---
@@ -220,7 +220,7 @@ href="https://docs.google.com/document/d/YOUR_ACTUAL_PRIVACY_ID"
 - [ ] Avatar uploads successfully
 - [ ] Profile page shows all editable fields
 - [ ] Statistics page displays correctly
-- [ ] OpenAI reports generate (with API key)
+- [ ] Gemini reports generate (with API key)
 - [ ] Acuity test shows in reports
 - [ ] XP doesn't duplicate on button spam
 - [ ] All tests award appropriate XP
@@ -238,12 +238,12 @@ href="https://docs.google.com/document/d/YOUR_ACTUAL_PRIVACY_ID"
 ## 📝 Commit Message
 
 ```
-feat: User prefs table, setup page, statistics, fixed dark mode, avatar, OpenAI, XP duplication
+feat: User prefs table, setup page, statistics, fixed dark mode, avatar, Gemini reports, XP duplication
 
 - Added user_preferences table for dark mode persistence
 - Created comprehensive Setup page with 20+ profile fields
 - Built gamified Statistics page with charts and trends
-- Enhanced OpenAI reports to 750-2000 words with historical trends
+- Enhanced Gemini reports to 750-2000 words with historical trends
 - Fixed avatar upload with proper validation
 - Fixed dark mode loading from database
 - Fixed XP duplication bug in Ishihara test

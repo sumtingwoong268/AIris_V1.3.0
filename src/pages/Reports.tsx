@@ -9,10 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Download, FileText, Plus } from "lucide-react";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { saveAs } from "file-saver";
-import { generateReport } from "@/utils/openaiClient";
+import { generateReport } from "@/utils/geminiClient";
 import logo from "@/assets/logo.png";
 
-function OpenAIReportHTML({ html }: { html: string }) {
+function AIReportHTML({ html }: { html: string }) {
   if (!html) return null;
   return (
     <div
@@ -38,6 +38,145 @@ const wrapText = (text: string, maxChars: number): string[] => {
   if (line) lines.push(line);
   return lines;
 };
+
+type TestResultRow = {
+  test_type: string;
+  score: number | null;
+  details: any;
+  created_at: string;
+  xp_earned?: number | null;
+};
+
+function calculateAge(dateString?: string | null): number | null {
+  if (!dateString) return null;
+  const dob = new Date(dateString);
+  if (Number.isNaN(dob.getTime())) return null;
+  const diff = Date.now() - dob.getTime();
+  const ageDate = new Date(diff);
+  return Math.abs(ageDate.getUTCFullYear() - 1970);
+}
+
+function buildGeminiDataset(
+  profile: Record<string, any>,
+  latestByType: Record<string, TestResultRow>,
+  results: TestResultRow[],
+) {
+  const tests: Record<string, any> = {};
+
+  const chronologicalHistory = (type: string) =>
+    results
+      .filter((entry) => entry.test_type === type)
+      .slice()
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+  Object.entries(latestByType).forEach(([testType, latest]) => {
+    const history = chronologicalHistory(testType).map((item) => ({
+      score: item.score ?? null,
+      created_at: item.created_at,
+      details: item.details ?? null,
+      xp_earned: item.xp_earned ?? null,
+    }));
+    const latestScore = latest?.score ?? null;
+    const previousScore = history.length >= 2 ? history[history.length - 2].score : null;
+    const trend =
+      latestScore !== null && previousScore !== null
+        ? Number((latestScore - previousScore).toFixed(2))
+        : null;
+
+    tests[testType] = {
+      current: {
+        score: latestScore,
+        created_at: latest?.created_at ?? null,
+        details: latest?.details ?? null,
+      },
+      previousScore,
+      trend,
+      history,
+    };
+  });
+
+  const allCurrentScores = Object.values(latestByType)
+    .map((entry) => (typeof entry?.score === "number" ? entry.score : null))
+    .filter((value): value is number => value !== null);
+
+  const overallScore =
+    allCurrentScores.length > 0
+      ? Number((allCurrentScores.reduce((sum, value) => sum + value, 0) / allCurrentScores.length).toFixed(2))
+      : null;
+
+  const previousScores: number[] = [];
+  Object.keys(latestByType).forEach((type) => {
+    const history = chronologicalHistory(type);
+    if (history.length >= 2 && typeof history[history.length - 2].score === "number") {
+      previousScores.push(history[history.length - 2].score as number);
+    }
+  });
+
+  const previousAverage =
+    previousScores.length > 0
+      ? Number((previousScores.reduce((sum, value) => sum + value, 0) / previousScores.length).toFixed(2))
+      : null;
+
+  let riskLevel: "Low" | "Moderate" | "High" | "Unknown" = "Unknown";
+  if (overallScore !== null) {
+    riskLevel = overallScore >= 80 ? "Low" : overallScore >= 60 ? "Moderate" : "High";
+  }
+
+  const trendOverall =
+    overallScore !== null && previousAverage !== null
+      ? Number((overallScore - previousAverage).toFixed(2))
+      : null;
+
+  const age = calculateAge(profile.date_of_birth ?? null);
+
+  const symptoms = Array.isArray(profile.symptoms) ? profile.symptoms : [];
+  const eyeConditions = Array.isArray(profile.eye_conditions) ? profile.eye_conditions : [];
+  const familyHistory = Array.isArray(profile.family_history) ? profile.family_history : [];
+
+  return {
+    generated_at: new Date().toISOString(),
+    user: {
+      name: profile.display_name || profile.full_name || "User",
+      full_name: profile.full_name ?? null,
+      age,
+      gender: profile.gender ?? null,
+      ethnicity: profile.ethnicity ?? null,
+      wears_correction: profile.wears_correction ?? null,
+      correction_type: profile.correction_type ?? null,
+      last_eye_exam: profile.last_eye_exam ?? null,
+    },
+    lifestyle: {
+      screen_time_hours: profile.screen_time_hours ?? null,
+      outdoor_time_hours: profile.outdoor_time_hours ?? null,
+      sleep_quality: profile.sleep_quality ?? null,
+      symptoms,
+      eye_conditions: eyeConditions,
+      family_history: familyHistory,
+      eye_surgeries: profile.eye_surgeries ?? null,
+      uses_eye_medication: profile.uses_eye_medication ?? false,
+      medication_details: profile.medication_details ?? null,
+      bio: profile.bio ?? null,
+    },
+    stats: {
+      xp: profile.xp ?? 0,
+      level: Math.floor((profile.xp ?? 0) / 100) + 1,
+      current_streak: profile.current_streak ?? 0,
+      overall_score: overallScore,
+      previous_average_score: previousAverage,
+      overall_trend: trendOverall,
+      risk_level: riskLevel,
+      tests_completed: Object.keys(latestByType).length,
+    },
+    tests,
+    history: results.map((entry) => ({
+      test_type: entry.test_type,
+      score: entry.score ?? null,
+      created_at: entry.created_at,
+      details: entry.details ?? null,
+      xp_earned: entry.xp_earned ?? null,
+    })),
+  };
+}
 
 export default function Reports() {
   const navigate = useNavigate();
@@ -94,57 +233,27 @@ export default function Reports() {
         if (!latestByType[r.test_type]) latestByType[r.test_type] = r;
       }
 
+      const dataset = buildGeminiDataset(
+        profile,
+        latestByType as Record<string, TestResultRow>,
+        results as TestResultRow[],
+      );
 
-      // 3) Build prompt (closed correctly)
-const testSummary = Object.entries(latestByType)
-  .map(([type, result]) => {
-    const score = result?.score ?? 0;
-    const when = result?.created_at ? new Date(result.created_at).toLocaleDateString() : "";
-    const details = result?.details ? JSON.stringify(result.details) : "{}";
-    return `${type}: ${score}% (Details: ${details}, Date: ${when})`;
-  })
-  .join("\n");
-
-const prompt = `
-You are a digital eye-health assistant for the AIris platform. Generate a visually clean, long, clinically-aligned report. No emojis.
-
-User:
-- Name: ${profile.display_name || profile.full_name || "User"}
-${profile.date_of_birth ? `- Date of Birth: ${profile.date_of_birth}\n` : ""}${profile.gender ? `- Gender: ${profile.gender}\n` : ""}${profile.wears_correction ? `- Wears Correction: ${profile.wears_correction}\n` : ""}${profile.correction_type ? `- Correction Type: ${profile.correction_type}\n` : ""}${profile.last_eye_exam ? `- Last Eye Exam: ${profile.last_eye_exam}\n` : ""}${profile.screen_time_hours ? `- Screen Time: ${profile.screen_time_hours} hours/day\n` : ""}${profile.outdoor_time_hours ? `- Outdoor Time: ${profile.outdoor_time_hours} hours/day\n` : ""}${profile.sleep_quality ? `- Sleep Quality: ${profile.sleep_quality}\n` : ""}
-
-Symptoms: ${(profile.symptoms && profile.symptoms.length) ? profile.symptoms.join(", ") : "None reported"}
-Known Eye Conditions: ${(profile.eye_conditions && profile.eye_conditions.length) ? profile.eye_conditions.join(", ") : "None reported"}
-Family Eye History: ${(profile.family_history && profile.family_history.length) ? profile.family_history.join(", ") : "None reported"}
-
-Current Test Results (most recent):
-${testSummary}
-
-Output as plain paragraphs and lists (HTML allowed). Sections:
-1. Summary Overview
-2. Detailed Test Analysis
-3. Personalised Self-Care Guidance (exercises, lifestyle, nutrition)
-4. Medical Follow-Up
-5. Long-Term Improvement Plan
-6. Disclaimers
-`.trim();
-
-      // 4) AI analysis (serverless)
+      // 3) AI analysis (serverless)
       toast({ title: "Generating AI Report...", description: "Analyzing your results" });
       const { text: aiReportText } = await generateReport({
-        prompt,
-        userData: { profile, testResults: latestByType, testHistory: results },
+        userData: dataset,
       });
 
-      // 5) PDF build
+      // 4) PDF build
       const pdfDoc = await PDFDocument.create();
-      let page = pdfDoc.addPage([595, 842]); // A4
+      let page = pdfDoc.addPage([595, 842]);
       const { width, height } = page.getSize();
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
       let y = height - 50;
 
-      // Header
       page.drawText("AIris Vision Health Report", {
         x: 50,
         y,
@@ -154,7 +263,10 @@ Output as plain paragraphs and lists (HTML allowed). Sections:
       });
       y -= 30;
 
-      page.drawText(`Generated for: ${profile.display_name || "User"}`, {
+      const displayName = dataset.user?.name ?? profile.display_name ?? "User";
+      const generatedDate = new Date().toLocaleDateString();
+
+      page.drawText(`Generated for: ${displayName}`, {
         x: 50,
         y,
         size: 12,
@@ -163,97 +275,63 @@ Output as plain paragraphs and lists (HTML allowed). Sections:
       });
       y -= 18;
 
-      page.drawText(`Date: ${new Date().toLocaleDateString()}`, {
+      page.drawText(`Date: ${generatedDate}`, {
         x: 50,
         y,
         size: 12,
         font,
         color: rgb(0.4, 0.4, 0.4),
       });
-      y -= 40;
+      y -= 28;
 
-      // Stats
-      page.drawText("Profile Statistics", { x: 50, y, size: 16, font: bold, color: rgb(0, 0, 0) });
-      y -= 25;
-      page.drawText(`Total XP: ${profile.xp || 0}`, { x: 60, y, size: 12, font }); y -= 18;
-      page.drawText(`Level: ${Math.floor((profile.xp || 0) / 100) + 1}`, { x: 60, y, size: 12, font }); y -= 18;
-      page.drawText(`Weekly Streak: ${profile.current_streak || 0} weeks`, { x: 60, y, size: 12, font }); y -= 35;
+      const sanitized = aiReportText
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<li>/gi, "• ")
+        .replace(/<\/(p|div|section|article)>/gi, "\n\n")
+        .replace(/<\/(h[1-6])>/gi, "\n")
+        .replace(/<[^>]*>/g, "")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&amp;/gi, "&")
+        .replace(/&lt;/gi, "<")
+        .replace(/&gt;/gi, ">")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
 
-      // Results summary
-      page.drawText("Test Results Summary", { x: 50, y, size: 16, font: bold, color: rgb(0, 0, 0) });
-      y -= 25;
+      const analysisLines = sanitized
+        .split("\n")
+        .map((line) => line.trim())
+        .flatMap((line) => (line ? wrapText(line, 90) : [""]));
 
-      const testLabels: Record<string, string> = {
-        ishihara: "Ishihara Color Test",
-        visual_acuity: "Visual Acuity Test",
-        acuity: "Visual Acuity Test",
-        amsler: "Amsler Grid Test",
-        reading_stress: "Reading Stress Test",
-      };
-      const used = new Set<string>();
-      for (const [key, label] of Object.entries(testLabels)) {
-        if (used.has(label)) continue;
-        let result = latestByType[key];
-        if (label === "Visual Acuity Test") {
-          result = latestByType["visual_acuity"] || latestByType["acuity"];
+      const summarySnippetSource = sanitized.replace(/\s+/g, " ").trim();
+      const summarySnippet =
+        summarySnippetSource.length > 220
+          ? `${summarySnippetSource.slice(0, 220).trim()}…`
+          : summarySnippetSource;
+
+      for (const line of analysisLines) {
+        if (y < 80) {
+          page = pdfDoc.addPage([595, 842]);
+          y = page.getSize().height - 50;
         }
-        const scoreText = result ? `${result.score ?? 0}%` : "Not taken";
-        const dateText = result?.created_at ? new Date(result.created_at).toLocaleDateString() : "";
-
-        page.drawText(`${label}:`, { x: 60, y, size: 12, font });
-        page.drawText(scoreText, {
-          x: 250,
+        if (!line) {
+          y -= 12;
+          continue;
+        }
+        page.drawText(line, {
+          x: 50,
           y,
-          size: 12,
+          size: 10,
           font,
-          color: result
-            ? (result.score >= 80 ? rgb(0, 0.6, 0) : result.score >= 60 ? rgb(0.8, 0.6, 0) : rgb(0.8, 0, 0))
-            : rgb(0.6, 0.6, 0.6),
+          maxWidth: width - 100,
+          color: rgb(0.1, 0.1, 0.1),
         });
-        if (dateText) {
-          page.drawText(dateText, { x: 350, y, size: 10, font, color: rgb(0.5, 0.5, 0.5) });
-        }
-        y -= 18;
-        used.add(label);
+        y -= 14;
       }
-      y -= 30;
-
-// AI Analysis
-page.drawText("AI-Powered Analysis", { x: 50, y, size: 16, font: bold, color: rgb(0.2, 0.4, 0.8) });
-y -= 5;
-page.drawText("Generated by OpenAI", { x: 50, y, size: 9, font, color: rgb(0.5, 0.5, 0.5) });
-y -= 20;
-
-const plainAnalysis = (aiReportText || "").replace(/<[^>]*>/g, "");
-const analysisLines = plainAnalysis.split("\n").flatMap((line) => wrapText(line.trim(), 75));
-for (const line of analysisLines) {
-  if (y < 100) {
-    page = pdfDoc.addPage([595, 842]);
-    y = page.getSize().height - 50;
-  }
-  page.drawText(line, { x: 60, y, size: 10, font, maxWidth: width - 120 });
-  y -= 14;
-}
-
-// Disclaimer
-if (y < 150) {
-  page = pdfDoc.addPage([595, 842]);
-  y = page.getSize().height - 50;
-}
-page.drawText("Important Disclaimer", { x: 50, y, size: 14, font: bold, color: rgb(0.6, 0, 0) });
-y -= 20;
-
-const disclaimer =
-  "This AI-generated report is based on self-administered vision screening tests and is NOT a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of a qualified eye care professional with any questions about your eye health. If you experience sudden vision changes, eye pain, flashes of light, or other concerning symptoms, seek immediate medical attention.";
-for (const line of wrapText(disclaimer, 75)) {
-  page.drawText(line, { x: 50, y, size: 9, font, color: rgb(0.3, 0.3, 0.3), maxWidth: width - 100 });
-  y -= 12;
-}
 
 // Footer
 const pages = pdfDoc.getPages();
 pages.forEach((p, idx) => {
-  p.drawText("AIris - The Future of Eyecare | AI-Powered by OpenAI", {
+  p.drawText("AIris - The Future of Eyecare | AI-assisted by Google Gemini", {
     x: 50,
     y: 30,
     size: 8,
@@ -281,8 +359,8 @@ saveAs(blob, fileName);
   const { error: insertError } = await supabase.from("reports").insert({
     user_id: user.id,
     title: "Vision Health Report",
-    summary: `Comprehensive eye health summary generated on ${new Date().toLocaleDateString()}`,
-    analysis: aiReportText, // keep AI HTML/plain for web preview
+    summary: summarySnippet || `AI-generated report created on ${generatedDate}`,
+    analysis: aiReportText,
   });
   if (insertError) throw insertError;
 }
@@ -349,10 +427,16 @@ saveAs(blob, fileName);
           </CardContent>
         </Card>
 
-        {reports.length > 0 && latestReport?.analysis && String(latestReport.analysis).startsWith("<") && (
+        {reports.length > 0 && latestReport?.analysis && (
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Latest AIris report preview</h2>
-            <OpenAIReportHTML html={String(latestReport.analysis)} />
+            {String(latestReport.analysis).trim().startsWith("<") ? (
+              <AIReportHTML html={String(latestReport.analysis)} />
+            ) : (
+              <div className="rounded-3xl border border-white/60 bg-white/80 p-6 text-sm leading-relaxed shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
+                {String(latestReport.analysis)}
+              </div>
+            )}
           </section>
         )}
 

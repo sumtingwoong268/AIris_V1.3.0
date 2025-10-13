@@ -126,7 +126,7 @@ export default function Statistics() {
     }).length;
   }, [sortedHistory]);
 
-  const lastResult = sortedHistory.at(-1) ?? null;
+  const lastResult = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1] : null;
   const previousResult = sortedHistory.length >= 2 ? sortedHistory[sortedHistory.length - 2] : null;
   const latestTrend =
     previousResult && lastResult
