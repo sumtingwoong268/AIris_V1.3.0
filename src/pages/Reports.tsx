@@ -90,18 +90,19 @@ export default function Reports() {
         if (!latestByType[r.test_type]) latestByType[r.test_type] = r;
       }
 
-      // 3) Build prompt
-      const testSummary = Object.entries(latestByType)
-        .map(([type, result]) => {
-          const score = result?.score ?? 0;
-          const when = result?.created_at ? new Date(result.created_at).toLocaleDateString() : "";
-          const details = result?.details ? JSON.stringify(result.details) : "{}";
-          return `${type}: ${score}% (Details: ${details}, Date: ${when})`;
-        })
-        .join("\n");
 
-      const prompt = `
-You are a digital eye-health assistant for the AIris platform. Generate a long, clinically aligned, easy-to-understand report with personalised guidance. Write crisp, clear language without emojis.
+      // 3) Build prompt (closed correctly)
+const testSummary = Object.entries(latestByType)
+  .map(([type, result]) => {
+    const score = result?.score ?? 0;
+    const when = result?.created_at ? new Date(result.created_at).toLocaleDateString() : "";
+    const details = result?.details ? JSON.stringify(result.details) : "{}";
+    return `${type}: ${score}% (Details: ${details}, Date: ${when})`;
+  })
+  .join("\n");
+
+const prompt = `
+You are a digital eye-health assistant for the AIris platform. Generate a visually clean, long, clinically-aligned report. No emojis.
 
 User:
 - Name: ${profile.display_name || profile.full_name || "User"}
@@ -114,14 +115,14 @@ Family Eye History: ${(profile.family_history && profile.family_history.length) 
 Current Test Results (most recent):
 ${testSummary}
 
-Output as plain paragraphs and lists (HTML allowed). Use sections:
+Output as plain paragraphs and lists (HTML allowed). Sections:
 1. Summary Overview
 2. Detailed Test Analysis
 3. Personalised Self-Care Guidance (exercises, lifestyle, nutrition)
 4. Medical Follow-Up
 5. Long-Term Improvement Plan
 6. Disclaimers
-      `.trim();
+`.trim();
 
       // 4) AI analysis (serverless)
       toast({ title: "Generating AI Report...", description: "Analyzing your results" });
