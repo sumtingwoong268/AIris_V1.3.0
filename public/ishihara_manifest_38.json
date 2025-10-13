@@ -4,7 +4,8 @@
       "id": 1,
       "image": "ishihara/plate_01.png",
       "analysis": {
-        "raw": "Everyone should see number 12."
+        "raw": "Normal view: 12",
+        "normal": "12"
       }
     },
     {
@@ -171,8 +172,8 @@
       "id": 22,
       "image": "ishihara/plate_22.png",
       "analysis": {
-        "raw": "Normal view: 26",
-        "normal": "26"
+        "raw": "Normal view: nothing",
+        "normal": "nothing"
       }
     },
     {
