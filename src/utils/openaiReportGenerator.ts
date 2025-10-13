@@ -1,4 +1,10 @@
+// src/utils/geminiReportGenerator.ts
 import { generateReport } from "./openaiClient";
+
+export async function runGeminiReport(prompt: string, userData?: unknown) {
+  const { text } = await generateReport({ prompt, userData });
+  return text;
+}
 
 interface TestResult {
   test_type: string;
