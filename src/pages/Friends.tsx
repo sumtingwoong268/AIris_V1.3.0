@@ -103,12 +103,25 @@ export default function Friends() {
         body: JSON.stringify({ email: trimmedEmail }),
       });
 
-      const lookupData = await lookupResponse.json();
+      const lookupRaw = await lookupResponse.text();
+      let lookupData: any = null;
+      if (lookupRaw) {
+        try {
+          lookupData = JSON.parse(lookupRaw);
+        } catch {
+          lookupData = null;
+        }
+      }
       if (!lookupResponse.ok) {
-        throw new Error(lookupData?.error || "User not found with that email");
+        const message =
+          lookupData?.error || lookupData?.message || lookupRaw || "User not found with that email";
+        throw new Error(message);
       }
 
-      const targetUser = lookupData.profile as { id: string; display_name: string | null };
+      const targetUser = lookupData?.profile as { id: string; display_name: string | null } | undefined;
+      if (!targetUser?.id) {
+        throw new Error("User profile data was not returned");
+      }
 
       // Check if already friends
       const { data: existing } = await supabase

@@ -38,22 +38,22 @@ export default function VisualAcuityTest() {
 
   const handleAnswer = (answer: typeof direction) => {
     if (completed) return;
-    if (answer === direction) {
-      setCorrect((prev) => prev + 1);
-    }
+    const answeredCorrectly = answer === direction;
+    const updatedCorrect = answeredCorrectly ? correct + 1 : correct;
+    setCorrect(updatedCorrect);
     if (level < 8) {
       setLevel((prev) => prev + 1);
       randomizeDirection();
     } else {
-      completeTest();
+      completeTest(updatedCorrect);
     }
   };
 
-  const completeTest = async () => {
+  const completeTest = async (finalCorrect = correct) => {
     if (!user || completed) return;
     setCompleted(true);
     try {
-      const score = (correct / 8) * 100;
+      const score = (finalCorrect / 8) * 100;
       // XP scaling: base 30, up to 40 for perfect score
       const xpEarned = Math.floor(30 + (score / 100) * 10);
       await supabase.from("test_results").insert({
@@ -61,7 +61,7 @@ export default function VisualAcuityTest() {
         test_type: "visual_acuity",
         score,
         xp_earned: xpEarned,
-        details: { correct, total: 8 },
+        details: { correct: finalCorrect, total: 8 },
       });
       await supabase.rpc("update_user_xp", {
         p_user_id: user.id,
