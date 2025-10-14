@@ -317,38 +317,6 @@ export default function Reports() {
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-      let y = height - 50;
-
-      page.drawText("AIris Vision Health Report", {
-        x: 50,
-        y,
-        size: 24,
-        font: bold,
-        color: rgb(0.2, 0.4, 0.8),
-      });
-      y -= 30;
-
-      const displayName = dataset.user?.name ?? profile.display_name ?? "User";
-      const generatedDate = new Date().toLocaleDateString();
-
-      page.drawText(`Generated for: ${displayName}`, {
-        x: 50,
-        y,
-        size: 12,
-        font,
-        color: rgb(0, 0, 0),
-      });
-      y -= 18;
-
-      page.drawText(`Date: ${generatedDate}`, {
-        x: 50,
-        y,
-        size: 12,
-        font,
-        color: rgb(0.4, 0.4, 0.4),
-      });
-      y -= 28;
-
       const baseRisk = dataset.stats?.risk_level ?? "Unknown";
       const fallbackTraffic: TrafficLight =
         baseRisk === "High" ? "red" : baseRisk === "Moderate" ? "yellow" : "green";
@@ -362,12 +330,7 @@ export default function Reports() {
       });
 
       const sanitizedPlain = parsedReport.plainText || sanitizeToPlainText(aiReportText);
-      const printablePlain = sanitizedPlain.length > 0 ? sanitizedPlain : parsedReport.summary ?? "";
-
-      const analysisLines = printablePlain
-        .split("\n")
-        .map((line) => line.trim())
-        .flatMap((line) => (line ? wrapText(line, 90) : [""]));
+      const generatedDate = new Date().toLocaleDateString();
 
       const summarySnippetSource =
         (parsedReport.summary && parsedReport.summary.trim().length > 0
@@ -381,28 +344,121 @@ export default function Reports() {
       const trafficLight = parsedReport.trafficLight;
       const urgencyLevel = parsedReport.urgency;
 
-      const pdfLines = analysisLines.some((line) => line && line.trim().length > 0)
-        ? analysisLines
-        : wrapText(summarySnippetSource || "No analysis available yet.", 90);
+      const structuredReport = parsedReport.structured;
 
-      for (const line of pdfLines) {
-        if (y < 80) {
+      const hexToRgb = (hex: string): [number, number, number] | null => {
+        const cleaned = hex.replace("#", "");
+        if (![3, 6].includes(cleaned.length)) return null;
+        const normalized = cleaned.length === 3 ? cleaned.replace(/./g, (ch) => ch + ch) : cleaned;
+        const segments = normalized.match(/.{2}/g);
+        if (!segments) return null;
+        const [rHex, gHex, bHex] = segments;
+        return [parseInt(rHex, 16) / 255, parseInt(gHex, 16) / 255, parseInt(bHex, 16) / 255];
+      };
+
+      const accentHex = parsedReport.accentColor ?? "#2563EB";
+      const accentRgb = hexToRgb(accentHex) ?? [0.2, 0.4, 0.8];
+      const accentColor = rgb(accentRgb[0], accentRgb[1], accentRgb[2]);
+
+      const marginX = 50;
+      let y = height - 50;
+
+      const ensureSpace = (amount: number) => {
+        if (y - amount < 60) {
           page = pdfDoc.addPage([595, 842]);
-          y = page.getSize().height - 50;
+          const nextSize = page.getSize();
+          y = nextSize.height - 50;
         }
-        if (!line) {
-          y -= 12;
-          continue;
+      };
+
+      const drawWrapped = (
+        text: string,
+        opts?: { size?: number; color?: ReturnType<typeof rgb>; indent?: number; leading?: number },
+      ) => {
+        const size = opts?.size ?? 10;
+        const color = opts?.color ?? rgb(0.1, 0.1, 0.1);
+        const indent = opts?.indent ?? 0;
+        const leading = opts?.leading ?? size + 4;
+        const lines = wrapText(text, 90);
+        for (const line of lines) {
+          if (!line) {
+            y -= leading / 2;
+            continue;
+          }
+          ensureSpace(leading);
+          page.drawText(line, {
+            x: marginX + indent,
+            y,
+            size,
+            font,
+            maxWidth: width - marginX * 2 - indent,
+            color,
+          });
+          y -= leading;
         }
-        page.drawText(line, {
-          x: 50,
+      };
+
+      const drawSectionTitle = (title: string) => {
+        ensureSpace(32);
+        page.drawText(title, {
+          x: marginX,
           y,
-          size: 10,
-          font,
-          maxWidth: width - 100,
-          color: rgb(0.1, 0.1, 0.1),
+          size: 14,
+          font: bold,
+          color: accentColor,
         });
-        y -= 14;
+        y -= 20;
+        page.drawLine({
+          start: { x: marginX, y: y + 6 },
+          end: { x: width - marginX, y: y + 6 },
+          thickness: 0.5,
+          color: accentColor,
+        });
+        y -= 10;
+      };
+
+      const displayName = dataset.user?.name ?? profile.display_name ?? "User";
+      page.drawText("AIris Vision Health Report", {
+        x: marginX,
+        y,
+        size: 24,
+        font: bold,
+        color: accentColor,
+      });
+      y -= 30;
+
+      drawWrapped(`Generated for: ${displayName}`, { size: 12, leading: 16 });
+      drawWrapped(`Date: ${generatedDate}`, { size: 12, color: rgb(0.4, 0.4, 0.4), leading: 16 });
+      const leadSummary = parsedReport.themeSummary ?? parsedReport.summary ?? "";
+      if (leadSummary.trim().length > 0) {
+        y -= 6;
+        drawWrapped(sanitizeToPlainText(leadSummary), { size: 11, color: rgb(0.2, 0.2, 0.2) });
+      }
+      y -= 6;
+
+      if (structuredReport) {
+        if (parsedReport.keyFindings.length > 0) {
+          drawSectionTitle("Key Findings");
+          parsedReport.keyFindings.forEach((finding) => {
+            const text = `• ${sanitizeToPlainText(finding)}`;
+            drawWrapped(text);
+          });
+          y -= 12;
+        }
+
+        structuredReport.sections.forEach((section) => {
+          drawSectionTitle(section.title);
+          section.blocks.forEach((block) => {
+            const text = sanitizeToPlainText(block);
+            if (!text.trim()) return;
+            drawWrapped(text);
+            y -= 6;
+          });
+          y -= 8;
+        });
+      } else {
+        const printablePlain = sanitizedPlain.length > 0 ? sanitizedPlain : parsedReport.summary ?? "";
+        drawWrapped(printablePlain);
       }
 
 // Footer
@@ -440,7 +496,7 @@ saveAs(blob, fileName);
     report_data: {
       dataset,
       html: parsedReport.html,
-      plain_text: sanitizedPlain,
+      plain_text: parsedReport.plainText || sanitizedPlain,
       raw_text: aiReportText,
       structured: parsedReport.structured,
       key_findings: parsedReport.keyFindings,
@@ -452,7 +508,7 @@ saveAs(blob, fileName);
       },
     },
     risk_assessment: summarySnippet || sanitizedPlain.slice(0, 500),
-    recommendations: sanitizedPlain,
+    recommendations: parsedReport.plainText || sanitizedPlain,
     urgency_level: urgencyLevel,
     traffic_light: trafficLight,
   });
@@ -509,6 +565,22 @@ saveAs(blob, fileName);
             <div className="flex w-full flex-col items-start gap-3 rounded-2xl bg-white/15 p-5 shadow-lg backdrop-blur lg:max-w-sm">
               <p className="text-xs uppercase tracking-wide text-white/70">Last generated</p>
               <p className="text-lg font-semibold">{lastGeneratedAt ?? "No reports yet"}</p>
+              {latestReportDetails?.trafficLight && (
+                <span
+                  className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]"
+                  style={{
+                    backgroundColor: TRAFFIC_BADGE_COLORS[latestReportDetails.trafficLight].bg,
+                    color: TRAFFIC_BADGE_COLORS[latestReportDetails.trafficLight].text,
+                  }}
+                >
+                  Status · {latestReportDetails.trafficLight.toUpperCase()}
+                </span>
+              )}
+              {latestReportDetails?.urgency && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white">
+                  Urgency · {latestReportDetails.urgency.replace(/_/g, " ")}
+                </span>
+              )}
               <Button
                 className="w-full bg-white/20 text-white hover:bg-white/30"
                 onClick={generatePDF}
