@@ -4,14 +4,6 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const anonKey = process.env.SUPABASE_ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !anonKey || !serviceKey) {
-  throw new Error("Missing required Supabase environment variables");
-}
-
-const serviceClient = createClient(supabaseUrl, serviceKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
-
 export default async function handler(req: any, res: any) {
   try {
     if (req.method !== "POST") {
@@ -25,11 +17,24 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
+    if (!supabaseUrl || !anonKey || !serviceKey) {
+      console.error("lookup-user missing env vars", { hasUrl: !!supabaseUrl, hasAnon: !!anonKey, hasService: !!serviceKey });
+      res.status(500).json({ error: "Server missing Supabase credentials" });
+      return;
+    }
+
+    const serviceClient = createClient(supabaseUrl, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
     const supabaseUserClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
 
     const { data: authData, error: authError } = await supabaseUserClient.auth.getUser();
+    if (authError) {
+      console.error("lookup-user auth error:", authError);
+    }
     if (authError || !authData?.user) {
       res.status(401).json({ error: "Invalid or expired session" });
       return;
@@ -48,7 +53,15 @@ export default async function handler(req: any, res: any) {
 
     const { data: targetUser, error: targetError } = await serviceClient.auth.admin.getUserByEmail(email);
     if (targetError || !targetUser?.user) {
-      res.status(404).json({ error: "User not found" });
+      if (targetError) {
+        console.error("lookup-user admin error:", targetError);
+      }
+      const adminMessage = targetError?.message ?? "User not found";
+      const friendly =
+        targetError && adminMessage.includes("Function invocation failed")
+          ? "Failed to look up user email. Verify SUPABASE_SERVICE_ROLE_KEY is configured on the server."
+          : adminMessage;
+      res.status(targetError ? 500 : 404).json({ error: friendly });
       return;
     }
 
@@ -70,6 +83,7 @@ export default async function handler(req: any, res: any) {
 
     res.status(200).json({ profile: { id: profile.id, display_name: profile.display_name ?? null } });
   } catch (error: any) {
+    console.error("lookup-user error:", error);
     res.status(500).json({ error: error?.message ?? "Internal Server Error" });
   }
 }
