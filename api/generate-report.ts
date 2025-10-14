@@ -198,50 +198,73 @@ export default async function handler(req: any, res: any) {
 
     const datasetBlock = createDatasetBlock(userData);
     const additional = typeof prompt === "string" && prompt.trim().length > 0 ? `\n\nAdditional Guidance:\n${prompt.trim()}` : "";
-    const finalPrompt = `${BASE_PROMPT}\n\n### DATASET\n${datasetBlock}${additional}`;
+    const RETRY_APPEND = `
 
-  const response = await model.generateContent({
-  contents: [
-    {
-      role: "user",
-      parts: [{ text: finalPrompt }],
-    },
-  ],
-  generationConfig: {
-    temperature: 0.2,
-    topP: 0.9,
-    topK: 32,
-    maxOutputTokens: 6000,
-    responseMimeType: "application/json", // ✅ ensures JSON-only output
-  },
-});
+The previous response was invalid JSON. RESPOND ONLY WITH VALID JSON THAT MATCHES THE SCHEMA EXACTLY. Close every quote and brace, include all required keys, and ensure the document is complete.`;
 
-const raw = response.response.text();
-// Grab the first JSON-looking block if anything extra slipped in
-const firstBrace = raw.indexOf("{");
-const lastBrace  = raw.lastIndexOf("}");
-const candidate  = (firstBrace >= 0 && lastBrace > firstBrace) ? raw.slice(firstBrace, lastBrace + 1) : raw;
+    const MAX_ATTEMPTS = 2;
+    let lastError: Error | null = null;
 
-let jsonText = candidate;
-let parsed: any;
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const retryNote = attempt === 0 ? "" : RETRY_APPEND;
+      const finalPrompt = `${BASE_PROMPT}${retryNote}\n\n### DATASET\n${datasetBlock}${additional}`;
 
-try {
-  parsed = tryParseJsonStrict(jsonText);
-} catch {
-  const repaired = repairJsonLoose(jsonText);
-  try {
-    parsed = tryParseJsonStrict(repaired);
-    jsonText = repaired;
-  } catch {
-    // Bubble a readable error back to the client (prevents “Failed to fetch”)
-    const preview = raw.slice(0, 400);
-    throw new Error(`Model did not return valid JSON. Preview:\n${preview}`);
-  }
-}
+      const response = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: finalPrompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          topP: 0.9,
+          topK: 32,
+          maxOutputTokens: 6000,
+          responseMimeType: "application/json",
+        },
+      });
 
-// Return a stable minified JSON string so your frontend always gets valid JSON
-const clean = JSON.stringify(parsed);
-res.status(200).json({ text: clean, meta: { ok: true, len: clean.length } });
+      const raw = response.response.text();
+      const firstBrace = raw.indexOf("{");
+      const lastBrace = raw.lastIndexOf("}");
+      const candidate = firstBrace >= 0 && lastBrace > firstBrace ? raw.slice(firstBrace, lastBrace + 1) : raw;
+
+      let jsonText = candidate;
+      let parsed: any;
+
+      try {
+        parsed = tryParseJsonStrict(jsonText);
+      } catch {
+        const repaired = repairJsonLoose(jsonText);
+        try {
+          parsed = tryParseJsonStrict(repaired);
+          jsonText = repaired;
+        } catch (err) {
+          lastError = new Error(`Model did not return valid JSON. Preview:\n${raw.slice(0, 400)}`);
+          console.warn("Gemini JSON parse retry failed (attempt %d): %s", attempt + 1, lastError.message);
+          continue;
+        }
+      }
+
+      if (
+        !parsed ||
+        typeof parsed !== "object" ||
+        typeof parsed.plain_text_document !== "string" ||
+        !Array.isArray(parsed.sections) ||
+        parsed.sections.length === 0
+      ) {
+        lastError = new Error(`Model response missing required fields. Preview:\n${raw.slice(0, 400)}`);
+        console.warn("Gemini JSON validation failed (attempt %d): %s", attempt + 1, lastError.message);
+        continue;
+      }
+
+      const clean = JSON.stringify(parsed);
+      res.status(200).json({ text: clean, meta: { ok: true, len: clean.length, attempt: attempt + 1 } });
+      return;
+    }
+
+    throw lastError ?? new Error("Model did not return valid JSON after retry.");
 
   } catch (err: any) {
     console.error("generate-report error:", err);
