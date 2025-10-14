@@ -371,7 +371,7 @@ export default function Reports() {
         }
       };
 
-      const drawWrapped = (
+      const drawLines = (
         text: string,
         opts?: { size?: number; color?: ReturnType<typeof rgb>; indent?: number; leading?: number },
       ) => {
@@ -379,10 +379,11 @@ export default function Reports() {
         const color = opts?.color ?? rgb(0.1, 0.1, 0.1);
         const indent = opts?.indent ?? 0;
         const leading = opts?.leading ?? size + 4;
-        const lines = wrapText(text, 90);
+        const lines = wrapText(text, 88);
+
         for (const line of lines) {
-          if (!line) {
-            y -= leading / 2;
+          if (!line.trim()) {
+            y -= leading * 0.6;
             continue;
           }
           ensureSpace(leading);
@@ -391,11 +392,50 @@ export default function Reports() {
             y,
             size,
             font,
-            maxWidth: width - marginX * 2 - indent,
             color,
           });
           y -= leading;
         }
+      };
+
+      const drawParagraph = (
+        text: string,
+        opts?: {
+          size?: number;
+          color?: ReturnType<typeof rgb>;
+          bulletIndent?: number;
+          indent?: number;
+          leading?: number;
+          paragraphSpacing?: number;
+        },
+      ) => {
+        const paragraphs = text
+          .split(/\n+/)
+          .map((p) => p.trim())
+          .filter((p) => p.length > 0);
+
+        if (paragraphs.length === 0) {
+          y -= (opts?.leading ?? (opts?.size ?? 10) + 4) * 0.6;
+          return;
+        }
+
+        paragraphs.forEach((para, index) => {
+          const isBullet = /^[-•\u2022]/.test(para);
+          const normalized = isBullet ? para.replace(/^[-•\u2022]\s*/, "") : para;
+          const prefix = isBullet ? "• " : "";
+          const indent = isBullet ? opts?.bulletIndent ?? 12 : opts?.indent ?? 0;
+
+          drawLines(`${prefix}${normalized}`, {
+            size: opts?.size,
+            color: opts?.color,
+            indent,
+            leading: opts?.leading,
+          });
+
+          if (index < paragraphs.length - 1) {
+            y -= opts?.paragraphSpacing ?? 6;
+          }
+        });
       };
 
       const drawSectionTitle = (title: string) => {
@@ -427,12 +467,12 @@ export default function Reports() {
       });
       y -= 30;
 
-      drawWrapped(`Generated for: ${displayName}`, { size: 12, leading: 16 });
-      drawWrapped(`Date: ${generatedDate}`, { size: 12, color: rgb(0.4, 0.4, 0.4), leading: 16 });
+      drawParagraph(`Generated for: ${displayName}`, { size: 12, leading: 16 });
+      drawParagraph(`Date: ${generatedDate}`, { size: 12, color: rgb(0.4, 0.4, 0.4), leading: 16 });
       const leadSummary = parsedReport.themeSummary ?? parsedReport.summary ?? "";
       if (leadSummary.trim().length > 0) {
         y -= 6;
-        drawWrapped(sanitizeToPlainText(leadSummary), { size: 11, color: rgb(0.2, 0.2, 0.2) });
+        drawParagraph(sanitizeToPlainText(leadSummary), { size: 11, color: rgb(0.2, 0.2, 0.2) });
       }
       y -= 6;
 
@@ -441,7 +481,7 @@ export default function Reports() {
           drawSectionTitle("Key Findings");
           parsedReport.keyFindings.forEach((finding) => {
             const text = `• ${sanitizeToPlainText(finding)}`;
-            drawWrapped(text);
+            drawParagraph(text, { bulletIndent: 12 });
           });
           y -= 12;
         }
@@ -451,14 +491,14 @@ export default function Reports() {
           section.blocks.forEach((block) => {
             const text = sanitizeToPlainText(block);
             if (!text.trim()) return;
-            drawWrapped(text);
+            drawParagraph(text, { bulletIndent: 12, paragraphSpacing: 4 });
             y -= 6;
           });
           y -= 8;
         });
       } else {
         const printablePlain = sanitizedPlain.length > 0 ? sanitizedPlain : parsedReport.summary ?? "";
-        drawWrapped(printablePlain);
+        drawParagraph(printablePlain, { bulletIndent: 12 });
       }
 
 // Footer
