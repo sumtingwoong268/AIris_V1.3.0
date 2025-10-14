@@ -392,7 +392,7 @@ export default function Setup() {
                 <div className="flex items-start space-x-2">
                   <Checkbox required checked={formData.privacy_accepted} onCheckedChange={val => setFormData({...formData, privacy_accepted: !!val})} />
                   <label className="text-sm">
-                    I agree to the <a href="https://docs.google.com/document/d/1mRvsgIr6H9fzEfP02vHtCDwWrA2sbnauyJqczURnWWQ/edit?usp=sharing" target="_blank" className="text-blue-600 underline">Privacy Policy</a> *
+                    I agree to the <a href="https://docs.google.com/document/d/1mRvsgIr6H9fzEfP02vHtCDwWrA2sbnauyJqczURnWWQ/edit?tab=t.0#heading=h.az3l7ex3egnh" target="_blank" className="text-blue-600 underline">Privacy Policy</a> *
                   </label>
                 </div>
               </div>
