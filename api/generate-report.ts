@@ -14,20 +14,78 @@ function repairJsonLoose(raw: string) {
   // Kill trailing commas like {"a":1,}
   s = s.replace(/,\s*([}\]])/g, "$1");
 
-  // Escape literal newlines/tabs only when *inside* strings
+  // Escape literal newlines/tabs only when *inside* strings and track structure balance
   let out = "";
-  let inStr = false, esc = false;
+  let inStr = false;
+  let esc = false;
+  const stack: string[] = [];
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
-    if (!inStr) { if (ch === '"') inStr = true; out += ch; continue; }
-    if (esc) { out += ch; esc = false; continue; }
-    if (ch === "\\") { esc = true; out += ch; continue; }
-    if (ch === '"') { inStr = false; out += ch; continue; }
-    if (ch === "\n") { out += "\\n"; continue; }
-    if (ch === "\r") { out += "\\r"; continue; }
-    if (ch === "\t") { out += "\\t"; continue; }
+    if (!inStr) {
+      if (ch === '"' && !esc) {
+        inStr = true;
+        out += ch;
+        continue;
+      }
+      if (ch === "{" || ch === "[") {
+        stack.push(ch);
+      } else if (ch === "}" || ch === "]") {
+        if (stack.length && ((stack[stack.length - 1] === "{" && ch === "}") || (stack[stack.length - 1] === "[" && ch === "]"))) {
+          stack.pop();
+        } else {
+          // ignore unmatched closing bracket
+          continue;
+        }
+      }
+      if (ch === "\\") {
+        esc = !esc;
+      } else {
+        esc = false;
+      }
+      out += ch;
+      continue;
+    }
+
+    if (esc) {
+      out += ch;
+      esc = false;
+      continue;
+    }
+    if (ch === "\\") {
+      esc = true;
+      out += ch;
+      continue;
+    }
+    if (ch === '"') {
+      inStr = false;
+      out += ch;
+      continue;
+    }
+    if (ch === "\n") {
+      out += "\\n";
+      continue;
+    }
+    if (ch === "\r") {
+      out += "\\r";
+      continue;
+    }
+    if (ch === "\t") {
+      out += "\\t";
+      continue;
+    }
     out += ch;
   }
+
+  if (inStr) {
+    out += '"';
+  }
+
+  while (stack.length) {
+    const opener = stack.pop();
+    if (opener === "{") out += "}";
+    else if (opener === "[") out += "]";
+  }
+
   return out;
 }
 const BASE_PROMPT = `
