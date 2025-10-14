@@ -10,13 +10,107 @@ type StructuredReportViewProps = {
   themeSummary?: string;
 };
 
+/* ----------------------------- Sanitizer Utils ----------------------------- */
+
+// Remove <script>/<style> blocks entirely
+function stripDangerousBlocks(html: string) {
+  return html
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "");
+}
+
+// Remove inline event handlers (onClick=, onload=, etc.) and javascript: URLs
+function stripDangerousAttrs(html: string) {
+  // remove on*="...", on*='...', on*=bare
+  let out = html
+    .replace(/\s(on\w+)\s*=\s*"(?:[^"]*)"/gi, "")
+    .replace(/\s(on\w+)\s*=\s*'(?:[^']*)'/gi, "")
+    .replace(/\s(on\w+)\s*=\s*[^\s>]+/gi, "");
+
+  // neutralize javascript: in href/src/style
+  out = out.replace(/\s(href|src)\s*=\s*"(javascript:[^"]*)"/gi, ' $1="#"');
+  out = out.replace(/\s(href|src)\s*=\s*'(javascript:[^']*)'/gi, " $1='#'");
+  out = out.replace(/\sstyle\s*=\s*"(?:[^"]*javascript:[^"]*)"/gi, ' style=""');
+  out = out.replace(/\sstyle\s*=\s*'(?:[^']*javascript:[^']*)'/gi, " style=''");
+
+  // very defensive: block url() in style
+  out = out.replace(/\sstyle\s*=\s*"[^"]*url\s*\([^)]*\)[^"]*"/gi, ' style=""');
+  out = out.replace(/\sstyle\s*=\s*'[^']*url\s*\([^)]*\)[^']*'/gi, " style=''");
+
+  return out;
+}
+
+// Strip markdown code fences (```json ... ```), trim, and dedupe
+function cleanBlocks(blocks: string[]) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of blocks ?? []) {
+    let s = (raw ?? "").trim();
+    if (!s) continue;
+    s = s.replace(/^```(?:json|md|markdown)?\s*/i, "").replace(/```$/i, "").trim();
+    // sanitize HTML but still allow safe subset + inline styles
+    s = stripDangerousBlocks(s);
+    s = stripDangerousAttrs(s);
+
+    // collapse excessive blank lines
+    s = s.replace(/\n{3,}/g, "\n\n").trim();
+    if (!s || seen.has(s)) continue;
+    seen.add(s);
+    out.push(s);
+  }
+  return out;
+}
+
+function sanitizeReport(report: any): GeminiStructuredReport {
+  const safe: any = { ...report };
+
+  safe.visual_theme = {
+    accentColor: report?.visual_theme?.accentColor || "#6B8AFB",
+    trafficLight: report?.visual_theme?.trafficLight || "green",
+    urgency: report?.visual_theme?.urgency || "no_action",
+    summary: (report?.visual_theme?.summary ?? "").toString().trim(),
+  };
+
+  safe.sections = (report?.sections ?? [])
+    .map((sec: any) => {
+      const title = (sec?.title ?? "").toString().trim() || "Untitled";
+      const blocks = cleanBlocks(sec?.blocks ?? []);
+      return { title, blocks };
+    })
+    .filter((s: any) => s.blocks.length > 0);
+
+  // plain_text_document and key_findings (if present) should be safe as text
+  if (typeof report?.plain_text_document === "string") {
+    safe.plain_text_document = report.plain_text_document.replace(/^```[\s\S]*?```/g, "").trim();
+  }
+  if (Array.isArray(report?.key_findings)) {
+    safe.key_findings = Array.from(
+      new Set(
+        report.key_findings
+          .map((x: any) => (x ?? "").toString().trim())
+          .filter((x: string) => x.length > 0)
+      )
+    );
+  }
+
+  return safe as GeminiStructuredReport;
+}
+
+/* --------------------------- Rendering Helper Bits -------------------------- */
+
 const hasHtml = (block: string) => /<[^>]+>/.test(block);
 
 const blockContent = (block: string) => {
   const trimmed = (block ?? "").trim();
   if (!trimmed) return null;
   if (hasHtml(trimmed)) {
-    return <div className="leading-relaxed text-slate-700 dark:text-slate-100" dangerouslySetInnerHTML={{ __html: trimmed }} />;
+    // Safe because we sanitized before
+    return (
+      <div
+        className="leading-relaxed text-slate-700 dark:text-slate-100"
+        dangerouslySetInnerHTML={{ __html: trimmed }}
+      />
+    );
   }
   return (
     <p className="whitespace-pre-line leading-relaxed text-slate-700 dark:text-slate-100">
@@ -27,6 +121,8 @@ const blockContent = (block: string) => {
 
 const urgencyLabel = (urgency: UrgencyLevel) => urgency.replace(/_/g, " ");
 
+/* --------------------------------- Component -------------------------------- */
+
 export function StructuredReportView({
   report,
   accentColor,
@@ -35,6 +131,8 @@ export function StructuredReportView({
   keyFindings,
   themeSummary,
 }: StructuredReportViewProps) {
+  // ✅ Sanitize once up-front
+  const safeReport = sanitizeReport(report);
   const badgeColors = TRAFFIC_BADGE_COLORS[trafficLight];
 
   return (
@@ -59,7 +157,9 @@ export function StructuredReportView({
             Urgency · {urgencyLabel(urgency)}
           </span>
         </div>
-        {themeSummary && <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{themeSummary}</p>}
+        {themeSummary && (
+          <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{themeSummary}</p>
+        )}
       </header>
 
       {keyFindings && keyFindings.length > 0 && (
@@ -81,7 +181,7 @@ export function StructuredReportView({
       )}
 
       <div className="flex flex-col gap-5">
-        {report.sections.map((section, idx) => (
+        {safeReport.sections.map((section, idx) => (
           <section
             key={`${section.title}-${idx}`}
             className="rounded-2xl border border-white/60 bg-white/70 p-6 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-950/70"

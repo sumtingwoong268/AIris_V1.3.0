@@ -2,6 +2,41 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const BASE_PROMPT = 
 `
+IMPORTANT: Your output must be a single valid JSON object. 
+Do NOT include markdown code fences, comments, prose, or text outside the JSON. 
+No leading or trailing explanations, no triple backticks.
+
+OUTPUT RULES (CRITICAL):
+- Output ONLY valid JSON. No markdown fences or prose outside JSON.
+- No HTML tags in any strings.
+- Use this schema:
+
+{
+  "visual_theme": {
+    "accentColor": "#RRGGBB",
+    "trafficLight": "green|yellow|red",
+    "urgency": "no_action|routine_checkup|consult_soon|urgent",
+    "summary": "1–2 sentences plain text"
+  },
+  "sections": [
+    {
+      "title": "1. Summary Overview",
+      "blocks": ["short paragraph 1", "short paragraph 2"]
+    },
+    {
+      "title": "2. Detailed Test Analysis",
+      "blocks": ["Visual Acuity: …", "Amsler: …"]
+    },
+    {
+      "title": "3. Personalised Self-Care Guidance",
+      "blocks": ["Exercises: …", "Lifestyle: …", "Nutrition: …"]
+    }
+  ]
+}
+
+VALIDATION:
+- Do not repeat any blocks.
+- Trim whitespace.
 You are a digital eye-health assistant that generates detailed, personalized reports strictly from the quantitative and qualitative vision-screening dataset provided. Your output must be a single valid JSON object in UTF-8, with exactly the schema specified below, and nothing else. Do not include markdown, bold, italics, headings, bullets, comments, explanations, or code fences outside of the JSON strings. Do not hallucinate any facts not present in the dataset. If a data point is missing, say “not provided” or “insufficient data” instead of inferring.
 
 Use the complete dataset provided below, including:
@@ -146,11 +181,28 @@ export default async function handler(req: any, res: any) {
         topP: 0.9,
         topK: 32,
         maxOutputTokens: 6000,
+        responseMimeType: "application/json",
       },
     });
 
-    const text = response.response.text();
-    res.status(200).json({ text, meta: { ok: true, len: text.length } });
+    const raw = response.response.text();
+
+    const jsonText = (() => {
+      const match = raw.match(/\{[\s\S]*\}$/m);
+      return match ? match[0] : raw;
+    })();
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(jsonText);
+    } catch (error) {
+      const preview = raw.slice(0, 400);
+      throw new Error(`Model did not return valid JSON. Preview:\n${preview}`);
+    }
+
+    const clean = JSON.stringify(parsed);
+    res.status(200).json({ text: clean, meta: { ok: true, len: clean.length } });
+
   } catch (err: any) {
     console.error("generate-report error:", err);
     res.status(500).send(err?.message || "Internal Server Error");
