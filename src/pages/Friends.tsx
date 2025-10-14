@@ -78,44 +78,37 @@ export default function Friends() {
     
     setAddingFriend(true);
     try {
-      // Get user's email first
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser?.email) {
         throw new Error("Could not retrieve your email");
       }
 
-      // Check if trying to add self
-      if (emailInput.toLowerCase() === authUser.email.toLowerCase()) {
+      const trimmedEmail = emailInput.trim().toLowerCase();
+      if (trimmedEmail === authUser.email.toLowerCase()) {
         throw new Error("You cannot add yourself as a friend");
       }
 
-      // Find user by email - query auth.users via profiles
-      const { data: targetProfile, error: searchError } = await supabase
-        .from("profiles")
-        .select("id, display_name")
-        .limit(1)
-        .single();
-
-      // Since we can't directly query by email from profiles, we'll use RPC or a workaround
-      // For now, let's search all profiles and match on the client (not ideal but functional)
-      const { data: allProfiles } = await supabase
-        .from("profiles")
-        .select("id, display_name");
-
-      // In production, you'd want to add an email field to profiles or use an RPC function
-      // For now, show a message
-      if (!allProfiles || allProfiles.length === 0) {
-        throw new Error("User not found with that email");
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) {
+        throw new Error("Session expired. Please sign in again.");
       }
 
-      // Temporary: Let users enter display name instead for demo
-      const targetUser = allProfiles.find(p => 
-        p.display_name?.toLowerCase() === emailInput.toLowerCase()
-      );
+      const lookupResponse = await fetch("/api/lookup-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
 
-      if (!targetUser) {
-        throw new Error(`User not found. Try entering their display name instead of email.`);
+      const lookupData = await lookupResponse.json();
+      if (!lookupResponse.ok) {
+        throw new Error(lookupData?.error || "User not found with that email");
       }
+
+      const targetUser = lookupData.profile as { id: string; display_name: string | null };
 
       // Check if already friends
       const { data: existing } = await supabase
@@ -141,7 +134,6 @@ export default function Friends() {
         throw new Error(`Friend request already ${existingRequest.status}`);
       }
 
-      // Create friend request
       const { error: insertError } = await supabase
         .from("friend_requests")
         .insert({
@@ -154,7 +146,7 @@ export default function Friends() {
 
       toast({
         title: "Friend request sent!",
-        description: `Request sent to ${targetUser.display_name}`,
+        description: `Request sent to ${targetUser.display_name ?? trimmedEmail}`,
       });
       
       setEmailInput("");
@@ -319,7 +311,7 @@ export default function Friends() {
               <CardContent>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Enter display name (email search coming soon)"
+                    placeholder="Enter friend's email"
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAddFriend()}
@@ -332,7 +324,7 @@ export default function Friends() {
                   </Button>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Tip: For now, enter the exact display name of the person you want to add
+                  Tip: Friend requests now use the email associated with their AIris account.
                 </p>
               </CardContent>
             </Card>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useDarkModePreference } from "@/hooks/useDarkModePreference";
 import { ArrowLeft } from "lucide-react";
 import logo from "@/assets/logo.png";
 
@@ -15,6 +16,7 @@ export default function AmslerTest() {
   const { user } = useAuth();
   const { xp } = useXP(user?.id);
   const { toast } = useToast();
+  const { darkMode } = useDarkModePreference();
   const [started, setStarted] = useState(false);
   const [eye, setEye] = useState<"left" | "right" | null>(null);
   const [leftClicks, setLeftClicks] = useState<{ x: number; y: number }[]>([]);
@@ -50,15 +52,17 @@ export default function AmslerTest() {
   const completeTest = async () => {
     if (!user || completed) return;
     setCompleted(true);
+    const hasMarks = leftClicks.length > 0 || rightClicks.length > 0;
 
     try {
-      // XP scaling: base 28 for completion
-      const xpEarned = 28;
+      // Award a flat amount of XP for completing the assessment
+      const xpEarned = 20;
+      const score = hasMarks ? 0 : 100;
 
       await supabase.from("test_results").insert({
         user_id: user.id,
         test_type: "amsler",
-        score: 100,
+        score,
         xp_earned: xpEarned,
         details: { leftClicks, rightClicks },
       });
@@ -155,13 +159,20 @@ export default function AmslerTest() {
                   className="relative mx-auto h-80 w-80 rounded-2xl border border-primary/30 bg-white shadow-inner dark:bg-slate-900"
                   onClick={handleGridClick}
                   style={{
-                    backgroundImage:
-                      "linear-gradient(0deg, rgba(0,0,0,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.12) 1px, transparent 1px)",
+                    backgroundColor: darkMode ? "#e0f2ff" : "#ffffff",
+                    backgroundImage: `linear-gradient(0deg, ${
+                      darkMode ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.12)"
+                    } 1px, transparent 1px), linear-gradient(90deg, ${
+                      darkMode ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.12)"
+                    } 1px, transparent 1px)`,
                     backgroundSize: "20px 20px",
                   }}
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
+                    <div
+                      className="h-2 w-2 rounded-full bg-primary"
+                      style={{ backgroundColor: darkMode ? "#1d4ed8" : undefined }}
+                    />
                   </div>
                   {currentClicks.map((point, index) => (
                     <div

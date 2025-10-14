@@ -651,6 +651,9 @@ export default function Dashboard() {
                   const date = test.created_at ? new Date(test.created_at) : null;
                   const formattedDate =
                     date && !Number.isNaN(date.getTime()) ? format(date, "MMM d, yyyy • h:mm a") : "Recent session";
+                  const scoreValue = test.score ?? 0;
+                  const scoreClass =
+                    scoreValue >= 70 ? "text-green-600" : scoreValue >= 40 ? "text-yellow-600" : "text-red-600";
                   return (
                     <div
                       key={`${test.created_at}-${index}`}
@@ -668,16 +671,8 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p
-                          className={`text-sm font-semibold ${
-                            (test.score ?? 0) >= 80
-                              ? "text-green-600"
-                              : (test.score ?? 0) >= 60
-                                ? "text-yellow-600"
-                                : "text-red-600"
-                          }`}
-                        >
-                          {test.score ?? 0}%
+                        <p className={`text-sm font-semibold ${scoreClass}`}>
+                          {scoreValue}%
                         </p>
                         <p className="text-xs text-muted-foreground">+{test.xp_earned ?? 0} XP</p>
                       </div>

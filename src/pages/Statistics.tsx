@@ -659,7 +659,7 @@ export default function Statistics() {
                           : "Recent session";
 
                       const scoreColor =
-                        score >= 80 ? "text-emerald-600" : score >= 60 ? "text-amber-600" : "text-rose-600";
+                        score >= 70 ? "text-emerald-600" : score >= 40 ? "text-amber-600" : "text-rose-600";
 
                       return (
                         <div

@@ -108,7 +108,7 @@ function buildGeminiDataset(
     .map((entry) => (typeof entry?.score === "number" ? entry.score : null))
     .filter((value): value is number => value !== null);
 
-  const overallScore =
+  const overallAverageScore =
     allCurrentScores.length > 0
       ? Number((allCurrentScores.reduce((sum, value) => sum + value, 0) / allCurrentScores.length).toFixed(2))
       : null;
@@ -126,14 +126,31 @@ function buildGeminiDataset(
       ? Number((previousScores.reduce((sum, value) => sum + value, 0) / previousScores.length).toFixed(2))
       : null;
 
+  const lowestScoresByType: Record<string, number | null> = {};
+  Object.keys(latestByType).forEach((type) => {
+    const history = chronologicalHistory(type);
+    let lowest: number | null = null;
+    history.forEach((entry) => {
+      if (typeof entry.score === "number") {
+        lowest = lowest === null ? entry.score : Math.min(lowest, entry.score);
+      }
+    });
+    lowestScoresByType[type] = lowest;
+  });
+
+  const careBaselinePool = Object.values(lowestScoresByType).filter(
+    (value): value is number => typeof value === "number",
+  );
+  const careBaselineScore = careBaselinePool.length > 0 ? Math.min(...careBaselinePool) : null;
+
   let riskLevel: "Low" | "Moderate" | "High" | "Unknown" = "Unknown";
-  if (overallScore !== null) {
-    riskLevel = overallScore >= 80 ? "Low" : overallScore >= 60 ? "Moderate" : "High";
+  if (careBaselineScore !== null) {
+    riskLevel = careBaselineScore >= 70 ? "Low" : careBaselineScore >= 40 ? "Moderate" : "High";
   }
 
   const trendOverall =
-    overallScore !== null && previousAverage !== null
-      ? Number((overallScore - previousAverage).toFixed(2))
+    overallAverageScore !== null && previousAverage !== null
+      ? Number((overallAverageScore - previousAverage).toFixed(2))
       : null;
 
   const age = calculateAge(profile.date_of_birth ?? null);
@@ -170,7 +187,8 @@ function buildGeminiDataset(
       xp: profile.xp ?? 0,
       level: Math.floor((profile.xp ?? 0) / 100) + 1,
       current_streak: profile.current_streak ?? 0,
-      overall_score: overallScore,
+      overall_score: overallAverageScore,
+      care_baseline_score: careBaselineScore,
       previous_average_score: previousAverage,
       overall_trend: trendOverall,
       risk_level: riskLevel,
@@ -321,7 +339,7 @@ export default function Reports() {
       const fallbackTraffic: TrafficLight =
         baseRisk === "High" ? "red" : baseRisk === "Moderate" ? "yellow" : "green";
       const fallbackUrgency: UrgencyLevel =
-        fallbackTraffic === "red" ? "consult_soon" : fallbackTraffic === "green" ? "no_action" : "routine_checkup";
+        fallbackTraffic === "red" ? "urgent" : fallbackTraffic === "yellow" ? "consult_soon" : "no_action";
 
       const parsedReport = parseAiReportText(aiReportText, {
         fallbackTrafficLight: fallbackTraffic,
