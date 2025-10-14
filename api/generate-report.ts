@@ -1,8 +1,69 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// ---------- JSON repair helpers ----------
+function tryParseJsonStrict(s: string) {
+  return JSON.parse(s);
+}
+
+// Repairs common model errors: unescaped newlines, smart quotes, trailing commas, etc.
+function repairJsonLoose(raw: string) {
+  // Normalize quotes
+  let s = raw.replace(/\u201C|\u201D|\u201E|\u201F/g, '"').replace(/\u2018|\u2019/g, "'");
+
+  // Remove BOM
+  s = s.replace(/^\uFEFF/, "");
+
+  // Remove trailing commas before } or ]
+  s = s.replace(/,\s*([}\]])/g, "$1");
+
+  // Escape any literal newlines/tabs inside strings
+  let out = "";
+  let inStr = false,
+    esc = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (!inStr) {
+      if (ch === '"') inStr = true;
+      out += ch;
+      continue;
+    }
+    if (esc) {
+      out += ch;
+      esc = false;
+      continue;
+    }
+    if (ch === "\\") {
+      esc = true;
+      out += ch;
+      continue;
+    }
+    if (ch === '"') {
+      inStr = false;
+      out += ch;
+      continue;
+    }
+    if (ch === "\n") {
+      out += "\\n";
+      continue;
+    }
+    if (ch === "\r") {
+      out += "\\r";
+      continue;
+    }
+    if (ch === "\t") {
+      out += "\\t";
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+
 const BASE_PROMPT = 
 `
-IMPORTANT: Your output must be a single valid JSON object. 
+IMPORTANT: Your output must be a single valid JSON object.
+All newline characters inside JSON strings MUST be escaped as \\n (not raw line breaks). 
 Do NOT include markdown code fences, comments, prose, or text outside the JSON. 
 No leading or trailing explanations, no triple backticks.
 
@@ -169,39 +230,49 @@ export default async function handler(req: any, res: any) {
     const additional = typeof prompt === "string" && prompt.trim().length > 0 ? `\n\nAdditional Guidance:\n${prompt.trim()}` : "";
     const finalPrompt = `${BASE_PROMPT}\n\n### DATASET\n${datasetBlock}${additional}`;
 
-    const response = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: finalPrompt }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.2,
-        topP: 0.9,
-        topK: 32,
-        maxOutputTokens: 6000,
-        responseMimeType: "application/json",
-      },
-    });
+  const response = await model.generateContent({
+  contents: [
+    {
+      role: "user",
+      parts: [{ text: finalPrompt }],
+    },
+  ],
+  generationConfig: {
+    temperature: 0.2,
+    topP: 0.9,
+    topK: 32,
+    maxOutputTokens: 6000,
+    responseMimeType: "application/json", // ✅ ensures JSON-only output
+  },
+});
 
-    const raw = response.response.text();
+const raw = response.response.text();
 
-    const jsonText = (() => {
-      const match = raw.match(/\{[\s\S]*\}$/m);
-      return match ? match[0] : raw;
-    })();
+// Extract first JSON-like block
+const firstBrace = raw.indexOf("{");
+const lastBrace = raw.lastIndexOf("}");
+const candidate =
+  firstBrace >= 0 && lastBrace > firstBrace ? raw.slice(firstBrace, lastBrace + 1) : raw;
 
-    let parsed: any;
-    try {
-      parsed = JSON.parse(jsonText);
-    } catch (error) {
-      const preview = raw.slice(0, 400);
-      throw new Error(`Model did not return valid JSON. Preview:\n${preview}`);
-    }
+let jsonText = candidate;
+let parsed: any;
 
-    const clean = JSON.stringify(parsed);
-    res.status(200).json({ text: clean, meta: { ok: true, len: clean.length } });
+try {
+  parsed = tryParseJsonStrict(jsonText);
+} catch {
+  // attempt repair
+  const repaired = repairJsonLoose(jsonText);
+  try {
+    parsed = tryParseJsonStrict(repaired);
+    jsonText = repaired;
+  } catch (err2) {
+    const preview = raw.slice(0, 400);
+    throw new Error(`Model did not return valid JSON. Preview:\n${preview}`);
+  }
+}
+
+const clean = JSON.stringify(parsed);
+res.status(200).json({ text: clean, meta: { ok: true, len: clean.length } });
 
   } catch (err: any) {
     console.error("generate-report error:", err);
