@@ -5,59 +5,32 @@ function tryParseJsonStrict(s: string) {
   return JSON.parse(s);
 }
 
-// Repairs common model errors: unescaped newlines, smart quotes, trailing commas, etc.
+// Repairs common model errors: unescaped newlines in strings, smart quotes, trailing commas, BOM.
 function repairJsonLoose(raw: string) {
-  // Normalize quotes
+  // Normalize curly quotes
   let s = raw.replace(/\u201C|\u201D|\u201E|\u201F/g, '"').replace(/\u2018|\u2019/g, "'");
-
-  // Remove BOM
+  // Strip BOM
   s = s.replace(/^\uFEFF/, "");
-
-  // Remove trailing commas before } or ]
+  // Kill trailing commas like {"a":1,}
   s = s.replace(/,\s*([}\]])/g, "$1");
 
-  // Escape any literal newlines/tabs inside strings
+  // Escape literal newlines/tabs only when *inside* strings
   let out = "";
-  let inStr = false,
-    esc = false;
+  let inStr = false, esc = false;
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
-    if (!inStr) {
-      if (ch === '"') inStr = true;
-      out += ch;
-      continue;
-    }
-    if (esc) {
-      out += ch;
-      esc = false;
-      continue;
-    }
-    if (ch === "\\") {
-      esc = true;
-      out += ch;
-      continue;
-    }
-    if (ch === '"') {
-      inStr = false;
-      out += ch;
-      continue;
-    }
-    if (ch === "\n") {
-      out += "\\n";
-      continue;
-    }
-    if (ch === "\r") {
-      out += "\\r";
-      continue;
-    }
-    if (ch === "\t") {
-      out += "\\t";
-      continue;
-    }
+    if (!inStr) { if (ch === '"') inStr = true; out += ch; continue; }
+    if (esc) { out += ch; esc = false; continue; }
+    if (ch === "\\") { esc = true; out += ch; continue; }
+    if (ch === '"') { inStr = false; out += ch; continue; }
+    if (ch === "\n") { out += "\\n"; continue; }
+    if (ch === "\r") { out += "\\r"; continue; }
+    if (ch === "\t") { out += "\\t"; continue; }
     out += ch;
   }
   return out;
 }
+
 
 
 const BASE_PROMPT = 
@@ -247,12 +220,10 @@ export default async function handler(req: any, res: any) {
 });
 
 const raw = response.response.text();
-
-// Extract first JSON-like block
+// Grab the first JSON-looking block if anything extra slipped in
 const firstBrace = raw.indexOf("{");
-const lastBrace = raw.lastIndexOf("}");
-const candidate =
-  firstBrace >= 0 && lastBrace > firstBrace ? raw.slice(firstBrace, lastBrace + 1) : raw;
+const lastBrace  = raw.lastIndexOf("}");
+const candidate  = (firstBrace >= 0 && lastBrace > firstBrace) ? raw.slice(firstBrace, lastBrace + 1) : raw;
 
 let jsonText = candidate;
 let parsed: any;
@@ -260,17 +231,18 @@ let parsed: any;
 try {
   parsed = tryParseJsonStrict(jsonText);
 } catch {
-  // attempt repair
   const repaired = repairJsonLoose(jsonText);
   try {
     parsed = tryParseJsonStrict(repaired);
     jsonText = repaired;
-  } catch (err2) {
+  } catch {
+    // Bubble a readable error back to the client (prevents “Failed to fetch”)
     const preview = raw.slice(0, 400);
     throw new Error(`Model did not return valid JSON. Preview:\n${preview}`);
   }
 }
 
+// Return a stable minified JSON string so your frontend always gets valid JSON
 const clean = JSON.stringify(parsed);
 res.status(200).json({ text: clean, meta: { ok: true, len: clean.length } });
 

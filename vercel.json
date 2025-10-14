@@ -4,5 +4,13 @@
   ],
   "redirects": [
     { "source": "/index.html", "destination": "/", "permanent": false }
-  ]
+  ],
+  
+  "functions": {
+    "api/*.ts": {
+      "runtime": "nodejs20.x",
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
 }
