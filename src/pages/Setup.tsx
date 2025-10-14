@@ -47,17 +47,17 @@ export default function Setup() {
   const [customFamilyHistory, setCustomFamilyHistory] = useState("");
 
   const symptomOptions = [
-    "blurred_distance", "near_strain", "headaches", "dryness", 
-    "halos_glare", "color_confusion", "night_vision_issues"
+    "Blurred_distance", "Near_strain", "Headaches", "Dryness", 
+    "Halos_glare", "Color_confusion", "Night_vision_issues"
   ];
 
   const conditionOptions = [
-    "myopia", "hyperopia", "astigmatism", "amblyopia", "color_deficiency",
-    "glaucoma", "cataract", "retinal_disease", "other"
+    "Myopia", "Hyperopia", "Astigmatism", "Amblyopia", "Aolor_deficiency",
+    "Glaucoma", "Cataract", "Retinal_disease", "Other"
   ];
 
   const familyOptions = [
-    "high_myopia", "glaucoma", "color_blindness", "macular_disease", "keratoconus"
+    "High_myopia", "Glaucoma", "Color_blindness", "Macular_disease", "Keratoconus"
   ];
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
