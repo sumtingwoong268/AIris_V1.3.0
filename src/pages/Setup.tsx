@@ -35,7 +35,6 @@ export default function Setup() {
     eye_surgeries: "",
     uses_eye_medication: false,
     medication_details: "",
-    tos_accepted: false,
     privacy_accepted: false,
   });
 
@@ -75,8 +74,8 @@ export default function Setup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.tos_accepted || !formData.privacy_accepted) {
-      toast({ title: "Error", description: "Please accept Terms and Privacy Policy", variant: "destructive" });
+    if (!formData.privacy_accepted) {
+      toast({ title: "Error", description: "Please accept the Privacy Policy to continue", variant: "destructive" });
       return;
     }
 
@@ -146,14 +145,26 @@ export default function Setup() {
     setArr(arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value]);
   };
 
+  const handleProtectedNavigation = () => {
+    if (!formData.privacy_accepted) {
+      toast({
+        title: "Finish required step",
+        description: "Please accept the Privacy Policy before leaving setup.",
+        variant: "destructive",
+      });
+      return;
+    }
+    navigate("/dashboard");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto flex items-center gap-3 px-4 py-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+          <Button variant="ghost" size="icon" onClick={handleProtectedNavigation}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="flex cursor-pointer items-center gap-3" onClick={() => navigate("/dashboard")}>
+          <div className="flex cursor-pointer items-center gap-3" onClick={handleProtectedNavigation}>
             <img src={logo} alt="AIris" className="h-10" />
             <div className="flex flex-col">
               <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
@@ -187,7 +198,7 @@ export default function Setup() {
               </div>
               <div className="rounded-2xl bg-white/15 p-4 text-sm backdrop-blur">
                 <span className="text-xs uppercase tracking-wide text-white/70">Required</span>
-                <p className="mt-2 text-lg font-semibold">Accept policies</p>
+                <p className="mt-2 text-lg font-semibold">Review privacy policy</p>
               </div>
             </div>
           </CardContent>
@@ -387,7 +398,7 @@ export default function Setup() {
                 )}
               </div>
 
-              {/* Terms & Privacy */}
+              {/* Privacy Policy */}
               <div className="space-y-4 border-t pt-4">
                 <div className="flex items-start space-x-2">
                   <Checkbox required checked={formData.privacy_accepted} onCheckedChange={val => setFormData({...formData, privacy_accepted: !!val})} />
