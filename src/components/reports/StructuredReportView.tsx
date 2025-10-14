@@ -13,10 +13,16 @@ type StructuredReportViewProps = {
 const hasHtml = (block: string) => /<[^>]+>/.test(block);
 
 const blockContent = (block: string) => {
-  if (hasHtml(block)) {
-    return <div dangerouslySetInnerHTML={{ __html: block }} />;
+  const trimmed = (block ?? "").trim();
+  if (!trimmed) return null;
+  if (hasHtml(trimmed)) {
+    return <div className="leading-relaxed text-slate-700 dark:text-slate-100" dangerouslySetInnerHTML={{ __html: trimmed }} />;
   }
-  return <p className="leading-relaxed text-slate-700 dark:text-slate-100">{block}</p>;
+  return (
+    <p className="whitespace-pre-line leading-relaxed text-slate-700 dark:text-slate-100">
+      {trimmed}
+    </p>
+  );
 };
 
 const urgencyLabel = (urgency: UrgencyLevel) => urgency.replace(/_/g, " ");
@@ -87,14 +93,18 @@ export function StructuredReportView({
               {section.title}
             </h2>
             <div className="mt-4 grid gap-4 text-sm leading-relaxed text-slate-700 dark:text-slate-100">
-              {section.blocks.map((block, blockIdx) => (
-                <div
-                  key={blockIdx}
-                  className="rounded-xl border border-slate-200/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/70"
-                >
-                  {blockContent(block)}
-                </div>
-              ))}
+              {section.blocks.map((block, blockIdx) => {
+                const content = blockContent(block);
+                if (!content) return null;
+                return (
+                  <div
+                    key={blockIdx}
+                    className="rounded-xl border border-slate-200/60 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/70"
+                  >
+                    {content}
+                  </div>
+                );
+              })}
             </div>
           </section>
         ))}
