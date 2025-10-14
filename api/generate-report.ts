@@ -51,7 +51,45 @@ Output Format
 - Incorporate inline styles inspired by the AIris palette (deep purples, blues, soft gradients) for headings, callout boxes, and dividers.
 - Do not include any content that is not derived from the dataset provided.
 - Ensure every sentence of the report is AI-generated (no boilerplate other than literal user data values).
-`;
+
+Return the response as valid JSON encoded in UTF-8 with the following schema:
+{
+  "visual_theme": {
+    "accentColor": "string HEX color",
+    "trafficLight": "green" | "yellow" | "red",
+    "urgency": "no_action" | "routine_checkup" | "consult_soon" | "urgent",
+    "summary": "short sentence describing risk status"
+  },
+  "sections": [
+    {
+      "title": "1. Summary Overview",
+      "blocks": ["HTML paragraph or list"...]
+    },
+    {
+      "title": "2. Detailed Test Analysis",
+      "blocks": ["HTML paragraph or list"...]
+    },
+    {
+      "title": "3. Personalised Self-Care Guidance",
+      "blocks": ["HTML paragraph or list"...]
+    },
+    {
+      "title": "4. Medical Follow-Up",
+      "blocks": ["HTML paragraph or list"...]
+    },
+    {
+      "title": "5. Long-Term Improvement Plan",
+      "blocks": ["HTML paragraph or list"...]
+    },
+    {
+      "title": "6. Disclaimers",
+      "blocks": ["HTML paragraph or list"...]
+    }
+  ],
+  "key_findings": ["short bullet strings highlighting notable points"...]
+}
+
+All narrative content inside the blocks and key_findings must be generated from the dataset only. Do not include additional keys. Do not wrap the JSON in code fences.`;
 
 function createDatasetBlock(data: unknown): string {
   try {

@@ -1,5 +1,5 @@
 // src/pages/Reports.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,15 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { saveAs } from "file-saver";
 import { generateReport } from "@/utils/geminiClient";
 import logo from "@/assets/logo.png";
+import StructuredReportView from "@/components/reports/StructuredReportView";
+import {
+  parseAiReportText,
+  sanitizeToPlainText,
+  TRAFFIC_BADGE_COLORS,
+  type TrafficLight,
+  type UrgencyLevel,
+} from "@/utils/reportFormatting";
+import type { GeminiStructuredReport } from "@/utils/reportTypes";
 
 function AIReportHTML({ html }: { html: string }) {
   if (!html) return null;
@@ -178,13 +187,69 @@ function buildGeminiDataset(
   };
 }
 
+const isStructuredReport = (value: unknown): value is GeminiStructuredReport => {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return Array.isArray(candidate.sections) && candidate.sections.length > 0;
+};
+
 export default function Reports() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [reports, setReports] = useState<any[]>([]);
   const [generating, setGenerating] = useState(false);
+
   const latestReport = reports[0];
+  const latestReportDetails = useMemo(() => {
+    if (!latestReport) return null;
+    const reportData = latestReport.report_data ?? {};
+    const structured = isStructuredReport(reportData?.structured) ? (reportData.structured as GeminiStructuredReport) : null;
+    const html =
+      typeof reportData?.html === "string"
+        ? reportData.html
+        : typeof latestReport.analysis === "string"
+          ? latestReport.analysis
+          : "";
+    const plainText =
+      typeof reportData?.plain_text === "string"
+        ? reportData.plain_text
+        : sanitizeToPlainText(
+            html ||
+              (typeof latestReport.recommendations === "string" ? latestReport.recommendations : "") ||
+              (typeof latestReport.risk_assessment === "string" ? latestReport.risk_assessment : ""),
+          );
+    const keyFindings: string[] = Array.isArray(reportData?.key_findings) ? (reportData.key_findings as string[]) : [];
+    const theme = reportData?.theme ?? {};
+    const accentColor = typeof theme?.accentColor === "string" ? theme.accentColor : "#6366F1";
+    const trafficLight =
+      (theme?.trafficLight as TrafficLight | undefined) || (latestReport.traffic_light as TrafficLight | undefined) || null;
+    const urgency =
+      (theme?.urgency as UrgencyLevel | undefined) || (latestReport.urgency_level as UrgencyLevel | undefined) || null;
+    const themeSummary =
+      typeof theme?.summary === "string" && theme.summary.trim().length > 0 ? theme.summary.trim() : undefined;
+    const summary =
+      themeSummary ??
+      (typeof latestReport.summary === "string" && latestReport.summary.trim().length > 0
+        ? latestReport.summary.trim()
+        : typeof latestReport.risk_assessment === "string" && latestReport.risk_assessment.trim().length > 0
+          ? latestReport.risk_assessment.trim()
+          : plainText.slice(0, 260));
+
+    return {
+      structured,
+      html,
+      plainText,
+      keyFindings,
+      accentColor,
+      trafficLight,
+      urgency,
+      summary,
+      themeSummary,
+    };
+  }, [latestReport]);
+
+  const latestReportHtml = latestReportDetails?.html ?? "";
   const lastGeneratedAt = latestReport?.created_at
     ? new Date(latestReport.created_at).toLocaleString()
     : null;
@@ -284,31 +349,43 @@ export default function Reports() {
       });
       y -= 28;
 
-      const sanitized = aiReportText
-        .replace(/<br\s*\/?>/gi, "\n")
-        .replace(/<li>/gi, "• ")
-        .replace(/<\/(p|div|section|article)>/gi, "\n\n")
-        .replace(/<\/(h[1-6])>/gi, "\n")
-        .replace(/<[^>]*>/g, "")
-        .replace(/&nbsp;/gi, " ")
-        .replace(/&amp;/gi, "&")
-        .replace(/&lt;/gi, "<")
-        .replace(/&gt;/gi, ">")
-        .replace(/\n{3,}/g, "\n\n")
-        .trim();
+      const baseRisk = dataset.stats?.risk_level ?? "Unknown";
+      const fallbackTraffic: TrafficLight =
+        baseRisk === "High" ? "red" : baseRisk === "Moderate" ? "yellow" : "green";
+      const fallbackUrgency: UrgencyLevel =
+        fallbackTraffic === "red" ? "consult_soon" : fallbackTraffic === "green" ? "no_action" : "routine_checkup";
 
-      const analysisLines = sanitized
+      const parsedReport = parseAiReportText(aiReportText, {
+        fallbackTrafficLight: fallbackTraffic,
+        fallbackUrgency,
+        fallbackAccentColor: "#6366F1",
+      });
+
+      const sanitizedPlain = parsedReport.plainText || sanitizeToPlainText(aiReportText);
+      const printablePlain = sanitizedPlain.length > 0 ? sanitizedPlain : parsedReport.summary ?? "";
+
+      const analysisLines = printablePlain
         .split("\n")
         .map((line) => line.trim())
         .flatMap((line) => (line ? wrapText(line, 90) : [""]));
 
-      const summarySnippetSource = sanitized.replace(/\s+/g, " ").trim();
+      const summarySnippetSource =
+        (parsedReport.summary && parsedReport.summary.trim().length > 0
+          ? parsedReport.summary.trim()
+          : sanitizedPlain.replace(/\s+/g, " ").trim()) || "";
       const summarySnippet =
         summarySnippetSource.length > 220
           ? `${summarySnippetSource.slice(0, 220).trim()}…`
-          : summarySnippetSource;
+          : summarySnippetSource || `AI-generated report created on ${generatedDate}`;
 
-      for (const line of analysisLines) {
+      const trafficLight = parsedReport.trafficLight;
+      const urgencyLevel = parsedReport.urgency;
+
+      const pdfLines = analysisLines.some((line) => line && line.trim().length > 0)
+        ? analysisLines
+        : wrapText(summarySnippetSource || "No analysis available yet.", 90);
+
+      for (const line of pdfLines) {
         if (y < 80) {
           page = pdfDoc.addPage([595, 842]);
           y = page.getSize().height - 50;
@@ -360,7 +437,24 @@ saveAs(blob, fileName);
     user_id: user.id,
     title: "Vision Health Report",
     summary: summarySnippet || `AI-generated report created on ${generatedDate}`,
-    analysis: aiReportText,
+    report_data: {
+      dataset,
+      html: parsedReport.html,
+      plain_text: sanitizedPlain,
+      raw_text: aiReportText,
+      structured: parsedReport.structured,
+      key_findings: parsedReport.keyFindings,
+      theme: {
+        accentColor: parsedReport.accentColor,
+        trafficLight,
+        urgency: urgencyLevel,
+        summary: parsedReport.themeSummary ?? parsedReport.summary,
+      },
+    },
+    risk_assessment: summarySnippet || sanitizedPlain.slice(0, 500),
+    recommendations: sanitizedPlain,
+    urgency_level: urgencyLevel,
+    traffic_light: trafficLight,
   });
   if (insertError) throw insertError;
 }
@@ -427,14 +521,31 @@ saveAs(blob, fileName);
           </CardContent>
         </Card>
 
-        {reports.length > 0 && latestReport?.analysis && (
+        {reports.length > 0 && latestReportDetails && (
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Latest AIris report preview</h2>
-            {String(latestReport.analysis).trim().startsWith("<") ? (
-              <AIReportHTML html={String(latestReport.analysis)} />
+            {latestReportDetails.structured ? (
+              <StructuredReportView
+                report={latestReportDetails.structured}
+                accentColor={latestReportDetails.accentColor}
+                trafficLight={
+                  latestReportDetails.trafficLight ??
+                  (latestReport.traffic_light as TrafficLight | undefined) ??
+                  "yellow"
+                }
+                urgency={
+                  latestReportDetails.urgency ??
+                  (latestReport.urgency_level as UrgencyLevel | undefined) ??
+                  "routine_checkup"
+                }
+                keyFindings={latestReportDetails.keyFindings}
+                themeSummary={latestReportDetails.themeSummary ?? latestReportDetails.summary}
+              />
+            ) : latestReportHtml.trim().startsWith("<") ? (
+              <AIReportHTML html={latestReportHtml} />
             ) : (
               <div className="rounded-3xl border border-white/60 bg-white/80 p-6 text-sm leading-relaxed shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
-                {String(latestReport.analysis)}
+                {latestReportDetails.plainText || latestReportHtml}
               </div>
             )}
           </section>
@@ -466,30 +577,81 @@ saveAs(blob, fileName);
           </Card>
         ) : (
           <section className="space-y-4">
-            {reports.map((report) => (
-              <Card key={report.id} className="transition-transform hover:-translate-y-0.5 hover:shadow-2xl">
-                <CardHeader>
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-50">
-                        <FileText className="h-5 w-5 text-primary" />
-                        {report.title}
-                      </CardTitle>
-                      <CardDescription className="mt-2 text-sm leading-relaxed">{report.summary}</CardDescription>
+            {reports.map((report) => {
+              const reportData = report.report_data ?? {};
+              const theme = reportData?.theme ?? {};
+              const keyFindings = Array.isArray(reportData?.key_findings) ? reportData.key_findings : [];
+              const traffic = (report.traffic_light as TrafficLight | undefined) || (theme?.trafficLight as TrafficLight | undefined);
+              const urgency =
+                (report.urgency_level as UrgencyLevel | undefined) || (theme?.urgency as UrgencyLevel | undefined);
+              const accentColor = typeof theme?.accentColor === "string" ? theme.accentColor : "#6366F1";
+              const summaryText =
+                (typeof theme?.summary === "string" && theme.summary.trim().length > 0
+                  ? theme.summary.trim()
+                  : typeof report.summary === "string" && report.summary.trim().length > 0
+                    ? report.summary.trim()
+                    : typeof report.risk_assessment === "string"
+                      ? report.risk_assessment
+                      : "AI-generated vision health summary") ?? "AI-generated vision health summary";
+              const badge =
+                traffic && TRAFFIC_BADGE_COLORS[traffic]
+                  ? TRAFFIC_BADGE_COLORS[traffic]
+                  : { bg: "rgba(148,163,184,0.16)", text: "rgb(71,85,105)" };
+
+              return (
+                <Card key={report.id} className="transition-transform hover:-translate-y-0.5 hover:shadow-2xl">
+                  <CardHeader>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-50">
+                          <FileText className="h-5 w-5" style={{ color: accentColor }} />
+                          {report.title}
+                        </CardTitle>
+                        <CardDescription className="mt-2 text-sm leading-relaxed">{summaryText}</CardDescription>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={generatePDF} disabled={generating}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Re-generate
+                      </Button>
                     </div>
-                    <Button size="sm" variant="outline" onClick={generatePDF} disabled={generating}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Re-generate
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Generated on {new Date(report.created_at).toLocaleDateString()}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Generated on {new Date(report.created_at).toLocaleDateString()}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.14em]">
+                      {urgency && (
+                        <span className="rounded-full bg-slate-900/5 px-3 py-1 text-slate-600 dark:bg-white/10 dark:text-slate-200">
+                          Urgency · {String(urgency).replace(/_/g, " ")}
+                        </span>
+                      )}
+                      {traffic && (
+                        <span
+                          className="rounded-full px-3 py-1"
+                          style={{ backgroundColor: badge.bg, color: badge.text }}
+                        >
+                          Status · {String(traffic).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    {keyFindings.length > 0 && (
+                      <ul className="mt-4 grid gap-2 text-sm text-slate-600 dark:text-slate-200">
+                        {keyFindings.slice(0, 3).map((finding: string, idx: number) => (
+                          <li key={idx} className="rounded-xl border border-slate-200/50 bg-white/70 px-3 py-2 dark:border-white/5 dark:bg-slate-950/60">
+                            {finding}
+                          </li>
+                        ))}
+                        {keyFindings.length > 3 && (
+                          <li className="text-xs uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                            +{keyFindings.length - 3} more insights
+                          </li>
+                        )}
+                      </ul>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </section>
         )}
       </main>
