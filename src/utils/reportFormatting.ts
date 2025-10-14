@@ -264,13 +264,36 @@ export const parseAiReportText = (rawText: string, options?: ParseOptions): Pars
 
   if (!rawText || rawText.trim().length === 0) return fallback;
 
-  const candidate = stripCodeFence(rawText);
-  let parsedJson: any;
-  try {
-    parsedJson = JSON.parse(candidate);
-  } catch (error) {
-    return fallback;
+  const trimmed = rawText.trim();
+  const candidate = stripCodeFence(trimmed);
+
+  const tryParse = (input: string | null | undefined) => {
+    if (!input) return null;
+    try {
+      return JSON.parse(input);
+    } catch {
+      return null;
+    }
+  };
+
+  let parsedJson: any = tryParse(candidate);
+
+  if (!parsedJson && /```/.test(trimmed)) {
+    const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenceMatch) {
+      parsedJson = tryParse(fenceMatch[1]);
+    }
   }
+
+  if (!parsedJson) {
+    const firstBrace = trimmed.indexOf("{");
+    const lastBrace = trimmed.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      parsedJson = tryParse(trimmed.slice(firstBrace, lastBrace + 1));
+    }
+  }
+
+  if (!parsedJson) return fallback;
 
   const structured = normalizeStructuredReport(parsedJson);
   if (!structured) return fallback;
