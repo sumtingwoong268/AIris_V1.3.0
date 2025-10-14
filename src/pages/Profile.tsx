@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Moon, Sun, Upload } from "lucide-react";
@@ -19,6 +21,30 @@ export default function Profile() {
   const { xp } = useXP(user?.id);
   const level = Math.floor(xp / 100) + 1;
   const { toast } = useToast();
+
+  const symptomOptions = [
+    "blurred_distance",
+    "near_strain",
+    "headaches",
+    "dryness",
+    "halos_glare",
+    "color_confusion",
+    "night_vision_issues",
+  ];
+
+  const conditionOptions = [
+    "myopia",
+    "hyperopia",
+    "astigmatism",
+    "amblyopia",
+    "color_deficiency",
+    "glaucoma",
+    "cataract",
+    "retinal_disease",
+    "other",
+  ];
+
+  const familyOptions = ["high_myopia", "glaucoma", "color_blindness", "macular_disease", "keratoconus"];
 
   // Profile fields
   const [displayName, setDisplayName] = useState("");
@@ -35,6 +61,9 @@ export default function Profile() {
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [eyeConditions, setEyeConditions] = useState<string[]>([]);
   const [familyHistory, setFamilyHistory] = useState<string[]>([]);
+  const [customSymptoms, setCustomSymptoms] = useState("");
+  const [customEyeConditions, setCustomEyeConditions] = useState("");
+  const [customFamilyHistory, setCustomFamilyHistory] = useState("");
   const [eyeSurgeries, setEyeSurgeries] = useState("");
   const [usesEyeMedication, setUsesEyeMedication] = useState(false);
   const [medicationDetails, setMedicationDetails] = useState("");
@@ -64,9 +93,30 @@ export default function Profile() {
           setScreenTimeHours(profile.screen_time_hours || "");
           setOutdoorTimeHours(profile.outdoor_time_hours || "");
           setSleepQuality(profile.sleep_quality || "");
-          setSymptoms(profile.symptoms || []);
-          setEyeConditions(profile.eye_conditions || []);
-          setFamilyHistory(profile.family_history || []);
+          const profileSymptoms = Array.isArray(profile.symptoms) ? profile.symptoms : [];
+          const profileConditions = Array.isArray(profile.eye_conditions) ? profile.eye_conditions : [];
+          const profileFamilyHistory = Array.isArray(profile.family_history) ? profile.family_history : [];
+
+          setSymptoms(profileSymptoms.filter((item: string) => symptomOptions.includes(item)));
+          setCustomSymptoms(
+            profileSymptoms
+              .filter((item: string) => !symptomOptions.includes(item))
+              .join("; "),
+          );
+
+          setEyeConditions(profileConditions.filter((item: string) => conditionOptions.includes(item)));
+          setCustomEyeConditions(
+            profileConditions
+              .filter((item: string) => !conditionOptions.includes(item))
+              .join("; "),
+          );
+
+          setFamilyHistory(profileFamilyHistory.filter((item: string) => familyOptions.includes(item)));
+          setCustomFamilyHistory(
+            profileFamilyHistory
+              .filter((item: string) => !familyOptions.includes(item))
+              .join("; "),
+          );
           setEyeSurgeries(profile.eye_surgeries || "");
           setUsesEyeMedication(!!profile.uses_eye_medication);
           setMedicationDetails(profile.medication_details || "");
@@ -82,6 +132,18 @@ export default function Profile() {
     if (!user) return;
     setLoading(true);
     try {
+      const mergeCustomValues = (selected: string[], custom: string) => {
+        const parsed = custom
+          .split(";")
+          .map((item) => item.trim())
+          .filter(Boolean);
+        return Array.from(new Set([...selected, ...parsed]));
+      };
+
+      const mergedSymptoms = mergeCustomValues(symptoms, customSymptoms);
+      const mergedEyeConditions = mergeCustomValues(eyeConditions, customEyeConditions);
+      const mergedFamilyHistory = mergeCustomValues(familyHistory, customFamilyHistory);
+
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -96,9 +158,9 @@ export default function Profile() {
           screen_time_hours: screenTimeHours,
           outdoor_time_hours: outdoorTimeHours,
           sleep_quality: sleepQuality,
-          symptoms,
-          eye_conditions: eyeConditions,
-          family_history: familyHistory,
+          symptoms: mergedSymptoms,
+          eye_conditions: mergedEyeConditions,
+          family_history: mergedFamilyHistory,
           eye_surgeries: eyeSurgeries,
           uses_eye_medication: usesEyeMedication,
           medication_details: medicationDetails,
@@ -199,6 +261,10 @@ export default function Profile() {
     navigate("/auth");
   };
 
+  const toggleArray = (arr: string[], setArr: (val: string[]) => void, value: string) => {
+    setArr(arr.includes(value) ? arr.filter((item) => item !== value) : [...arr, value]);
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
@@ -266,13 +332,11 @@ export default function Profile() {
           <CardHeader>
             <CardTitle className="text-2xl text-slate-900 dark:text-slate-50">Profile Settings</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-
-            {/* Profile Info - Expanded */}
-            <div className="space-y-4">
+          <CardContent className="space-y-8">
+            <div className="space-y-8">
               {/* Avatar Upload */}
               <div className="space-y-2">
-                <Label>Profile Picture</Label>
+                <Label>Profile Photo</Label>
                 <div className="flex items-center gap-4">
                   {avatarUrl ? (
                     <img
@@ -286,28 +350,13 @@ export default function Profile() {
                     </div>
                   )}
                   <div className="flex-1">
-                    <input
-                      type="file"
-                      id="avatar-upload"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      className="hidden"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => document.getElementById("avatar-upload")?.click()}
-                      disabled={uploading}
-                    >
+                    <input type="file" id="avatar-upload" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                    <Button variant="outline" onClick={() => document.getElementById("avatar-upload")?.click()} disabled={uploading}>
                       <Upload className="mr-2 h-4 w-4" />
                       {uploading ? "Uploading..." : "Upload Photo"}
                     </Button>
                     {avatarUrl && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="ml-2"
-                        onClick={() => setAvatarUrl("")}
-                      >
+                      <Button variant="ghost" size="sm" className="ml-2" onClick={() => setAvatarUrl("")}>
                         Remove
                       </Button>
                     )}
@@ -315,164 +364,228 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Display Name</Label>
-                  <Input
-                    id="displayName"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Enter your name"
-                  />
+              {/* Basic Profile */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">👤 Basic Profile</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Display Name *</Label>
+                    <Input required value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Full Name</Label>
+                    <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Date of Birth</Label>
+                    <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Gender</Label>
+                    <Select value={gender} onValueChange={(val) => setGender(val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="prefer_not_say">Prefer not to say</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Ethnicity (Optional)</Label>
+                    <Input value={ethnicity} onChange={(e) => setEthnicity(e.target.value)} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your full name"
-                  />
+              </div>
+
+              {/* Vision Information */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">👓 Vision Information</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Do you wear glasses/contacts?</Label>
+                    <Select value={wearsCorrection} onValueChange={(val) => setWearsCorrection(val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="glasses">Glasses</SelectItem>
+                        <SelectItem value="contacts">Contacts</SelectItem>
+                        <SelectItem value="both">Both</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Correction Type</Label>
+                    <Select value={correctionType} onValueChange={(val) => setCorrectionType(val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="distance">Distance</SelectItem>
+                        <SelectItem value="reading">Reading</SelectItem>
+                        <SelectItem value="bifocal">Bifocal</SelectItem>
+                        <SelectItem value="progressive">Progressive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Last Eye Exam</Label>
+                    <Select value={lastEyeExam} onValueChange={(val) => setLastEyeExam(val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="never">Never</SelectItem>
+                        <SelectItem value="less_1_year">Less than 1 year</SelectItem>
+                        <SelectItem value="1_2_years">1-2 years ago</SelectItem>
+                        <SelectItem value="more_2_years">More than 2 years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                  />
+              </div>
+
+              {/* Lifestyle */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">🌿 Lifestyle</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <div>
+                    <Label>Screen Time (hours/day)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="16"
+                      value={screenTimeHours}
+                      onChange={(e) => setScreenTimeHours(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Outdoor Time (hours/day)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="10"
+                      value={outdoorTimeHours}
+                      onChange={(e) => setOutdoorTimeHours(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Sleep Quality</Label>
+                    <Select value={sleepQuality} onValueChange={(val) => setSleepQuality(val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="good">Good</SelectItem>
+                        <SelectItem value="average">Average</SelectItem>
+                        <SelectItem value="poor">Poor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
+                <div>
+                  <Label>
+                    Common Symptoms (Select all that apply or add custom; separate custom values with a semicolon{" "}
+                    <code>;</code>)
+                  </Label>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {symptomOptions.map((symptom) => (
+                      <div key={symptom} className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={symptoms.includes(symptom)}
+                          onCheckedChange={() => toggleArray(symptoms, setSymptoms, symptom)}
+                        />
+                        <label className="text-sm">{symptom.replace(/_/g, " ")}</label>
+                      </div>
+                    ))}
+                  </div>
                   <Input
-                    id="gender"
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    placeholder="Enter your gender"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ethnicity">Ethnicity</Label>
-                  <Input
-                    id="ethnicity"
-                    value={ethnicity}
-                    onChange={(e) => setEthnicity(e.target.value)}
-                    placeholder="Enter your ethnicity"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="wearsCorrection">Do you wear glasses/contacts?</Label>
-                  <Input
-                    id="wearsCorrection"
-                    value={wearsCorrection}
-                    onChange={(e) => setWearsCorrection(e.target.value)}
-                    placeholder="e.g. glasses, contacts, none"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="correctionType">Correction Type</Label>
-                  <Input
-                    id="correctionType"
-                    value={correctionType}
-                    onChange={(e) => setCorrectionType(e.target.value)}
-                    placeholder="e.g. distance, reading, bifocal"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastEyeExam">Last Eye Exam</Label>
-                  <Input
-                    id="lastEyeExam"
-                    value={lastEyeExam}
-                    onChange={(e) => setLastEyeExam(e.target.value)}
-                    placeholder="e.g. within 1 year"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="screenTimeHours">Screen Time (hours/day)</Label>
-                  <Input
-                    id="screenTimeHours"
-                    type="number"
-                    value={screenTimeHours}
-                    onChange={(e) => setScreenTimeHours(e.target.value)}
-                    placeholder="e.g. 4"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="outdoorTimeHours">Outdoor Time (hours/day)</Label>
-                  <Input
-                    id="outdoorTimeHours"
-                    type="number"
-                    value={outdoorTimeHours}
-                    onChange={(e) => setOutdoorTimeHours(e.target.value)}
-                    placeholder="e.g. 2"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sleepQuality">Sleep Quality</Label>
-                  <Input
-                    id="sleepQuality"
-                    value={sleepQuality}
-                    onChange={(e) => setSleepQuality(e.target.value)}
-                    placeholder="e.g. good, average, poor"
+                    className="mt-2"
+                    placeholder="Custom symptoms (e.g. blurry vision; eye pain)"
+                    value={customSymptoms}
+                    onChange={(e) => setCustomSymptoms(e.target.value)}
                   />
                 </div>
               </div>
+
+              {/* Eye Health History */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">👁️ Eye Health History</h3>
+                <div>
+                  <Label>
+                    Known Eye Conditions (Select or add custom; separate custom values with a semicolon <code>;</code>)
+                  </Label>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {conditionOptions.map((condition) => (
+                      <div key={condition} className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={eyeConditions.includes(condition)}
+                          onCheckedChange={() => toggleArray(eyeConditions, setEyeConditions, condition)}
+                        />
+                        <label className="text-sm">{condition.replace(/_/g, " ")}</label>
+                      </div>
+                    ))}
+                  </div>
+                  <Input
+                    className="mt-2"
+                    placeholder="Custom conditions (e.g. dry eye; keratoconus)"
+                    value={customEyeConditions}
+                    onChange={(e) => setCustomEyeConditions(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>
+                    Family Eye History (Select or add custom; separate custom values with a semicolon <code>;</code>)
+                  </Label>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {familyOptions.map((history) => (
+                      <div key={history} className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={familyHistory.includes(history)}
+                          onCheckedChange={() => toggleArray(familyHistory, setFamilyHistory, history)}
+                        />
+                        <label className="text-sm">{history.replace(/_/g, " ")}</label>
+                      </div>
+                    ))}
+                  </div>
+                  <Input
+                    className="mt-2"
+                    placeholder="Custom family history (e.g. glaucoma; macular degeneration)"
+                    value={customFamilyHistory}
+                    onChange={(e) => setCustomFamilyHistory(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>Eye Surgeries or Trauma (Optional)</Label>
+                  <Input
+                    value={eyeSurgeries}
+                    onChange={(e) => setEyeSurgeries(e.target.value)}
+                    placeholder="Describe any surgeries or eye injuries"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox checked={usesEyeMedication} onCheckedChange={(val) => setUsesEyeMedication(!!val)} />
+                  <Label>I use eye drops or vision medication</Label>
+                </div>
+                {usesEyeMedication && (
+                  <div>
+                    <Label>Medication Details</Label>
+                    <Input
+                      value={medicationDetails}
+                      onChange={(e) => setMedicationDetails(e.target.value)}
+                      placeholder="List medications"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Additional Details */}
               <div className="space-y-2">
-                <Label>Common Symptoms (comma separated)</Label>
-                <Input
-                  value={symptoms.join(", ")}
-                  onChange={e => setSymptoms(e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
-                  placeholder="e.g. blurred_distance, near_strain, headaches"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Known Eye Conditions (comma separated)</Label>
-                <Input
-                  value={eyeConditions.join(", ")}
-                  onChange={e => setEyeConditions(e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
-                  placeholder="e.g. myopia, glaucoma"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Family Eye History (comma separated)</Label>
-                <Input
-                  value={familyHistory.join(", ")}
-                  onChange={e => setFamilyHistory(e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
-                  placeholder="e.g. high_myopia, glaucoma"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="eyeSurgeries">Eye Surgeries or Trauma</Label>
-                <Input
-                  id="eyeSurgeries"
-                  value={eyeSurgeries}
-                  onChange={(e) => setEyeSurgeries(e.target.value)}
-                  placeholder="Describe any surgeries or eye injuries"
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={usesEyeMedication}
-                  onChange={e => setUsesEyeMedication(e.target.checked)}
-                  id="usesEyeMedication"
-                  className="h-4 w-4 rounded border-primary accent-primary"
-                />
-                <Label htmlFor="usesEyeMedication">I use eye drops or vision medication</Label>
-              </div>
-              {usesEyeMedication && (
-                <div className="space-y-2">
-                  <Label htmlFor="medicationDetails">Medication Details</Label>
-                  <Input
-                    id="medicationDetails"
-                    value={medicationDetails}
-                    onChange={(e) => setMedicationDetails(e.target.value)}
-                    placeholder="List medications"
-                  />
-                </div>
-              )}
-              <div className="space-y-2">
+                <h3 className="text-xl font-semibold">📝 Additional Details</h3>
                 <Label htmlFor="bio">Bio</Label>
                 <Textarea
                   id="bio"
@@ -497,7 +610,11 @@ export default function Profile() {
 
             {/* Actions */}
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button onClick={handleSave} disabled={loading} className="flex-1 bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary">
+              <Button
+                onClick={handleSave}
+                disabled={loading}
+                className="flex-1 bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
+              >
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
               <Button variant="destructive" onClick={handleSignOut}>
