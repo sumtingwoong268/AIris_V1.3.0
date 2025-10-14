@@ -293,15 +293,32 @@ export const parseAiReportText = (rawText: string, options?: ParseOptions): Pars
     }
   }
 
+  const plainTextDoc =
+    parsedJson && typeof parsedJson.plain_text_document === "string"
+      ? parsedJson.plain_text_document.trim()
+      : "";
+
   if (!parsedJson) return fallback;
 
   const structured = normalizeStructuredReport(parsedJson);
-  if (!structured) return fallback;
+  if (!structured) {
+    if (plainTextDoc.length > 0) {
+      const summary =
+        plainTextDoc.length > 260 ? `${plainTextDoc.slice(0, 257).trim()}…` : plainTextDoc;
+      return {
+        ...fallback,
+        plainText: plainTextDoc,
+        summary,
+      };
+    }
+    return fallback;
+  }
 
   const accentColor = resolveAccentColor(structured.visual_theme, fallbackAccent);
   const trafficLight = mergeTraffic(structured.visual_theme?.trafficLight ?? fallbackTraffic, fallbackTraffic);
   const urgency = mergeUrgency(structured.visual_theme?.urgency ?? fallbackUrgency, fallbackUrgency);
-  const plainText = buildPlainTextFromStructure(structured);
+  const builtPlain = buildPlainTextFromStructure(structured);
+  const plainText = plainTextDoc.length > 0 ? plainTextDoc : builtPlain;
   const html = buildHtmlFromStructure(structured, accentColor, trafficLight, urgency, structured.visual_theme?.summary);
   const summary = deriveSummary(structured, plainText);
 
