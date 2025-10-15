@@ -40,9 +40,21 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const { email } = typeof req.body === "string" ? JSON.parse(req.body) : req.body ?? {};
-    if (!email || typeof email !== "string") {
+    const { email: rawEmail } = typeof req.body === "string" ? JSON.parse(req.body) : req.body ?? {};
+    if (!rawEmail || typeof rawEmail !== "string") {
       res.status(400).json({ error: "Email is required" });
+      return;
+    }
+    const email = rawEmail.trim();
+    if (!email) {
+      res.status(400).json({ error: "Email is required" });
+      return;
+    }
+
+    const basicEmailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const hasOnlyAscii = /^[\x00-\x7F]+$/.test(email);
+    if (!basicEmailPattern.test(email) || !hasOnlyAscii) {
+      res.status(400).json({ error: "Enter a valid email address" });
       return;
     }
 
