@@ -152,7 +152,13 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
         targetList = response.data;
         targetError = response.error;
       } catch (adminError: unknown) {
-        if (adminError instanceof Error && adminError.message.includes("ByteString")) {
+        const adminMessage =
+          typeof adminError === "string"
+            ? adminError
+            : adminError && typeof (adminError as { message?: unknown }).message === "string"
+            ? ((adminError as { message: string }).message)
+            : null;
+        if (adminMessage?.includes("ByteString")) {
           res.status(400).json({ error: "Enter a valid email address" });
           return;
         }
