@@ -457,8 +457,11 @@ export default function Dashboard() {
                 <div className="space-y-2">
                   <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Personalized vision insights</p>
                   <h1 className="text-4xl font-bold leading-tight lg:text-5xl">
-                    Welcome back, {profile?.display_name || "Explorer"}!
+                    Welcome back, {profile?.display_name || profile?.username || "Explorer"}!
                   </h1>
+                  {profile?.username && (
+                    <p className="text-sm font-medium text-white/75">{profile.username}</p>
+                  )}
                   <p className="max-w-xl text-base text-white/80">
                     Keep the momentum going—stay on top of your vision health with guided tests, insights, and goals tailored just for you.
                   </p>

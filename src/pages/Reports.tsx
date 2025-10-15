@@ -162,7 +162,7 @@ function buildGeminiDataset(
   return {
     generated_at: new Date().toISOString(),
     user: {
-      name: profile.display_name || profile.full_name || "User",
+      name: profile.display_name || profile.full_name || profile.username || "User",
       full_name: profile.full_name ?? null,
       age,
       gender: profile.gender ?? null,
@@ -475,7 +475,8 @@ export default function Reports() {
         y -= 10;
       };
 
-      const displayName = dataset.user?.name ?? profile.display_name ?? "User";
+      const displayName =
+        dataset.user?.name ?? profile.display_name ?? profile.username ?? "User";
       page.drawText("AIris Vision Health Report", {
         x: marginX,
         y,
@@ -541,7 +542,7 @@ pages.forEach((p, idx) => {
 // ✅ Save and download the PDF here
 const pdfBytes = await pdfDoc.save();
 const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });   // <-- put this line here
-const fileName = `AIris_Report_${(profile.display_name ?? "User")
+const fileName = `AIris_Report_${(profile.display_name ?? profile.username ?? "User")
   .replace(/\s/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
 saveAs(blob, fileName);
 

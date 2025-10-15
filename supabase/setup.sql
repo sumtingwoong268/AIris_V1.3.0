@@ -14,9 +14,13 @@
 -- =====================================================
 -- 1. PROFILES TABLE
 -- =====================================================
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   display_name TEXT,
+  username TEXT,
+  username_changed_at TIMESTAMPTZ,
   bio TEXT,
   avatar_url TEXT,
   xp INTEGER DEFAULT 0,
@@ -55,6 +59,75 @@ CREATE TABLE IF NOT EXISTS profiles (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Username helpers
+CREATE OR REPLACE FUNCTION public.generate_random_username()
+RETURNS TEXT AS $$
+DECLARE
+  candidate TEXT;
+BEGIN
+  LOOP
+    candidate := '@' || substr(encode(gen_random_bytes(6), 'hex'), 1, 10);
+    EXIT WHEN NOT EXISTS (SELECT 1 FROM public.profiles WHERE username = candidate);
+    -- Keep looping until we find a unique candidate
+  END LOOP;
+  RETURN candidate;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+ALTER TABLE profiles
+  ALTER COLUMN username SET DEFAULT public.generate_random_username(),
+  ALTER COLUMN username_changed_at SET DEFAULT NOW();
+
+UPDATE profiles
+SET
+  username = COALESCE(username, public.generate_random_username()),
+  username_changed_at = COALESCE(username_changed_at, NOW() - INTERVAL '14 days');
+
+ALTER TABLE profiles
+  ALTER COLUMN username SET NOT NULL,
+  ALTER COLUMN username_changed_at SET NOT NULL;
+
+ALTER TABLE profiles
+  DROP CONSTRAINT IF EXISTS profiles_username_format,
+  ADD CONSTRAINT profiles_username_format CHECK (username ~ '^@[A-Za-z0-9_.-]{1,19}$');
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
+
+CREATE OR REPLACE FUNCTION public.enforce_username_rules()
+RETURNS TRIGGER AS $$
+DECLARE
+  normalized TEXT;
+BEGIN
+  normalized := '@' || lower(regexp_replace(COALESCE(trim(BOTH FROM NEW.username), ''), '^@?', ''));
+
+  IF normalized IS NULL OR normalized = '@' THEN
+    RAISE EXCEPTION 'Username is required';
+  END IF;
+
+  IF normalized !~ '^@[a-z0-9_.-]{1,19}$' THEN
+    RAISE EXCEPTION 'Username must start with @, be 2-20 characters, and use only letters, numbers, ".", "_", or "-"';
+  END IF;
+
+  IF TG_OP = 'UPDATE' AND normalized <> OLD.username THEN
+    IF OLD.username_changed_at > NOW() - INTERVAL '14 days' THEN
+      RAISE EXCEPTION 'Username can only be changed every 14 days';
+    END IF;
+    NEW.username_changed_at = NOW();
+  ELSIF TG_OP = 'INSERT' AND NEW.username_changed_at IS NULL THEN
+    NEW.username_changed_at = NOW();
+  END IF;
+
+  NEW.username = normalized;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_profiles_username_rules ON profiles;
+CREATE TRIGGER trg_profiles_username_rules
+  BEFORE INSERT OR UPDATE ON profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.enforce_username_rules();
 
 -- Enable RLS
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -254,12 +327,16 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Function to auto-create profile and preferences on user signup
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  seeded_username TEXT := public.generate_random_username();
 BEGIN
   -- Create profile
-  INSERT INTO public.profiles (id, display_name, created_at, updated_at)
+  INSERT INTO public.profiles (id, display_name, username, username_changed_at, created_at, updated_at)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.email),
+    seeded_username,
+    NOW() - INTERVAL '14 days',
     NOW(),
     NOW()
   );

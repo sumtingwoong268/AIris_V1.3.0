@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Moon, Sun, Upload } from "lucide-react";
 import { useDarkModePreference } from "@/hooks/useDarkModePreference";
 import logo from "@/assets/logo.png";
+import { sanitizeUsername, usernameIsAvailable, USERNAME_MAX_LENGTH } from "@/utils/username";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -21,6 +22,24 @@ export default function Profile() {
   const { xp } = useXP(user?.id);
   const level = Math.floor(xp / 100) + 1;
   const { toast } = useToast();
+  const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
+  const usernameChangedAtDate = usernameChangedAt ? new Date(usernameChangedAt) : null;
+  const effectiveChangedAt =
+    usernameChangedAtDate && !Number.isNaN(usernameChangedAtDate.getTime()) ? usernameChangedAtDate : null;
+  const nextUsernameChangeDate = effectiveChangedAt
+    ? new Date(effectiveChangedAt.getTime() + TWO_WEEKS_MS)
+    : null;
+  const canChangeUsername = !nextUsernameChangeDate || Date.now() >= nextUsernameChangeDate.getTime();
+  const nextUsernameChangeText = nextUsernameChangeDate
+    ? nextUsernameChangeDate.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })
+    : null;
+  const usernameHelpText = canChangeUsername
+    ? "Usernames start with @ and can include letters, numbers, '.', '_' or '-'."
+    : nextUsernameChangeText
+    ? `You can change your username again on ${nextUsernameChangeText}.`
+    : "You can only change your username every 14 days.";
+  const normalizedUsernameDraft = sanitizeUsername(usernameInput);
+  const usernameCanSubmit = !!normalizedUsernameDraft && normalizedUsernameDraft !== username && canChangeUsername;
 
   const symptomOptions = [
     "blurred_distance",
@@ -45,6 +64,13 @@ export default function Profile() {
   ];
 
   const familyOptions = ["high_myopia", "glaucoma", "color_blindness", "macular_disease", "keratoconus"];
+
+  // Username management
+  const [username, setUsername] = useState("");
+  const [usernameInput, setUsernameInput] = useState("");
+  const [usernameChangedAt, setUsernameChangedAt] = useState<string | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [usernameLoading, setUsernameLoading] = useState(false);
 
   // Profile fields
   const [displayName, setDisplayName] = useState("");
@@ -82,6 +108,9 @@ export default function Profile() {
           .eq("id", user.id)
           .single();
         if (profile) {
+          setUsername(profile.username ?? "");
+          setUsernameInput(profile.username ?? "");
+          setUsernameChangedAt(profile.username_changed_at ?? null);
           setDisplayName(profile.display_name || "");
           setFullName(profile.full_name || "");
           setDateOfBirth(profile.date_of_birth || "");
@@ -127,6 +156,58 @@ export default function Profile() {
       fetchProfile();
     }
   }, [user]);
+
+  const handleUsernameUpdate = async () => {
+    if (!user) return;
+    const normalized = sanitizeUsername(usernameInput);
+    if (!normalized) {
+      setUsernameError("Enter a valid username (start with @, max 20 characters).");
+      return;
+    }
+    if (normalized === username) {
+      setUsernameError("That's already your current username.");
+      return;
+    }
+    if (!canChangeUsername) {
+      setUsernameError(
+        nextUsernameChangeText
+          ? `You can change your username again on ${nextUsernameChangeText}.`
+          : "You can only change your username every 14 days.",
+      );
+      return;
+    }
+
+    setUsernameLoading(true);
+    try {
+      const available = await usernameIsAvailable(supabase, normalized, user.id);
+      if (!available) {
+        setUsernameError("That username is already taken.");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({ username: normalized })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setUsername(normalized);
+      setUsernameInput(normalized);
+      setUsernameChangedAt(new Date().toISOString());
+      setUsernameError(null);
+      toast({ title: "Username updated", description: `You're now ${normalized}.` });
+    } catch (error: any) {
+      const message =
+        typeof error?.message === "string" && error.message.includes("14 days")
+          ? "You can only change your username once every 14 days."
+          : error?.message ?? "Failed to update username.";
+      setUsernameError(message);
+      toast({ title: "Username update failed", description: message, variant: "destructive" });
+    } finally {
+      setUsernameLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -300,6 +381,7 @@ export default function Profile() {
               <h1 className="text-4xl font-bold">
                 {displayName ? `Hey ${displayName},` : "Complete your profile,"} keep your details current
               </h1>
+              <p className="text-sm font-medium text-white/80">{username}</p>
               <p className="max-w-xl text-sm text-white/80">
                 Review your vision history, update lifestyle habits, and manage preferences so AIris can tailor insights
                 for you.
@@ -334,6 +416,36 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-8">
             <div className="space-y-8">
+              {/* Username */}
+              <div className="space-y-2">
+                <Label htmlFor="profile-username">Username</Label>
+                <div className="flex flex-col gap-2 md:flex-row">
+                  <Input
+                    id="profile-username"
+                    value={usernameInput}
+                    onChange={(e) => {
+                      setUsernameInput(e.target.value);
+                      if (usernameError) setUsernameError(null);
+                    }}
+                    maxLength={USERNAME_MAX_LENGTH}
+                    autoComplete="off"
+                    className="md:flex-1"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleUsernameUpdate}
+                    disabled={usernameLoading || !usernameCanSubmit}
+                  >
+                    {usernameLoading ? "Saving..." : "Update username"}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {usernameHelpText}
+                </p>
+                <p className="text-xs text-muted-foreground">Current: {username || "—"}</p>
+                {usernameError && <p className="text-xs text-destructive">{usernameError}</p>}
+              </div>
+
               {/* Avatar Upload */}
               <div className="space-y-2">
                 <Label>Profile Photo</Label>
@@ -346,7 +458,7 @@ export default function Profile() {
                     />
                   ) : (
                     <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-blue-500 text-2xl font-bold text-white">
-                      {displayName ? displayName[0].toUpperCase() : "?"}
+                      {(displayName?.[0] ?? username?.[1] ?? "?").toUpperCase()}
                     </div>
                   )}
                   <div className="flex-1">

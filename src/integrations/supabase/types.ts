@@ -128,6 +128,8 @@ export type Database = {
         Row: {
           id: string;
           display_name: string | null;
+          username: string;
+          username_changed_at: string;
           full_name: string | null;
           date_of_birth: string | null;
           gender: string | null;
@@ -158,6 +160,8 @@ export type Database = {
         Insert: {
           id: string;
           display_name?: string | null;
+          username?: string;
+          username_changed_at?: string;
           full_name?: string | null;
           date_of_birth?: string | null;
           gender?: string | null;
@@ -188,6 +192,8 @@ export type Database = {
         Update: {
           id?: string;
           display_name?: string | null;
+          username?: string;
+          username_changed_at?: string;
           full_name?: string | null;
           date_of_birth?: string | null;
           gender?: string | null;

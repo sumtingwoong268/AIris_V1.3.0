@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { sanitizeUsername, usernameIsAvailable, USERNAME_MAX_LENGTH } from "@/utils/username";
 
 export default function Setup() {
   const { user } = useAuth();
@@ -19,6 +20,10 @@ export default function Setup() {
   const [loading, setLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [usernameInput, setUsernameInput] = useState("@");
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
   
   const [formData, setFormData] = useState({
     display_name: "",
@@ -44,6 +49,26 @@ export default function Setup() {
   const [customEyeConditions, setCustomEyeConditions] = useState("");
   const [familyHistory, setFamilyHistory] = useState<string[]>([]);
   const [customFamilyHistory, setCustomFamilyHistory] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    const loadUsername = async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", user.id)
+        .single();
+      if (error) {
+        console.error("Failed to load username during setup:", error);
+        return;
+      }
+      if (data?.username) {
+        setUsernameInput(data.username);
+        setCurrentUsername(data.username);
+      }
+    };
+    void loadUsername();
+  }, [user]);
 
   const symptomOptions = [
     "Blurred_distance", "Near_strain", "Headaches", "Dryness", 
@@ -71,12 +96,61 @@ export default function Setup() {
     }
   };
 
+  const handleUsernameCheck = async () => {
+    if (!user) return;
+    const sanitized = sanitizeUsername(usernameInput);
+    if (!sanitized) {
+      setUsernameError("Enter a valid username (start with @, max 20 characters).");
+      return;
+    }
+    if (sanitized === currentUsername) {
+      setUsernameError(null);
+      return;
+    }
+    setCheckingUsername(true);
+    try {
+      const available = await usernameIsAvailable(supabase, sanitized, user.id);
+      setUsernameError(available ? null : "That username is already taken.");
+    } catch (error: any) {
+      console.error("Username availability check failed:", error);
+      setUsernameError(error.message ?? "Could not verify username availability.");
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.privacy_accepted) {
       toast({ title: "Error", description: "Please accept the Privacy Policy to continue", variant: "destructive" });
       return;
+    }
+
+    const sanitizedUsername = sanitizeUsername(usernameInput);
+    if (!sanitizedUsername) {
+      setUsernameError("Enter a valid username (start with @, max 20 characters).");
+      toast({ title: "Username required", description: "Choose a username that starts with @ and uses allowed characters.", variant: "destructive" });
+      return;
+    }
+
+    if (user && sanitizedUsername !== currentUsername) {
+      setCheckingUsername(true);
+      try {
+        const available = await usernameIsAvailable(supabase, sanitizedUsername, user.id);
+        if (!available) {
+          setUsernameError("That username is already taken.");
+          toast({ title: "Username taken", description: "Please choose another username.", variant: "destructive" });
+          return;
+        }
+        setUsernameError(null);
+      } catch (error: any) {
+        setUsernameError(error.message ?? "Could not verify username availability.");
+        toast({ title: "Username check failed", description: "Please try again in a moment.", variant: "destructive" });
+        return;
+      } finally {
+        setCheckingUsername(false);
+      }
     }
 
     setLoading(true);
@@ -121,6 +195,7 @@ export default function Setup() {
         .from("profiles")
         .update({
           ...formData,
+          username: sanitizedUsername,
           avatar_url,
           symptoms: mergedSymptoms,
           eye_conditions: mergedEyeConditions,
@@ -132,6 +207,9 @@ export default function Setup() {
 
       if (error) throw error;
 
+      setCurrentUsername(sanitizedUsername);
+      setUsernameInput(sanitizedUsername);
+      setUsernameError(null);
       toast({ title: "Success", description: "Profile setup complete!" });
       navigate("/dashboard");
     } catch (error: any) {
@@ -229,6 +307,30 @@ export default function Setup() {
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold">👤 Basic Profile</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <Label htmlFor="username">Username *</Label>
+                    <Input
+                      id="username"
+                      value={usernameInput}
+                      onChange={(e) => {
+                        setUsernameInput(e.target.value);
+                        if (usernameError) setUsernameError(null);
+                      }}
+                      onBlur={handleUsernameCheck}
+                      maxLength={USERNAME_MAX_LENGTH}
+                      autoComplete="off"
+                      required
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Choose a unique handle starting with @. Allowed characters: letters, numbers, ".", "_" and "-".
+                    </p>
+                    {checkingUsername && !usernameError && (
+                      <p className="text-xs text-muted-foreground">Checking availability…</p>
+                    )}
+                    {usernameError && (
+                      <p className="text-xs text-destructive">{usernameError}</p>
+                    )}
+                  </div>
                   <div>
                     <Label>Display Name *</Label>
                     <Input required value={formData.display_name} onChange={e => setFormData({...formData, display_name: e.target.value})} />

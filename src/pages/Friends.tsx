@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Flame, Trophy, UserPlus, Check, X } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { sanitizeUsername } from "@/utils/username";
 
 export default function Friends() {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export default function Friends() {
   const [friends, setFriends] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
-  const [emailInput, setEmailInput] = useState("");
+  const [usernameInput, setUsernameInput] = useState("");
   const [addingFriend, setAddingFriend] = useState(false);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function Friends() {
       .from("friendships")
       .select(`
         friend_id,
-        profiles!friendships_friend_id_fkey(id, display_name, avatar_url, current_streak, xp)
+        profiles!friendships_friend_id_fkey(id, display_name, username, avatar_url, current_streak, xp)
       `)
       .eq("user_id", user.id);
 
@@ -46,7 +47,7 @@ export default function Friends() {
   const fetchLeaderboard = async () => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, avatar_url, current_streak, xp")
+      .select("id, display_name, username, avatar_url, current_streak, xp")
       .order("current_streak", { ascending: false })
       .limit(10);
 
@@ -63,7 +64,7 @@ export default function Friends() {
         id,
         sender_id,
         created_at,
-        profiles!friend_requests_sender_id_fkey(id, display_name, avatar_url)
+        profiles!friend_requests_sender_id_fkey(id, display_name, username, avatar_url)
       `)
       .eq("receiver_id", user.id)
       .eq("status", "pending");
@@ -74,18 +75,13 @@ export default function Friends() {
   };
 
   const handleAddFriend = async () => {
-    if (!user || !emailInput.trim()) return;
-    
+    if (!user || !usernameInput.trim()) return;
+
     setAddingFriend(true);
     try {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser?.email) {
-        throw new Error("Could not retrieve your email");
-      }
-
-      const trimmedEmail = emailInput.trim().toLowerCase();
-      if (trimmedEmail === authUser.email.toLowerCase()) {
-        throw new Error("You cannot add yourself as a friend");
+      const sanitizedUsername = sanitizeUsername(usernameInput);
+      if (!sanitizedUsername) {
+        throw new Error("Enter a valid username (start with @, max 20 characters)");
       }
 
       const { data: sessionData } = await supabase.auth.getSession();
@@ -100,7 +96,7 @@ export default function Friends() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ email: trimmedEmail }),
+        body: JSON.stringify({ username: sanitizedUsername }),
       });
 
       const lookupRaw = await lookupResponse.text();
@@ -114,11 +110,11 @@ export default function Friends() {
       }
       if (!lookupResponse.ok) {
         const message =
-          lookupData?.error || lookupData?.message || lookupRaw || "User not found with that email";
+          lookupData?.error || lookupData?.message || lookupRaw || "No user found with that username";
         throw new Error(message);
       }
 
-      const targetUser = lookupData?.profile as { id: string; display_name: string | null } | undefined;
+      const targetUser = lookupData?.profile as { id: string; display_name: string | null; username: string } | undefined;
       if (!targetUser?.id) {
         throw new Error("User profile data was not returned");
       }
@@ -159,10 +155,10 @@ export default function Friends() {
 
       toast({
         title: "Friend request sent!",
-        description: `Request sent to ${targetUser.display_name ?? trimmedEmail}`,
+        description: `Request sent to ${targetUser.display_name ?? targetUser.username}`,
       });
-      
-      setEmailInput("");
+
+      setUsernameInput("");
     } catch (error: any) {
       console.error("Add friend error:", error);
       toast({
@@ -298,7 +294,10 @@ export default function Friends() {
                         {index + 1}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900 dark:text-slate-100">{profile.display_name || "User"}</p>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">
+                          {profile.display_name || profile.username}
+                        </p>
+                        <p className="text-sm text-muted-foreground">{profile.username}</p>
                         <p className="text-sm text-muted-foreground">Level {Math.floor(profile.xp / 100) + 1}</p>
                       </div>
                     </div>
@@ -324,20 +323,21 @@ export default function Friends() {
               <CardContent>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Enter friend's email"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
+                    placeholder="Enter friend's username (e.g. @visionhero)"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAddFriend()}
+                    maxLength={20}
                   />
                   <Button 
                     onClick={handleAddFriend} 
-                    disabled={addingFriend || !emailInput.trim()}
+                    disabled={addingFriend || !usernameInput.trim()}
                   >
                     {addingFriend ? "Sending..." : "Send Request"}
                   </Button>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Tip: Friend requests now use the email associated with their AIris account.
+                  Usernames are 2-20 characters, begin with @, and can include letters, numbers, dots, underscores, and hyphens.
                 </p>
               </CardContent>
             </Card>
@@ -362,16 +362,19 @@ export default function Friends() {
                         {friend.avatar_url ? (
                           <img
                             src={friend.avatar_url}
-                            alt={friend.display_name}
+                            alt={friend.display_name || friend.username}
                             className="h-10 w-10 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold">
-                            {friend.display_name?.[0]?.toUpperCase() || "?"}
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary font-bold text-white">
+                            {(friend.display_name?.[0] || friend.username?.[1] || "?").toUpperCase()}
                           </div>
                         )}
                         <div>
-                          <p className="font-semibold">{friend.display_name || "User"}</p>
+                          <p className="font-semibold text-slate-900 dark:text-slate-100">
+                            {friend.display_name || friend.username}
+                          </p>
+                          <p className="text-sm text-muted-foreground">{friend.username}</p>
                           <p className="text-sm text-muted-foreground">
                             Level {Math.floor((friend.xp || 0) / 100) + 1} • Streak: {friend.current_streak} weeks
                           </p>
@@ -408,18 +411,23 @@ export default function Friends() {
                         {request.profiles?.avatar_url ? (
                           <img
                             src={request.profiles.avatar_url}
-                            alt={request.profiles.display_name}
+                            alt={request.profiles.display_name || request.profiles?.username}
                             className="h-10 w-10 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold">
-                            {request.profiles?.display_name?.[0]?.toUpperCase() || "?"}
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary font-bold text-white">
+                            {(
+                              request.profiles?.display_name?.[0] ??
+                              request.profiles?.username?.[1] ??
+                              "?"
+                            ).toUpperCase()}
                           </div>
                         )}
                         <div>
                           <p className="font-semibold">
-                            {request.profiles?.display_name || "User"}
+                            {request.profiles?.display_name || request.profiles?.username}
                           </p>
+                          <p className="text-xs text-muted-foreground">{request.profiles?.username}</p>
                           <p className="text-xs text-muted-foreground">
                             {new Date(request.created_at).toLocaleDateString()}
                           </p>
