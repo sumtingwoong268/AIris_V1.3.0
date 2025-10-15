@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Flame, Trophy, UserPlus, Check, X } from "lucide-react";
+import { ArrowLeft, Copy, Flame, Trophy, UserPlus, Check, X } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { sanitizeUsername } from "@/utils/username";
 
@@ -19,6 +19,7 @@ export default function Friends() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [usernameInput, setUsernameInput] = useState("");
+  const [selfProfile, setSelfProfile] = useState<{ display_name: string | null; username: string; avatar_url: string | null } | null>(null);
   const [addingFriend, setAddingFriend] = useState(false);
 
   useEffect(() => {
@@ -26,8 +27,30 @@ export default function Friends() {
       fetchFriends();
       fetchLeaderboard();
       fetchRequests();
+      fetchSelfProfile();
     }
   }, [user]);
+
+  const fetchSelfProfile = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("display_name, username, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Failed to load self profile:", error);
+      return;
+    }
+    if (data) {
+      setSelfProfile({
+        display_name: data.display_name ?? null,
+        username: data.username,
+        avatar_url: data.avatar_url ?? null,
+      });
+    }
+  };
 
   const fetchFriends = async () => {
     if (!user) return;
@@ -245,12 +268,54 @@ export default function Friends() {
       </header>
 
       <main className="container mx-auto max-w-5xl space-y-8 px-4 py-10">
-        <div className="rounded-[28px] border border-primary/15 bg-gradient-to-br from-white via-slate-50 to-primary/10 p-6 shadow-xl dark:from-slate-900 dark:via-slate-900/70 dark:to-primary/10">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Friends & Leaderboard</h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Celebrate your streaks, connect with friends, and send requests to keep one another accountable.
-          </p>
-        </div>
+                    <div className="rounded-[28px] border border-primary/15 bg-gradient-to-br from-white via-slate-50 to-primary/10 p-6 shadow-xl dark:from-slate-900 dark:via-slate-900/70 dark:to-primary/10">
+                      <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Friends & Leaderboard</h1>
+                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                        Celebrate your streaks, connect with friends, and send requests to keep one another accountable.
+                      </p>
+                    </div>
+
+                    {selfProfile && (
+                      <div className="flex flex-col gap-3 rounded-3xl border border-white/60 bg-white/80 p-5 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-900/70 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3">
+                          {selfProfile.avatar_url ? (
+                            <img
+                              src={selfProfile.avatar_url}
+                              alt={selfProfile.display_name || selfProfile.username}
+                              className="h-12 w-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary font-semibold text-white">
+                              {(selfProfile.display_name?.[0] ?? selfProfile.username[1] ?? "?").toUpperCase()}
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-sm uppercase tracking-[0.25rem] text-muted-foreground">Your username</p>
+                            <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">{selfProfile.username}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Friends can add you by entering this handle.
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full sm:w-auto"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(selfProfile.username);
+                              toast({ title: "Username copied", description: "Share it with a friend to connect." });
+                            } catch (error) {
+                              console.error("copy username error:", error);
+                              toast({ title: "Copy failed", description: "Couldn't copy username to clipboard.", variant: "destructive" });
+                            }
+                          }}
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copy username
+                        </Button>
+                      </div>
+                    )}
 
         <Tabs defaultValue="leaderboard" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white/60 p-1 shadow-inner backdrop-blur dark:bg-slate-900/60">

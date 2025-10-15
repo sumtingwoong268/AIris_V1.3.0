@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useXP } from "@/hooks/useXP";
@@ -22,25 +22,6 @@ export default function Profile() {
   const { xp } = useXP(user?.id);
   const level = Math.floor(xp / 100) + 1;
   const { toast } = useToast();
-  const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
-  const usernameChangedAtDate = usernameChangedAt ? new Date(usernameChangedAt) : null;
-  const effectiveChangedAt =
-    usernameChangedAtDate && !Number.isNaN(usernameChangedAtDate.getTime()) ? usernameChangedAtDate : null;
-  const nextUsernameChangeDate = effectiveChangedAt
-    ? new Date(effectiveChangedAt.getTime() + TWO_WEEKS_MS)
-    : null;
-  const canChangeUsername = !nextUsernameChangeDate || Date.now() >= nextUsernameChangeDate.getTime();
-  const nextUsernameChangeText = nextUsernameChangeDate
-    ? nextUsernameChangeDate.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })
-    : null;
-  const usernameHelpText = canChangeUsername
-    ? "Usernames start with @ and can include letters, numbers, '.', '_' or '-'."
-    : nextUsernameChangeText
-    ? `You can change your username again on ${nextUsernameChangeText}.`
-    : "You can only change your username every 14 days.";
-  const normalizedUsernameDraft = sanitizeUsername(usernameInput);
-  const usernameCanSubmit = !!normalizedUsernameDraft && normalizedUsernameDraft !== username && canChangeUsername;
-
   const symptomOptions = [
     "blurred_distance",
     "near_strain",
@@ -71,6 +52,35 @@ export default function Profile() {
   const [usernameChangedAt, setUsernameChangedAt] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [usernameLoading, setUsernameLoading] = useState(false);
+
+  const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
+  const usernameTiming = useMemo(() => {
+    const rawDate = usernameChangedAt ? new Date(usernameChangedAt) : null;
+    if (!rawDate || Number.isNaN(rawDate.getTime())) {
+      return {
+        nextChange: null as Date | null,
+        nextChangeText: null as string | null,
+        canChange: true,
+      };
+    }
+    const nextChange = new Date(rawDate.getTime() + TWO_WEEKS_MS);
+    const canChange = Date.now() >= nextChange.getTime();
+    const nextChangeText = nextChange.toLocaleDateString(undefined, {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    return { nextChange, nextChangeText, canChange };
+  }, [usernameChangedAt]);
+
+  const usernameHelpText = usernameTiming.canChange
+    ? "Usernames start with @ and can include letters, numbers, '.', '_' or '-'."
+    : usernameTiming.nextChangeText
+    ? `You can change your username again on ${usernameTiming.nextChangeText}.`
+    : "You can only change your username every 14 days.";
+  const normalizedUsernameDraft = sanitizeUsername(usernameInput);
+  const usernameCanSubmit =
+    !!normalizedUsernameDraft && normalizedUsernameDraft !== username && usernameTiming.canChange;
 
   // Profile fields
   const [displayName, setDisplayName] = useState("");
@@ -168,10 +178,10 @@ export default function Profile() {
       setUsernameError("That's already your current username.");
       return;
     }
-    if (!canChangeUsername) {
+    if (!usernameTiming.canChange) {
       setUsernameError(
-        nextUsernameChangeText
-          ? `You can change your username again on ${nextUsernameChangeText}.`
+        usernameTiming.nextChangeText
+          ? `You can change your username again on ${usernameTiming.nextChangeText}.`
           : "You can only change your username every 14 days.",
       );
       return;
