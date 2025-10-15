@@ -51,8 +51,13 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const { data: targetUser, error: targetError } = await serviceClient.auth.admin.getUserByEmail(email);
-    if (targetError || !targetUser?.user) {
+    const { data: targetList, error: targetError } = await serviceClient.auth.admin.listUsers({
+      email,
+      page: 1,
+      perPage: 1,
+    });
+    const targetUser = targetList?.users?.[0] ?? null;
+    if (targetError || !targetUser) {
       if (targetError) {
         console.error("lookup-user admin error:", targetError);
       }
@@ -68,7 +73,7 @@ export default async function handler(req: any, res: any) {
     const { data: profile, error: profileError } = await serviceClient
       .from("profiles")
       .select("id, display_name")
-      .eq("id", targetUser.user.id)
+      .eq("id", targetUser.id)
       .maybeSingle();
 
     if (profileError) {
