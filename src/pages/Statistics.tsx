@@ -333,7 +333,7 @@ export default function Statistics() {
                   <Award className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Most Reliable Test</p>
+                  <p className="text-sm font-semibold text-foreground">Your Best Test</p>
                   <p className="text-xs text-muted-foreground">
                     {bestScoreLabel === "-"
                       ? "Complete tests to discover your strongest area."
