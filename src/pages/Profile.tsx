@@ -411,7 +411,7 @@ export default function Profile() {
                 <p className="mt-2 text-lg font-semibold">{darkMode ? "Enabled" : "Disabled"}</p>
               </div>
               <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
-                <p className="text-xs uppercase tracking-wide text-white/70">Last Sync</p>
+                <p className="text-xs uppercase tracking-wide text-white/70">Last Eye Exam</p>
                 <p className="mt-2 text-lg font-semibold">
                   {lastEyeExam ? lastEyeExam.replace(/_/g, " ") : "Update your exam date"}
                 </p>
