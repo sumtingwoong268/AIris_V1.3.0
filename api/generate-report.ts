@@ -18,6 +18,29 @@ type SectionContent = {
   htmlBullets?: string[];
 };
 
+type TestInsight = {
+  id: string;
+  name: string;
+  latest: number | null;
+  lowest: number | null;
+  highest: number | null;
+  sessions: number;
+  trend: number | null;
+  notCompleted: boolean;
+};
+
+type InsightSummary = {
+  all: TestInsight[];
+  completed: TestInsight[];
+  pendingNames: string[];
+  topPerformer?: TestInsight;
+  lowestPerformer?: TestInsight;
+  improving: TestInsight[];
+  declining: TestInsight[];
+  lowScoring: TestInsight[];
+  limitedHistory: TestInsight[];
+};
+
 const ACCENT_BY_TRAFFIC: Record<TrafficLight, string> = {
   green: "#22C55E",
   yellow: "#F59E0B",
@@ -115,6 +138,7 @@ const summarizeTests = (tests: any) => {
   const htmlBullets: string[] = [];
   const plainBullets: string[] = [];
   let lowestScore: number | null = null;
+  const insights: TestInsight[] = [];
 
   Object.entries(tests ?? {}).forEach(([id, test]) => {
     const currentScore = toNumber((test as any)?.current?.score);
@@ -127,6 +151,10 @@ const summarizeTests = (tests: any) => {
     const testLowest =
       historyScores.length > 0
         ? historyScores.reduce((min, score) => Math.min(min, score), historyScores[0])
+        : currentScore;
+    const testHighest =
+      historyScores.length > 0
+        ? historyScores.reduce((max, score) => Math.max(max, score), historyScores[0])
         : currentScore;
 
     if (typeof testLowest === "number") {
@@ -148,6 +176,17 @@ const summarizeTests = (tests: any) => {
         lowestText,
       )}</span>, ${escapeHtml(sessionText)}, trend ${escapeHtml(trendText)}.</li>`,
     );
+
+    insights.push({
+      id,
+      name,
+      latest: currentScore,
+      lowest: testLowest ?? null,
+      highest: testHighest ?? null,
+      sessions,
+      trend,
+      notCompleted: currentScore === null,
+    });
   });
 
   if (htmlBullets.length === 0) {
@@ -156,7 +195,7 @@ const summarizeTests = (tests: any) => {
     htmlBullets.push(`<li>${escapeHtml(message)}</li>`);
   }
 
-  return { htmlBullets, plainBullets, lowestScore };
+  return { htmlBullets, plainBullets, lowestScore, insights };
 };
 
 const renderSectionHtml = (section: SectionContent): string => {
@@ -179,6 +218,264 @@ const renderSectionHtml = (section: SectionContent): string => {
   )}</h3>${paragraphsHtml}${bulletsHtml}</section>`;
 };
 
+const describeTrendModifier = (trend: number | null): string => {
+  if (trend === null) return "with no trend data yet";
+  if (Math.abs(trend) < 0.2) return "holding steady";
+  const delta = `${trend > 0 ? "+" : ""}${trend.toFixed(1)} pts/session`;
+  return trend > 0 ? `trending upward (${delta})` : `trending downward (${delta})`;
+};
+
+const computeInsightSummary = (insights: TestInsight[]): InsightSummary => {
+  const completed = insights.filter((insight) => typeof insight.latest === "number");
+  const pending = insights.filter((insight) => insight.notCompleted).map((insight) => insight.name);
+
+  const topPerformer = completed.length
+    ? completed.reduce((best, current) =>
+        (best.latest ?? -Infinity) >= (current.latest ?? -Infinity) ? best : current,
+      )
+    : undefined;
+
+  const lowestPerformer = completed.length
+    ? completed.reduce((worst, current) =>
+        (worst.latest ?? Infinity) <= (current.latest ?? Infinity) ? worst : current,
+      )
+    : undefined;
+
+  const improving = completed
+    .filter((insight) => (insight.trend ?? 0) > 0.3)
+    .sort((a, b) => (b.trend ?? 0) - (a.trend ?? 0));
+
+  const declining = completed
+    .filter((insight) => (insight.trend ?? 0) < -0.3)
+    .sort((a, b) => (a.trend ?? 0) - (b.trend ?? 0));
+
+  const lowScoring = completed
+    .filter((insight) => (insight.latest ?? 100) < 55 || (insight.lowest ?? 100) < 40)
+    .sort((a, b) => (a.latest ?? 0) - (b.latest ?? 0));
+
+  const limitedHistory = completed.filter((insight) => insight.sessions < 3);
+
+  return {
+    all: insights,
+    completed,
+    pendingNames: pending,
+    topPerformer,
+    lowestPerformer,
+    improving,
+    declining,
+    lowScoring,
+    limitedHistory,
+  };
+};
+
+const TEST_SELF_CARE_LIBRARY: Record<
+  string,
+  {
+    selfCare?: (insight: TestInsight) => string;
+    followUp?: (insight: TestInsight) => string;
+    longTerm?: (insight: TestInsight) => string;
+  }
+> = {
+  ishihara: {
+    selfCare: (insight) =>
+      `Color contrast workout: alternate between red/green object sorting and hue-matching apps for 10 minutes daily to support ${insight.name.toLowerCase()} resilience.`,
+    followUp: () =>
+      "Discuss occupational color-vision demands during your consultation so a Farnsworth D-15 or similar diagnostic can confirm functional thresholds.",
+    longTerm: (insight) =>
+      `Target raising ${insight.name.toLowerCase()} scores to at least ${Math.min(
+        90,
+        Math.round((insight.latest ?? 40) + 15),
+      )}% by reinforcing weekly contrast drills and documenting trigger lighting.`,
+  },
+  visual_acuity: {
+    selfCare: (insight) =>
+      `Acuity stamina: perform near/far focus ladders twice daily (30 seconds per distance) to rebuild clarity for ${insight.name.toLowerCase()}.`,
+    followUp: () =>
+      "Ask whether updated refractive correction, topography, or tear-film assessment is needed if clarity continues to drift.",
+    longTerm: (insight) =>
+      `Plan for ${insight.name.toLowerCase()} retests every two weeks until scores surpass ${Math.min(
+        95,
+        Math.round((insight.latest ?? 45) + 20),
+      )}% and stabilise.`,
+  },
+  acuity: {
+    selfCare: (insight) =>
+      `Acuity stamina: perform near/far focus ladders twice daily (30 seconds per distance) to rebuild clarity for ${insight.name.toLowerCase()}.`,
+    followUp: () =>
+      "Ask whether updated refractive correction, topography, or tear-film assessment is needed if clarity continues to drift.",
+    longTerm: (insight) =>
+      `Plan for ${insight.name.toLowerCase()} retests every two weeks until scores surpass ${Math.min(
+        95,
+        Math.round((insight.latest ?? 45) + 20),
+      )}% and stabilise.`,
+  },
+  amsler: {
+    selfCare: () =>
+      "Macular vigilance: review the Amsler grid at arm's length under bright light nightly and log any waviness or new gaps immediately.",
+    followUp: () =>
+      "Request a macular OCT or dilated fundus exam if distortions or scotomas increase—these tests visualise retinal layers in detail.",
+    longTerm: (insight) =>
+      `Record ${insight.name.toLowerCase()} readings twice weekly and share changes with your clinician; stable lines without distortion signal progress.`,
+  },
+  reading_stress: {
+    selfCare: () =>
+      "Near-work pacing: use a metronome or pacing app to alternate 5-minute reading intervals with 1-minute eye-yoga and blink drills to ease reading stress.",
+    followUp: () =>
+      "Explore ergonomic adjustments (lighting, monitor distance) with your provider if strain persists despite pacing routines.",
+    longTerm: (insight) =>
+      `Track ${insight.name.toLowerCase()} comfort weekly and aim for at least ${Math.min(
+        90,
+        Math.round((insight.latest ?? 50) + 15),
+      )}% sustained comfort before extending session lengths.`,
+  },
+};
+
+const buildAnalysisParagraphs = (summary: InsightSummary): string[] => {
+  if (!summary.all.length) {
+    return [
+      "AI analysis could not locate completed screenings, so run at least one test to unlock deeper comparative insights.",
+    ];
+  }
+
+  const paragraphs: string[] = [];
+  const completedCount = summary.completed.length;
+  const pendingCount = summary.pendingNames.length;
+  const totalCount = summary.all.length;
+  const pendingText =
+    pendingCount > 0
+      ? ` ${pendingCount} test${pendingCount === 1 ? " is" : "s are"} pending data (${summary.pendingNames.join(", ")}).`
+      : "";
+  paragraphs.push(
+    `AI review processed ${totalCount} vision screening${totalCount === 1 ? "" : "s"} with ${completedCount} current score${
+      completedCount === 1 ? "" : "s"
+    }.${pendingText}`,
+  );
+
+  if (summary.topPerformer) {
+    paragraphs.push(
+      `${summary.topPerformer.name} is performing strongest at ${formatPercent(
+        summary.topPerformer.latest,
+      )}, ${describeTrendModifier(summary.topPerformer.trend)} over ${summary.topPerformer.sessions} session${
+        summary.topPerformer.sessions === 1 ? "" : "s"
+      }.`,
+    );
+  }
+
+  if (summary.lowestPerformer && summary.lowestPerformer !== summary.topPerformer) {
+    paragraphs.push(
+      `${summary.lowestPerformer.name} needs attention with a current score of ${formatPercent(
+        summary.lowestPerformer.latest,
+      )}; ${describeTrendModifier(summary.lowestPerformer.trend)} indicates where habits must tighten.`,
+    );
+  }
+
+  if (summary.improving.length > 0) {
+    const improvingList = summary.improving
+      .slice(0, 3)
+      .map(
+        (insight) =>
+          `${insight.name} (+${(insight.trend ?? 0).toFixed(1)} pts)`,
+      )
+      .join(", ");
+    paragraphs.push(`Momentum is building in ${improvingList}. Capture what changed recently and reinforce those routines.`);
+  }
+
+  if (summary.declining.length > 0) {
+    const decliningList = summary.declining
+      .slice(0, 3)
+      .map(
+        (insight) =>
+          `${insight.name} (${(insight.trend ?? 0).toFixed(1)} pts)`,
+      )
+      .join(", ");
+    paragraphs.push(
+      `Declines flagged in ${decliningList}. Investigate triggers such as extended screen time, fatigue, or lighting shifts.`,
+    );
+  }
+
+  if (summary.limitedHistory.length > 0) {
+    const limitedList = summary.limitedHistory
+      .slice(0, 2)
+      .map((insight) => insight.name)
+      .join(", ");
+    paragraphs.push(
+      `Most metrics have fewer than three sessions (${limitedList} among them), so build a consistent testing cadence to verify the emerging trends.`,
+    );
+  }
+
+  return paragraphs;
+};
+
+const buildGuidanceEnhancements = (summary: InsightSummary) => {
+  const extraParagraphs: string[] = [];
+  const extraGuidanceBullets: string[] = [];
+  const extraFollowUpParagraphs: string[] = [];
+  const extraImprovementBullets: string[] = [];
+
+  if (summary.pendingNames.length > 0) {
+    extraParagraphs.push(
+      `Complete the pending tests (${summary.pendingNames.join(
+        ", ",
+      )}) this week so AIris can calibrate personalised baselines.`,
+    );
+    extraImprovementBullets.push(
+      `Week 1 focus: finish outstanding screenings (${summary.pendingNames.join(
+        ", ",
+      )}) and log symptoms immediately afterwards.`,
+    );
+  }
+
+  const priorityTargets =
+    summary.lowScoring.length > 0 ? summary.lowScoring.slice(0, 3) : summary.lowestPerformer ? [summary.lowestPerformer] : [];
+
+  priorityTargets.forEach((insight) => {
+    const library = TEST_SELF_CARE_LIBRARY[insight.id];
+    if (library?.selfCare) {
+      extraGuidanceBullets.push(library.selfCare(insight));
+    } else {
+      extraGuidanceBullets.push(
+        `Dedicate five minutes daily to drills that directly challenge ${insight.name.toLowerCase()}—small, frequent reps rebuild the low score of ${formatPercent(
+          insight.latest,
+        )}.`,
+      );
+    }
+
+    if (library?.followUp) {
+      extraFollowUpParagraphs.push(`For ${insight.name}, ${library.followUp(insight)}`);
+    }
+    if (library?.longTerm) {
+      extraImprovementBullets.push(library.longTerm(insight));
+    } else {
+      const target = Math.min(95, Math.round(((insight.latest ?? 45) + 15) / 5) * 5);
+      extraImprovementBullets.push(
+        `Set a measurable target for ${insight.name}: lift scores to ${target}% over the next 8–10 weeks by pairing structured practice with weekly retesting.`,
+      );
+    }
+  });
+
+  if (summary.declining.length > 0) {
+    extraParagraphs.push(
+      `Stabilise declining metrics (${summary.declining
+        .slice(0, 2)
+        .map((insight) => insight.name)
+        .join(", ")}) by reviewing ergonomics, lighting, and break schedules.`,
+    );
+    extraImprovementBullets.push(
+      `Monitor declining metrics (${summary.declining
+        .slice(0, 2)
+        .map((insight) => insight.name)
+        .join(", ")}) weekly and escalate care if downward trends persist beyond two more sessions.`,
+    );
+  }
+
+  return {
+    extraParagraphs,
+    extraGuidanceBullets,
+    extraFollowUpParagraphs,
+    extraImprovementBullets,
+  };
+};
+
 const buildFallbackReport = (dataset: any, reason?: string | null) => {
   if (!dataset || typeof dataset !== "object") return null;
 
@@ -186,6 +483,7 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
   const lifestyle = dataset.lifestyle ?? {};
   const history = Array.isArray(dataset.history) ? dataset.history : [];
   const testBundle = summarizeTests(dataset.tests ?? {});
+  const insightSummary = computeInsightSummary(testBundle.insights);
   const care = determineCareLevel(stats);
 
   const totalTestCategories = Object.keys(dataset.tests ?? {}).length;
@@ -213,9 +511,18 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
     summaryParagraphs.push("Fallback summary generated while AI formatting was unavailable.");
   }
 
-  const analysisParagraphs = [
-    "Test-by-test insights are summarised below so you can compare latest, lowest, and trend information at a glance.",
-  ];
+  if (insightSummary.topPerformer?.latest !== null) {
+    summaryParagraphs.push(
+      `Best performing metric: ${insightSummary.topPerformer.name} at ${formatPercent(insightSummary.topPerformer.latest)}.`,
+    );
+  }
+  if (insightSummary.lowestPerformer?.latest !== null) {
+    summaryParagraphs.push(
+      `Priority to improve: ${insightSummary.lowestPerformer.name} at ${formatPercent(insightSummary.lowestPerformer.latest)}.`,
+    );
+  }
+
+  const analysisParagraphs = buildAnalysisParagraphs(insightSummary);
 
   const careMessage =
     care.trafficLight === "red"
@@ -224,9 +531,12 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
         ? "Scores trend in the caution range—schedule consistent check-ins and track any subtle visual changes."
         : "Maintain the habits that are supporting strong scores and continue routine monitoring.";
 
+  const guidanceEnhancements = buildGuidanceEnhancements(insightSummary);
+
   const guidanceParagraphs = [
     "Focus your daily routine on protecting central vision and sustaining comfortable screen habits. Implement the routines below consistently.",
     careMessage,
+    ...guidanceEnhancements.extraParagraphs,
   ];
 
   const guidanceBullets = [
@@ -237,6 +547,7 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
     "Hydration and breaks: Drink water steadily (target 8 cups daily) to support tear film stability and reduce dryness.",
     "Nutrition: Include leafy greens, orange vegetables, and fatty fish weekly for lutein, zeaxanthin, and omega-3 support.",
     "Sample day plan — Morning: contrast reading drill in natural light; Midday: outdoor break with 20-20-20 routine; Evening: gentle grid scan and symptom log update.",
+    ...guidanceEnhancements.extraGuidanceBullets,
   ];
 
   const followUpParagraphs = [
@@ -246,6 +557,7 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
         ? "Arrange a comprehensive eye exam within the next few weeks. Discuss whether enhanced macular imaging or contrast sensitivity testing is warranted."
         : "Plan your next routine eye exam at the standard cadence (often annually) unless new symptoms emerge.",
     "Seek immediate in-person care if you notice sudden vision loss, new blind spots, flashes of light, or rapid decline in clarity.",
+    ...guidanceEnhancements.extraFollowUpParagraphs,
   ];
 
   const improvementParagraphs = [
@@ -257,6 +569,7 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
     "Weeks 5–8: Review results; contact your clinician if any score dips below 40% or symptoms escalate.",
     "Weeks 9–12: Maintain cross-training habits (screen breaks, lighting hygiene) and repeat the full testing cycle.",
     "Months 4–6: Schedule a formal eye exam and compare professional findings with your AIris test trends.",
+    ...guidanceEnhancements.extraImprovementBullets,
   ];
 
   const disclaimersBullets = [
@@ -313,6 +626,22 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
     `Lowest recorded test score: ${lowestRecorded}.`,
     `Testing coverage: ${totalTestCategories} categories across ${totalSessions} session${totalSessions === 1 ? "" : "s"}.`,
   ];
+
+  if (insightSummary.topPerformer?.latest !== null) {
+    keyFindings.push(
+      `Strongest metric: ${insightSummary.topPerformer.name} at ${formatPercent(insightSummary.topPerformer.latest)}.`,
+    );
+  }
+
+  if (insightSummary.lowestPerformer?.latest !== null) {
+    keyFindings.push(
+      `Greatest opportunity: ${insightSummary.lowestPerformer.name} at ${formatPercent(insightSummary.lowestPerformer.latest)}.`,
+    );
+  }
+
+  if (insightSummary.pendingNames.length > 0) {
+    keyFindings.push(`Pending data: ${insightSummary.pendingNames.join(", ")}.`);
+  }
 
   return {
     visual_theme: {
@@ -469,13 +798,16 @@ CONTENT GUIDELINES
 - Tone: clinical, clear, empathetic. No emojis or informal language.
 - Base each statement strictly on the dataset (scores, prior results, lifestyle, symptoms). If no prior measurement exists, write "no prior data for comparison".
 - If a test was not completed, state “not completed” without speculating on causes.
+- Spotlight the strongest and weakest test domains with exact scores, mentioning how many sessions informed the conclusion.
+- Explain AI reasoning when connecting habits or symptoms to results; flag data gaps and recommend how to close them.
+- Reference trend direction (improving, declining, stable) whenever model-supplied trend values are available.
 
 SECTION EXPECTATIONS
-1. Summary Overview — 2–3 short paragraphs covering overall score, risk level, trend, and key findings (acuity, color perception, macular/retinal health, general function).
-2. Detailed Test Analysis — one HTML block per test present; include current score, interpretation, comparison to prior results where available, and data-backed explanations.
-3. Personalised Self-Care Guidance — eye exercises (3–5 routines with frequency), lifestyle advice, and nutrition guidance tied to user data; include a sample day plan when nutrition info exists.
-4. Medical Follow-Up — professional exam recommendation plus justified diagnostics (only if supported by data) with brief rationale.
-5. Long-Term Improvement Plan — 3–6 month roadmap with retest cadence, habit metrics, and measurable targets based on current values.
+1. Summary Overview — 2–3 short paragraphs covering overall score, risk level, trend, and key findings (acuity, color perception, macular/retinal health, general function). Include one sentence that names the strongest metric and one that highlights the most vulnerable metric.
+2. Detailed Test Analysis — one HTML block per test present; include current score, interpretation, comparison to prior results where available, and data-backed explanations. Integrate AI commentary describing likely contributing factors only when data supports it.
+3. Personalised Self-Care Guidance — eye exercises (3–5 routines with frequency), lifestyle advice, and nutrition guidance tied to user data; include a sample day plan when nutrition info exists. Connect each recommendation to the specific tests or symptoms it is meant to improve.
+4. Medical Follow-Up — professional exam recommendation plus justified diagnostics (only if supported by data) with brief rationale. Mention timelines (e.g., urgent, 2–4 weeks, routine) matching the severity level.
+5. Long-Term Improvement Plan — 3–6 month roadmap with retest cadence, habit metrics, and measurable targets based on current values. Insert at least one measurable goal (percentage or session milestone) per key area of concern.
 6. Disclaimers — neutral reminder that the report is informational only and not a substitute for professional care.
 
 VALIDATION CHECKLIST BEFORE RESPONDING
