@@ -281,8 +281,36 @@ const computeInsightSummary = (insights: TestInsight[]): InsightSummary => {
     improving,
     declining,
     lowScoring,
-    limitedHistory,
+  limitedHistory,
   };
+};
+
+const ensureSectionCoverage = (sections: any[]): boolean => {
+  if (!Array.isArray(sections) || sections.length === 0) return false;
+
+  const titleHasContent = new Map<string, boolean>();
+  sections.forEach((section) => {
+    const rawTitle = typeof section?.title === "string" ? section.title.trim().toLowerCase() : "";
+    if (!rawTitle) return;
+    if (!Array.isArray(section?.blocks) || section.blocks.length === 0) return;
+    const hasSubstance = section.blocks.some(
+      (block: unknown) => typeof block === "string" && block.trim().length > 0,
+    );
+    if (!hasSubstance) return;
+    titleHasContent.set(rawTitle, true);
+  });
+
+  const requiredTitleGroups: Array<string[]> = [
+    ["1. summary overview"],
+    ["2. detailed test analysis"],
+    ["3. personalised eye exercises", "3. personalised self-care guidance"],
+    ["4. targeted nutrition strategy", "4. personalised self-care guidance"],
+    ["5. medical follow-up"],
+    ["6. long-term improvement plan"],
+    ["7. disclaimers"],
+  ];
+
+  return requiredTitleGroups.every((group) => group.some((title) => titleHasContent.has(title)));
 };
 
 const TEST_SELF_CARE_LIBRARY: Record<
@@ -1111,6 +1139,12 @@ The previous response was invalid JSON. RESPOND ONLY WITH VALID JSON THAT MATCHE
       ) {
         lastError = new Error(`Model response missing required fields. Preview:\n${raw.slice(0, 400)}`);
         console.warn("Gemini JSON validation failed (attempt %d): %s", attempt + 1, lastError.message);
+        continue;
+      }
+
+      if (!ensureSectionCoverage(parsed.sections)) {
+        lastError = new Error(`Model response omitted required sections. Preview:\n${raw.slice(0, 400)}`);
+        console.warn("Gemini section coverage failed (attempt %d): %s", attempt + 1, lastError.message);
         continue;
       }
 
