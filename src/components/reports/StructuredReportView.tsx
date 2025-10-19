@@ -40,12 +40,51 @@ function stripDangerousAttrs(html: string) {
   return out;
 }
 
+const BLOCK_STRING_KEYS = ["html", "content", "text", "markdown", "value"] as const;
+
+function extractBlockString(raw: unknown): string | null {
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (Array.isArray(raw)) {
+    const combined = raw
+      .map((item) => extractBlockString(item))
+      .filter((item): item is string => Boolean(item))
+      .join("\n")
+      .trim();
+    return combined.length > 0 ? combined : null;
+  }
+
+  if (!raw || typeof raw !== "object") return null;
+
+  for (const key of BLOCK_STRING_KEYS) {
+    const candidate = extractBlockString((raw as Record<string, unknown>)[key]);
+    if (candidate) return candidate;
+  }
+
+  if (Array.isArray((raw as Record<string, unknown>).children)) {
+    const child = extractBlockString((raw as Record<string, unknown>).children);
+    if (child) return child;
+  }
+
+  if (Array.isArray((raw as Record<string, unknown>).blocks)) {
+    const nested = extractBlockString((raw as Record<string, unknown>).blocks);
+    if (nested) return nested;
+  }
+
+  return null;
+}
+
 // Strip markdown code fences (```json ... ```), trim, and dedupe
-function cleanBlocks(blocks: string[]) {
+function cleanBlocks(blocks: unknown[]) {
   const seen = new Set<string>();
   const out: string[] = [];
   for (const raw of blocks ?? []) {
-    let s = (raw ?? "").trim();
+    const rawString = extractBlockString(raw);
+    if (!rawString) continue;
+    let s = rawString.trim();
     if (!s) continue;
     s = s.replace(/^```(?:json|md|markdown)?\s*/i, "").replace(/```$/i, "").trim();
     // sanitize HTML but still allow safe subset + inline styles

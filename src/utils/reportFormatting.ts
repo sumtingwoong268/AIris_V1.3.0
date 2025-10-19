@@ -50,12 +50,63 @@ const stripCodeFence = (input: string): string => {
 
 const isValidHex = (value?: string): value is string => Boolean(value && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.trim()));
 
+const COERCE_BLOCK_KEYS = ["html", "content", "text", "markdown", "value"] as const;
+
+const coerceBlockToString = (input: unknown): string | null => {
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (Array.isArray(input)) {
+    const combined = input
+      .map((segment) => coerceBlockToString(segment))
+      .filter((segment): segment is string => Boolean(segment))
+      .join("\n")
+      .trim();
+    return combined.length > 0 ? combined : null;
+  }
+
+  if (!input || typeof input !== "object") return null;
+
+  for (const key of COERCE_BLOCK_KEYS) {
+    const value = (input as Record<string, unknown>)[key];
+    const coerced = coerceBlockToString(value);
+    if (coerced) return coerced;
+  }
+
+  if (Array.isArray((input as Record<string, unknown>).children)) {
+    const childText = coerceBlockToString((input as Record<string, unknown>).children);
+    if (childText) return childText;
+  }
+
+  if (Array.isArray((input as Record<string, unknown>).blocks)) {
+    const nested = coerceBlockToString((input as Record<string, unknown>).blocks);
+    if (nested) return nested;
+  }
+
+  return null;
+};
+
 const ensureSection = (section: any): GeminiStructuredSection | null => {
-  if (!section || typeof section !== "object" || typeof section.title !== "string") return null;
-  const blocks = Array.isArray(section.blocks) ? section.blocks.filter((block): block is string => typeof block === "string" && block.trim().length > 0) : [];
+  if (!section || typeof section !== "object") return null;
+  const title =
+    typeof section.title === "string"
+      ? section.title.trim()
+      : typeof section.heading === "string"
+        ? section.heading.trim()
+        : null;
+  if (!title) return null;
+
+  const rawBlocks = Array.isArray(section.blocks) ? section.blocks : Array.isArray(section.content) ? section.content : [];
+  const blocks = rawBlocks
+    .map((block) => coerceBlockToString(block))
+    .filter((block): block is string => typeof block === "string" && block.trim().length > 0);
+
   if (blocks.length === 0) return null;
+
   return {
-    title: section.title.trim(),
+    title,
     blocks,
   };
 };
