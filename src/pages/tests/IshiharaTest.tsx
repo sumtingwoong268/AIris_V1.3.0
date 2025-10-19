@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { XPBar } from "@/components/XPBar";
 import { useXP } from "@/hooks/useXP";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { XPBar } from "@/components/XPBar";
+import { useTestTimer, type QuestionTimingRecord } from "@/hooks/useTestTimer";
+import { TestTimerDisplay } from "@/components/tests/TestTimerDisplay";
 
 interface PlateData {
   id: number;
@@ -31,6 +33,7 @@ interface TestAnswer {
   answer: string;
   expected: string;
   correct: boolean;
+  timing?: QuestionTimingRecord | null;
 }
 
 export default function IshiharaTest() {
@@ -47,6 +50,16 @@ export default function IshiharaTest() {
   const [imageError, setImageError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const {
+    sessionElapsedMs,
+    questionElapsedMs,
+    activeQuestionLabel,
+    startSession,
+    markQuestionStart,
+    completeQuestion,
+    completeSession,
+    reset: resetTimer,
+  } = useTestTimer();
 
   useEffect(() => {
     fetch("/ishihara_manifest_38.json")
@@ -84,6 +97,7 @@ export default function IshiharaTest() {
 
   const handleStart = () => {
     if (!manifest) return;
+    resetTimer();
     // Select initial 20 plates randomly
     const shuffled = [...manifest.plates].sort(() => Math.random() - 0.5);
     const initialPlates = shuffled.slice(0, 20);
@@ -92,46 +106,64 @@ export default function IshiharaTest() {
     setCurrentPlateIndex(0);
     setAnswers([]);
     setCompleted(false);
+
+    const firstPlate = initialPlates[0];
+    if (firstPlate) {
+      startSession(`plate-${firstPlate.id}`, `Plate ${firstPlate.id}`);
+    }
   };
 
   const handleAnswer = () => {
     if (!manifest || !userInput.trim() || completed) return;
 
     const currentPlate = testPlates[currentPlateIndex];
+    if (!currentPlate) return;
+
     const normalizedInput = normalizeAnswer(userInput);
     const expected = currentPlate.analysis.normal || "";
     const normalizedExpected = normalizeAnswer(expected);
-    
+
     const isCorrect = normalizedInput === normalizedExpected;
-    
+
+    const timingPayload = completeQuestion(`plate-${currentPlate.id}`, `Plate ${currentPlate.id}`);
+
     const newAnswer: TestAnswer = {
       plateId: currentPlate.id,
       answer: userInput,
       expected: expected,
       correct: isCorrect,
+      timing: timingPayload.record,
     };
-    
+
     const newAnswers = [...answers, newAnswer];
     setAnswers(newAnswers);
     setUserInput("");
     setImageError(false);
 
-    // Adaptive logic: if incorrect, add follow-up plates
+    let updatedPlates = testPlates;
+
     if (!isCorrect && testPlates.length < 32) {
-      // Find plates that help distinguish protan/deutan
-      const followUpPlates = manifest.plates.filter(
-        (p) => 
-          !testPlates.some((tp) => tp.id === p.id) && 
-          (p.analysis.protan || p.analysis.deutan)
-      ).slice(0, 2);
-      
+      const followUpPlates = manifest.plates
+        .filter(
+          (plate) =>
+            !testPlates.some((existing) => existing.id === plate.id) &&
+            (plate.analysis.protan || plate.analysis.deutan),
+        )
+        .slice(0, 2);
+
       if (followUpPlates.length > 0) {
-        setTestPlates([...testPlates, ...followUpPlates]);
+        updatedPlates = [...testPlates, ...followUpPlates];
+        setTestPlates(updatedPlates);
       }
     }
 
-    if (currentPlateIndex < testPlates.length - 1) {
-      setCurrentPlateIndex(currentPlateIndex + 1);
+    if (currentPlateIndex < updatedPlates.length - 1) {
+      const nextIndex = currentPlateIndex + 1;
+      const nextPlate = updatedPlates[nextIndex];
+      setCurrentPlateIndex(nextIndex);
+      if (nextPlate) {
+        markQuestionStart(`plate-${nextPlate.id}`, `Plate ${nextPlate.id}`);
+      }
     } else {
       completeTest(newAnswers);
     }
@@ -172,6 +204,7 @@ export default function IshiharaTest() {
 
       // XP scaling: base 35, up to 55 for perfect score
       const xpEarned = Math.round(35 + (score / 100) * 20);
+      const timingSummary = completeSession();
 
       await supabase.from("test_results").insert({
         user_id: user.id,
@@ -183,11 +216,17 @@ export default function IshiharaTest() {
             plateId: a.plateId,
             answer: a.answer,
             expected: a.expected,
-            correct: a.correct
+            correct: a.correct,
+            timing: a.timing ?? null,
           })),
           subtype,
           totalPlates: testAnswers.length,
           correctCount,
+          timing: {
+            sessionDurationMs: timingSummary.sessionDurationMs,
+            averageQuestionDurationMs: timingSummary.averageQuestionDurationMs,
+            perQuestion: timingSummary.questionTimings,
+          },
         },
       });
 
@@ -336,6 +375,13 @@ export default function IshiharaTest() {
                     </div>
                   )}
                 </div>
+
+                <TestTimerDisplay
+                  sessionMs={sessionElapsedMs}
+                  questionMs={questionElapsedMs}
+                  questionLabel={activeQuestionLabel || (currentPlate ? `Plate ${currentPlate.id}` : undefined)}
+                  className="w-full max-w-md"
+                />
 
                 <div className="w-full max-w-md space-y-4">
                   <Input

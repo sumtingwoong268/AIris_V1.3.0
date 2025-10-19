@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { XPBar } from "@/components/XPBar";
 import { useXP } from "@/hooks/useXP";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowUp, ArrowDown, ArrowRight } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { XPBar } from "@/components/XPBar";
+import { useTestTimer, type QuestionTimingRecord } from "@/hooks/useTestTimer";
+import { TestTimerDisplay } from "@/components/tests/TestTimerDisplay";
 
 export default function VisualAcuityTest() {
   const navigate = useNavigate();
@@ -20,48 +22,95 @@ export default function VisualAcuityTest() {
   const [correct, setCorrect] = useState(0);
   const [direction, setDirection] = useState<"up" | "down" | "left" | "right">("up");
   const [completed, setCompleted] = useState(false);
+  const [responses, setResponses] = useState<
+    Array<{ level: number; direction: typeof directions[number]; correct: boolean; timing?: QuestionTimingRecord | null }>
+  >([]);
+  const {
+    sessionElapsedMs,
+    questionElapsedMs,
+    activeQuestionLabel,
+    startSession,
+    markQuestionStart,
+    completeQuestion,
+    completeSession,
+    reset: resetTimer,
+  } = useTestTimer();
 
   const directions = ["up", "down", "left", "right"] as const;
 
   const handleStart = () => {
+    resetTimer();
     setStarted(true);
     setLevel(1);
     setCorrect(0);
+    setResponses([]);
     setCompleted(false);
-    randomizeDirection();
+    const firstDirection = randomizeDirection();
+    startSession("level-1", `Level 1 (${firstDirection})`);
   };
 
   const randomizeDirection = () => {
     const random = directions[Math.floor(Math.random() * directions.length)];
     setDirection(random);
+    return random;
   };
 
   const handleAnswer = (answer: typeof direction) => {
     if (completed) return;
     const answeredCorrectly = answer === direction;
+    const timingPayload = completeQuestion(`level-${level}`, `Level ${level}`);
+    const responseDetail = {
+      level,
+      direction,
+      correct: answeredCorrectly,
+      timing: timingPayload.record,
+    };
+    const updatedResponses = [...responses, responseDetail];
+    setResponses(updatedResponses);
     const updatedCorrect = answeredCorrectly ? correct + 1 : correct;
     setCorrect(updatedCorrect);
     if (level < 8) {
-      setLevel((prev) => prev + 1);
-      randomizeDirection();
+      const nextLevel = level + 1;
+      const nextDirection = randomizeDirection();
+      setLevel(nextLevel);
+      markQuestionStart(`level-${nextLevel}`, `Level ${nextLevel} (${nextDirection})`);
     } else {
-      completeTest(updatedCorrect);
+      completeTest(updatedCorrect, updatedResponses);
     }
   };
 
-  const completeTest = async (finalCorrect = correct) => {
+  const completeTest = async (finalCorrect = correct, finalResponses = responses) => {
     if (!user || completed) return;
     setCompleted(true);
     try {
       const score = (finalCorrect / 8) * 100;
       // XP scaling: base 30, up to 40 for perfect score
       const xpEarned = Math.floor(30 + (score / 100) * 10);
+      const timingSummary = completeSession();
+      const responseSummary = finalResponses.map((entry) => ({
+        level: entry.level,
+        direction: entry.direction,
+        correct: entry.correct,
+        durationMs: entry.timing?.durationMs ?? null,
+        startedAt: entry.timing?.startedAtIso ?? null,
+        endedAt: entry.timing?.endedAtIso ?? null,
+      }));
+
       await supabase.from("test_results").insert({
         user_id: user.id,
         test_type: "visual_acuity",
         score,
         xp_earned: xpEarned,
-        details: { correct: finalCorrect, total: 8 },
+        details: {
+          correct: finalCorrect,
+          total: 8,
+          responses: responseSummary,
+          timing: {
+            sessionDurationMs: timingSummary.sessionDurationMs,
+            averageQuestionDurationMs: timingSummary.averageQuestionDurationMs,
+            perQuestion: timingSummary.questionTimings,
+          },
+        },
       });
       await supabase.rpc("update_user_xp", {
         p_user_id: user.id,
@@ -154,6 +203,12 @@ export default function VisualAcuityTest() {
                   {direction === "right" && <ArrowRight size={iconSize} className="text-primary" />}
                 </div>
               </div>
+
+              <TestTimerDisplay
+                sessionMs={sessionElapsedMs}
+                questionMs={questionElapsedMs}
+                questionLabel={activeQuestionLabel || `Level ${level}`}
+              />
 
               <div className="space-y-3">
                 <p className="text-center font-medium text-slate-900 dark:text-slate-100">

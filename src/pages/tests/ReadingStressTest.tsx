@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { XPBar } from "@/components/XPBar";
 import { useXP } from "@/hooks/useXP";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { XPBar } from "@/components/XPBar";
+import { useTestTimer, type QuestionTimingRecord } from "@/hooks/useTestTimer";
+import { TestTimerDisplay } from "@/components/tests/TestTimerDisplay";
 
 const READING_TEXTS = [
   `The quick brown fox jumps over the lazy dog. This sentence contains every letter of the alphabet at least once.`,
@@ -27,6 +29,7 @@ interface TrialResult {
   duration: number;
   difficulty: number;
   text: string;
+  timing?: QuestionTimingRecord | null;
 }
 
 export default function ReadingStressTest() {
@@ -37,46 +40,54 @@ export default function ReadingStressTest() {
 
   const [started, setStarted] = useState(false);
   const [currentTrial, setCurrentTrial] = useState(0);
-  const [trialStartTime, setTrialStartTime] = useState<number | null>(null);
   const [difficulty, setDifficulty] = useState(1);
   const [trialResults, setTrialResults] = useState<TrialResult[]>([]);
   const [completed, setCompleted] = useState(false);
-
-  useEffect(() => {
-    if (started && trialStartTime === null) {
-      setTrialStartTime(Date.now());
-    }
-  }, [started, currentTrial, trialStartTime]);
+  const {
+    sessionElapsedMs,
+    questionElapsedMs,
+    activeQuestionLabel,
+    startSession,
+    markQuestionStart,
+    completeQuestion,
+    completeSession,
+    reset: resetTimer,
+  } = useTestTimer();
 
   const handleStart = () => {
+    resetTimer();
     setStarted(true);
     setCurrentTrial(0);
     setTrialResults([]);
-    setTrialStartTime(Date.now());
     setDifficulty(1);
     setCompleted(false);
+    startSession("trial-1", "Trial 1");
   };
 
   const handleNextTrial = () => {
-    if (!trialStartTime || completed) {
+    if (completed) {
       return;
     }
 
-    const duration = Math.floor((Date.now() - trialStartTime) / 1000);
+    const timingPayload = completeQuestion(`trial-${currentTrial + 1}`, `Trial ${currentTrial + 1}`);
+    const durationSeconds =
+      timingPayload.durationMs > 0 ? Math.max(1, Math.round(timingPayload.durationMs / 1000)) : 0;
     const result: TrialResult = {
       fontSize: FONT_SIZES[currentTrial],
-      duration,
+      duration: durationSeconds,
       difficulty,
       text: READING_TEXTS[currentTrial],
+      timing: timingPayload.record,
     };
 
     const updatedResults = [...trialResults, result];
     setTrialResults(updatedResults);
 
     if (currentTrial < FONT_SIZES.length - 1) {
-      setCurrentTrial(currentTrial + 1);
+      const nextTrialIndex = currentTrial + 1;
+      setCurrentTrial(nextTrialIndex);
       setDifficulty(1);
-      setTrialStartTime(Date.now());
+      markQuestionStart(`trial-${nextTrialIndex + 1}`, `Trial ${nextTrialIndex + 1}`);
     } else {
       completeTest(updatedResults);
     }
@@ -101,6 +112,7 @@ export default function ReadingStressTest() {
 
       const score = Math.round(Math.max(0, 100 - (avgDifficulty - 1) * 12.5));
       const xpEarned = Math.round(18 + (score / 100) * 10);
+      const timingSummary = completeSession();
 
       await supabase.from("test_results").insert({
         user_id: user.id,
@@ -113,10 +125,16 @@ export default function ReadingStressTest() {
             duration: r.duration,
             difficulty: r.difficulty,
             text: r.text,
+            timing: r.timing ?? null,
           })),
           readabilityThreshold,
           avgDifficulty: Number(avgDifficulty.toFixed(2)),
           totalTrials: results.length,
+          timing: {
+            sessionDurationMs: timingSummary.sessionDurationMs,
+            averageQuestionDurationMs: timingSummary.averageQuestionDurationMs,
+            perQuestion: timingSummary.questionTimings,
+          },
         },
       });
 
@@ -238,6 +256,12 @@ export default function ReadingStressTest() {
                   Stop Test
                 </Button>
               </div>
+
+              <TestTimerDisplay
+                sessionMs={sessionElapsedMs}
+                questionMs={questionElapsedMs}
+                questionLabel={activeQuestionLabel || `Trial ${currentTrial + 1}`}
+              />
 
               <div
                 className="rounded-2xl border border-primary/20 bg-white/80 p-6 text-slate-900 shadow-inner dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-100"

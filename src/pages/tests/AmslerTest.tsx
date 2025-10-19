@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useDarkModePreference } from "@/hooks/useDarkModePreference";
 import { ArrowLeft } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { useTestTimer } from "@/hooks/useTestTimer";
+import { TestTimerDisplay } from "@/components/tests/TestTimerDisplay";
 
 export default function AmslerTest() {
   const navigate = useNavigate();
@@ -22,11 +24,23 @@ export default function AmslerTest() {
   const [leftClicks, setLeftClicks] = useState<{ x: number; y: number }[]>([]);
   const [rightClicks, setRightClicks] = useState<{ x: number; y: number }[]>([]);
   const [completed, setCompleted] = useState(false);
+  const {
+    sessionElapsedMs,
+    questionElapsedMs,
+    activeQuestionLabel,
+    startSession,
+    markQuestionStart,
+    completeQuestion,
+    completeSession,
+    reset: resetTimer,
+  } = useTestTimer();
 
   const handleStart = () => {
+    resetTimer();
     setStarted(true);
     setEye("left");
     setCompleted(false);
+    startSession("left-eye", "Left eye");
   };
 
   const handleGridClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -43,8 +57,11 @@ export default function AmslerTest() {
 
   const handleNext = () => {
     if (eye === "left") {
+      completeQuestion("left-eye", "Left eye");
       setEye("right");
+      markQuestionStart("right-eye", "Right eye");
     } else {
+      completeQuestion("right-eye", "Right eye");
       completeTest();
     }
   };
@@ -58,13 +75,22 @@ export default function AmslerTest() {
       // Award a flat amount of XP for completing the assessment
       const xpEarned = 20;
       const score = hasMarks ? 0 : 100;
+      const timingSummary = completeSession();
 
       await supabase.from("test_results").insert({
         user_id: user.id,
         test_type: "amsler",
         score,
         xp_earned: xpEarned,
-        details: { leftClicks, rightClicks },
+        details: {
+          leftClicks,
+          rightClicks,
+          timing: {
+            sessionDurationMs: timingSummary.sessionDurationMs,
+            averageQuestionDurationMs: timingSummary.averageQuestionDurationMs,
+            perQuestion: timingSummary.questionTimings,
+          },
+        },
       });
 
       await supabase.rpc("update_user_xp", {
@@ -183,6 +209,12 @@ export default function AmslerTest() {
                   ))}
                 </div>
               </div>
+
+              <TestTimerDisplay
+                sessionMs={sessionElapsedMs}
+                questionMs={questionElapsedMs}
+                questionLabel={activeQuestionLabel || (eye ? `${eye} eye` : undefined)}
+              />
 
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
                 <Button

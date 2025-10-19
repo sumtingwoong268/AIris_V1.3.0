@@ -18,10 +18,13 @@ import {
   BookOpen,
   Sparkles,
   Palette,
+  Timer,
+  Hourglass,
 } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, XAxis, YAxis } from "recharts";
 import { format, formatDistanceToNow } from "date-fns";
+import { formatDurationMs } from "@/hooks/useTestTimer";
 
 type TestResult = {
   id?: string;
@@ -29,6 +32,7 @@ type TestResult = {
   score: number | null;
   test_type: string | null;
   xp_earned: number | null;
+  details?: Record<string, any> | null;
 };
 
 type TestTypeConfig = {
@@ -37,6 +41,16 @@ type TestTypeConfig = {
   name: string;
   gradient: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
+};
+
+type TimingSession = {
+  id: string;
+  testType: string | null;
+  label: string;
+  createdAt: string | null;
+  sessionDurationMs: number | null;
+  averageQuestionDurationMs: number | null;
+  perQuestion: Array<{ durationMs: number | null }>;
 };
 
 const TEST_TYPES: TestTypeConfig[] = [
@@ -92,7 +106,7 @@ export default function Statistics() {
           return;
         }
 
-        setTestHistory(data || []);
+        setTestHistory((data ?? []) as TestResult[]);
       } finally {
         setLoading(false);
       }
@@ -110,6 +124,39 @@ export default function Statistics() {
       }),
     [testHistory],
   );
+
+  const timingSessions = useMemo<TimingSession[]>(() => {
+    return sortedHistory
+      .map((test) => {
+        const timing = test.details && typeof test.details === "object" ? (test.details as any).timing : null;
+        if (!timing) return null;
+        const sessionDurationMs = Number.isFinite(timing.sessionDurationMs)
+          ? Number(timing.sessionDurationMs)
+          : null;
+        const averageQuestionDurationMs = Number.isFinite(timing.averageQuestionDurationMs)
+          ? Number(timing.averageQuestionDurationMs)
+          : null;
+        const perQuestionRaw = Array.isArray(timing.perQuestion) ? timing.perQuestion : [];
+        const perQuestion = perQuestionRaw.map((entry: any) => ({
+          durationMs: Number.isFinite(entry?.durationMs) ? Number(entry.durationMs) : null,
+        }));
+
+        if (sessionDurationMs === null && averageQuestionDurationMs === null && perQuestion.length === 0) {
+          return null;
+        }
+
+        return {
+          id: test.id ?? `${test.test_type ?? "unknown"}-${test.created_at ?? Date.now()}`,
+          testType: test.test_type,
+          label: formatTestLabel(test.test_type),
+          createdAt: test.created_at,
+          sessionDurationMs,
+          averageQuestionDurationMs,
+          perQuestion,
+        } satisfies TimingSession;
+      })
+      .filter((entry): entry is TimingSession => entry !== null);
+  }, [sortedHistory]);
 
   const totalTests = sortedHistory.length;
   const averageScore = totalTests
@@ -136,6 +183,78 @@ export default function Statistics() {
     ? formatDistanceToNow(new Date(lastResult.created_at), { addSuffix: true })
     : "No sessions yet";
 
+  const sessionDurations = timingSessions
+    .map((session) => session.sessionDurationMs)
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
+
+  const questionDurations = timingSessions.flatMap((session) =>
+    session.perQuestion
+      .map((entry) => entry.durationMs)
+      .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0),
+  );
+
+  const averageSessionMs = sessionDurations.length
+    ? Math.round(sessionDurations.reduce((sum, value) => sum + value, 0) / sessionDurations.length)
+    : 0;
+
+  const averageQuestionMs = questionDurations.length
+    ? Math.round(questionDurations.reduce((sum, value) => sum + value, 0) / questionDurations.length)
+    : 0;
+
+  const fastestQuestionMs = questionDurations.length ? Math.min(...questionDurations) : 0;
+  const slowestQuestionMs = questionDurations.length ? Math.max(...questionDurations) : 0;
+  const latestSessionTiming = timingSessions.length ? timingSessions[timingSessions.length - 1] : null;
+
+  const timingByTest = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        sessionDurations: number[];
+        questionDurations: number[];
+        sessionCount: number;
+        questionCount: number;
+      }
+    >();
+
+    timingSessions.forEach((session) => {
+      const key = session.label;
+      if (!map.has(key)) {
+        map.set(key, { sessionDurations: [], questionDurations: [], sessionCount: 0, questionCount: 0 });
+      }
+      const bucket = map.get(key)!;
+      if (session.sessionDurationMs && Number.isFinite(session.sessionDurationMs)) {
+        bucket.sessionDurations.push(session.sessionDurationMs);
+        bucket.sessionCount += 1;
+      }
+      const validQuestions = session.perQuestion
+        .map((entry) => entry.durationMs)
+        .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
+      if (validQuestions.length > 0) {
+        bucket.questionDurations.push(...validQuestions);
+        bucket.questionCount += validQuestions.length;
+      } else if (session.averageQuestionDurationMs && Number.isFinite(session.averageQuestionDurationMs)) {
+        bucket.questionDurations.push(session.averageQuestionDurationMs);
+        bucket.questionCount += 1;
+      }
+    });
+
+    return Array.from(map.entries()).map(([label, values]) => {
+      const avgSession = values.sessionDurations.length
+        ? Math.round(values.sessionDurations.reduce((sum, value) => sum + value, 0) / values.sessionDurations.length)
+        : 0;
+      const avgQuestion = values.questionDurations.length
+        ? Math.round(values.questionDurations.reduce((sum, value) => sum + value, 0) / values.questionDurations.length)
+        : 0;
+      return {
+        label,
+        averageSessionMs: avgSession,
+        averageQuestionMs: avgQuestion,
+        sessionCount: values.sessionCount,
+        questionCount: values.questionCount,
+      };
+    });
+  }, [timingSessions]);
+
   const bestResult = sortedHistory.reduce<TestResult | null>((best, current) => {
     const currentScore = current.score ?? 0;
     const bestScore = best?.score ?? -Infinity;
@@ -157,6 +276,19 @@ export default function Statistics() {
       }),
     [sortedHistory],
   );
+
+  const sessionTrendData = useMemo(() => {
+    if (timingSessions.length === 0) return [];
+    return timingSessions.slice(-12).map((session) => {
+      const date = session.createdAt ? new Date(session.createdAt) : null;
+      const label = date && !Number.isNaN(date.getTime()) ? format(date, "MMM d") : "-";
+      return {
+        date: label,
+        minutes: session.sessionDurationMs ? Number((session.sessionDurationMs / 60000).toFixed(2)) : 0,
+        test: session.label,
+      };
+    });
+  }, [timingSessions]);
 
   const monthlyActivityData = useMemo(() => {
     const aggregates = new Map<
@@ -302,6 +434,34 @@ export default function Statistics() {
                   </div>
                   <div className="mt-3 text-3xl font-semibold">{latestChangeValue}</div>
                   <p className="text-xs text-white/60">{latestChangeDescription}</p>
+                </div>
+                <div className="rounded-3xl border border-white/15 bg-white/15 p-4 shadow-sm backdrop-blur">
+                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-white/70">
+                    <Timer className="h-4 w-4" />
+                    Avg Session Time
+                  </div>
+                  <div className="mt-3 text-3xl font-semibold">
+                    {averageSessionMs ? formatDurationMs(averageSessionMs) : "--"}
+                  </div>
+                  <p className="text-xs text-white/60">
+                    {sessionDurations.length > 0
+                      ? `Across ${sessionDurations.length} timed session${sessionDurations.length === 1 ? "" : "s"}`
+                      : "Timers start the moment each test begins"}
+                  </p>
+                </div>
+                <div className="rounded-3xl border border-white/15 bg-white/15 p-4 shadow-sm backdrop-blur">
+                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-white/70">
+                    <Hourglass className="h-4 w-4" />
+                    Avg Question Time
+                  </div>
+                  <div className="mt-3 text-3xl font-semibold">
+                    {averageQuestionMs ? formatDurationMs(averageQuestionMs) : "--"}
+                  </div>
+                  <p className="text-xs text-white/60">
+                    {questionDurations.length > 0
+                      ? `Fastest ${formatDurationMs(fastestQuestionMs)} • Slowest ${formatDurationMs(slowestQuestionMs)}`
+                      : "Answer timings will appear as you complete sessions"}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -544,10 +704,117 @@ export default function Statistics() {
                     )}
                   </CardContent>
                 </Card>
+                <Card className="border border-primary/15 bg-gradient-to-br from-white via-sky-50 to-primary/10 shadow-xl hover:shadow-2xl dark:from-slate-900 dark:via-slate-900/80 dark:to-primary/10">
+                  <CardHeader>
+                    <CardTitle>Session Tempo</CardTitle>
+                    <CardDescription>Elapsed minutes for your most recent sessions.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-2">
+                    {sessionTrendData.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-muted p-6 text-center text-sm text-muted-foreground">
+                        Timers will appear once you complete a timed session.
+                      </div>
+                    ) : (
+                      <ChartContainer
+                        config={{
+                          minutes: {
+                            label: "Minutes",
+                            theme: {
+                              light: "hsl(265 85% 55%)",
+                              dark: "hsl(265 80% 75%)",
+                            },
+                          },
+                        }}
+                        className="aspect-auto h-72 rounded-[24px] bg-white/85 p-3 shadow-inner dark:bg-slate-900/60"
+                      >
+                        <LineChart data={sessionTrendData}>
+                          <CartesianGrid strokeDasharray="4 8" className="stroke-muted" />
+                          <XAxis
+                            dataKey="date"
+                            stroke="currentColor"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={12}
+                            className="text-xs text-muted-foreground"
+                          />
+                          <YAxis
+                            stroke="currentColor"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            className="text-xs text-muted-foreground"
+                          />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Line
+                            dataKey="minutes"
+                            type="monotone"
+                            stroke="var(--color-minutes)"
+                            strokeWidth={3}
+                            dot={{ r: 3 }}
+                            activeDot={{ r: 6 }}
+                          />
+                        </LineChart>
+                      </ChartContainer>
+                    )}
+                    {latestSessionTiming && (
+                      <div className="mt-4 rounded-2xl border border-primary/20 bg-white/80 p-4 text-sm text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-100">
+                        <p className="font-semibold text-foreground">Most recent session</p>
+                        <p className="text-xs text-muted-foreground">
+                          {latestSessionTiming.label} • {latestSessionTiming.createdAt ? format(new Date(latestSessionTiming.createdAt), "MMM d, h:mma") : "recent"}
+                        </p>
+                        <p className="mt-2 text-sm">
+                          {latestSessionTiming.sessionDurationMs
+                            ? `Session time ${formatDurationMs(latestSessionTiming.sessionDurationMs)}`
+                            : "Duration pending"}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             </section>
 
             <section className="mt-10 grid gap-6 lg:grid-cols-2">
+              <Card className="overflow-hidden rounded-3xl border border-primary/15 bg-white/90 shadow-xl backdrop-blur dark:bg-slate-900/80">
+                <CardHeader>
+                  <CardTitle>Average Timing by Test</CardTitle>
+                  <CardDescription>Your typical pacing for each screening.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {timingByTest.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-muted p-6 text-center text-sm text-muted-foreground">
+                      Timing data will appear after you complete a timed session.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {timingByTest.map((entry) => (
+                        <div
+                          key={entry.label}
+                          className="flex flex-col gap-1 rounded-2xl border border-primary/15 bg-white/80 p-4 shadow-sm dark:border-white/10 dark:bg-slate-900/70"
+                        >
+                          <div className="flex items-center justify-between text-sm font-semibold text-foreground">
+                            <span>{entry.label}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {entry.averageSessionMs
+                                ? `${formatDurationMs(entry.averageSessionMs)} avg session`
+                                : "--"}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {entry.sessionCount > 0
+                              ? `${entry.sessionCount} session${entry.sessionCount === 1 ? "" : "s"} timed`
+                              : "Session timing pending"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Avg question {entry.averageQuestionMs ? formatDurationMs(entry.averageQuestionMs) : "--"}
+                            {entry.questionCount > 0 ? ` • ${entry.questionCount} responses` : ""}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
               {TEST_TYPES.map((testType) => {
                 const data = getTestTypeData(testType.keys);
                 const Icon = testType.icon;

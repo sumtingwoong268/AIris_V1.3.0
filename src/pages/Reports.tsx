@@ -72,6 +72,36 @@ function buildGeminiDataset(
 ) {
   const tests: Record<string, any> = {};
 
+  const normalizeTiming = (details: any) => {
+    const timing = details && typeof details === "object" ? details.timing : null;
+    if (!timing) return null;
+    const sessionDurationMs = Number.isFinite(timing.sessionDurationMs) ? Number(timing.sessionDurationMs) : null;
+    const averageQuestionDurationMs = Number.isFinite(timing.averageQuestionDurationMs)
+      ? Number(timing.averageQuestionDurationMs)
+      : null;
+    const perQuestionRaw = Array.isArray(timing.perQuestion) ? timing.perQuestion : [];
+    const perQuestion = perQuestionRaw.map((entry: any) => ({
+      id: entry?.id ?? null,
+      label: entry?.label ?? null,
+      durationMs: Number.isFinite(entry?.durationMs) ? Number(entry.durationMs) : null,
+      startedAtIso: typeof entry?.startedAtIso === "string" ? entry.startedAtIso : null,
+      endedAtIso: typeof entry?.endedAtIso === "string" ? entry.endedAtIso : null,
+    }));
+    const questionDurations = perQuestion
+      .map((entry) => entry.durationMs)
+      .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
+    const fastestQuestionMs = questionDurations.length ? Math.min(...questionDurations) : null;
+    const slowestQuestionMs = questionDurations.length ? Math.max(...questionDurations) : null;
+
+    return {
+      sessionDurationMs,
+      averageQuestionDurationMs,
+      perQuestion,
+      fastestQuestionMs,
+      slowestQuestionMs,
+    };
+  };
+
   const chronologicalHistory = (type: string) =>
     results
       .filter((entry) => entry.test_type === type)
@@ -84,6 +114,7 @@ function buildGeminiDataset(
       created_at: item.created_at,
       details: item.details ?? null,
       xp_earned: item.xp_earned ?? null,
+      timing: normalizeTiming(item.details ?? null),
     }));
     const latestScore = latest?.score ?? null;
     const previousScore = history.length >= 2 ? history[history.length - 2].score : null;
@@ -92,15 +123,50 @@ function buildGeminiDataset(
         ? Number((latestScore - previousScore).toFixed(2))
         : null;
 
+    const timingRecords = history
+      .map((entry) => entry.timing)
+      .filter((timing): timing is NonNullable<typeof timing> => timing !== null);
+
+    const sessionDurations = timingRecords
+      .map((timing) => timing.sessionDurationMs)
+      .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
+
+    const questionDurations = timingRecords.flatMap((timing) =>
+      timing.perQuestion
+        .map((entry) => entry.durationMs)
+        .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0),
+    );
+
+    const averageSessionDurationMs = sessionDurations.length
+      ? Math.round(sessionDurations.reduce((sum, value) => sum + value, 0) / sessionDurations.length)
+      : null;
+
+    const averageQuestionDurationMs = questionDurations.length
+      ? Math.round(questionDurations.reduce((sum, value) => sum + value, 0) / questionDurations.length)
+      : null;
+
+    const fastestQuestionMs = questionDurations.length ? Math.min(...questionDurations) : null;
+    const slowestQuestionMs = questionDurations.length ? Math.max(...questionDurations) : null;
+    const latestTiming = normalizeTiming(latest?.details ?? null);
+
     tests[testType] = {
       current: {
         score: latestScore,
         created_at: latest?.created_at ?? null,
         details: latest?.details ?? null,
+        timing: latestTiming,
       },
       previousScore,
       trend,
       history,
+      timing: {
+        averageSessionDurationMs,
+        averageQuestionDurationMs,
+        sessionCount: sessionDurations.length,
+        questionCount: questionDurations.length,
+        fastestQuestionMs,
+        slowestQuestionMs,
+      },
     };
   });
 
@@ -159,6 +225,31 @@ function buildGeminiDataset(
   const eyeConditions = Array.isArray(profile.eye_conditions) ? profile.eye_conditions : [];
   const familyHistory = Array.isArray(profile.family_history) ? profile.family_history : [];
 
+  const allTimingRecords = results
+    .map((entry) => normalizeTiming(entry.details ?? null))
+    .filter((timing): timing is NonNullable<ReturnType<typeof normalizeTiming>> => timing !== null);
+
+  const overallSessionDurations = allTimingRecords
+    .map((timing) => timing.sessionDurationMs)
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
+
+  const overallQuestionDurations = allTimingRecords.flatMap((timing) =>
+    timing.perQuestion
+      .map((entry) => entry.durationMs)
+      .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0),
+  );
+
+  const averageSessionDurationMs = overallSessionDurations.length
+    ? Math.round(overallSessionDurations.reduce((sum, value) => sum + value, 0) / overallSessionDurations.length)
+    : null;
+
+  const averageQuestionDurationMs = overallQuestionDurations.length
+    ? Math.round(overallQuestionDurations.reduce((sum, value) => sum + value, 0) / overallQuestionDurations.length)
+    : null;
+
+  const fastestQuestionMs = overallQuestionDurations.length ? Math.min(...overallQuestionDurations) : null;
+  const slowestQuestionMs = overallQuestionDurations.length ? Math.max(...overallQuestionDurations) : null;
+
   return {
     generated_at: new Date().toISOString(),
     user: {
@@ -193,6 +284,12 @@ function buildGeminiDataset(
       overall_trend: trendOverall,
       risk_level: riskLevel,
       tests_completed: Object.keys(latestByType).length,
+      average_session_duration_ms: averageSessionDurationMs,
+      average_question_duration_ms: averageQuestionDurationMs,
+      fastest_question_ms: fastestQuestionMs,
+      slowest_question_ms: slowestQuestionMs,
+      timed_sessions_count: overallSessionDurations.length,
+      timed_responses_count: overallQuestionDurations.length,
     },
     tests,
     history: results.map((entry) => ({
@@ -201,6 +298,7 @@ function buildGeminiDataset(
       created_at: entry.created_at,
       details: entry.details ?? null,
       xp_earned: entry.xp_earned ?? null,
+      timing: normalizeTiming(entry.details ?? null),
     })),
   };
 }

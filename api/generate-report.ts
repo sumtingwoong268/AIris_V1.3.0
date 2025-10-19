@@ -92,6 +92,27 @@ const formatPercent = (value: number | null): string => {
   return Number.isInteger(rounded) ? `${rounded.toFixed(0)}%` : `${rounded.toFixed(1)}%`;
 };
 
+const formatDuration = (value: number | null | undefined): string => {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) return "not tracked";
+  const totalSeconds = Math.round(value / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes <= 0) return `${seconds}s`;
+  if (minutes < 60) return `${minutes}m${seconds > 0 ? ` ${seconds}s` : ""}`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}h${remainingMinutes > 0 ? ` ${remainingMinutes}m` : ""}`;
+};
+
+const formatDurationShort = (value: number | null | undefined): string => {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) return "n/a";
+  const totalSeconds = Math.round(value / 1000);
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`;
+};
+
 const escapeHtml = (value: unknown): string =>
   String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -179,12 +200,32 @@ const summarizeTests = (tests: any) => {
     const sessionText = `${sessions} session${sessions === 1 ? "" : "s"}`;
     const name = friendlyTestName(id);
 
-    const plain = `${name}: latest ${latestText}, lowest ${lowestText}, ${sessionText}, trend ${trendText}.`;
+    const currentTiming = (test as any)?.current?.timing;
+    const timingAggregate = (test as any)?.timing;
+    const latestSessionDuration = toNumber(currentTiming?.sessionDurationMs ?? null);
+    const averageSessionDurationMs = toNumber(timingAggregate?.averageSessionDurationMs ?? null);
+    const averageQuestionDurationMs = toNumber(
+      timingAggregate?.averageQuestionDurationMs ?? currentTiming?.averageQuestionDurationMs ?? null,
+    );
+    const fastestQuestionMs = toNumber(timingAggregate?.fastestQuestionMs ?? null);
+    const slowestQuestionMs = toNumber(timingAggregate?.slowestQuestionMs ?? null);
+
+    const paceFragments: string[] = [];
+    const sessionDurationForDisplay = latestSessionDuration ?? averageSessionDurationMs;
+    if (sessionDurationForDisplay !== null) {
+      paceFragments.push(`session ${formatDurationShort(sessionDurationForDisplay)}`);
+    }
+    if (averageQuestionDurationMs !== null) {
+      paceFragments.push(`avg q ${formatDurationShort(averageQuestionDurationMs)}`);
+    }
+    const paceText = paceFragments.length ? `, ${paceFragments.join(", ")}` : "";
+
+    const plain = `${name}: latest ${latestText}, lowest ${lowestText}, ${sessionText}, trend ${trendText}${paceText}.`;
     plainBullets.push(plain);
     htmlBullets.push(
       `<li><strong>${escapeHtml(name)}</strong>: latest <span>${escapeHtml(latestText)}</span>, lowest <span>${escapeHtml(
         lowestText,
-      )}</span>, ${escapeHtml(sessionText)}, trend ${escapeHtml(trendText)}.</li>`,
+      )}</span>, ${escapeHtml(sessionText)}, trend ${escapeHtml(trendText)}${paceFragments.length ? `, ${escapeHtml(paceFragments.join(", "))}` : ""}.</li>`,
     );
 
     insights.push({
@@ -550,6 +591,15 @@ const createTestDetailBody = (insight: TestInsight, testData: any): SectionBody 
   const previousScoreRaw =
     toNumber(testData?.previousScore) ??
     (historyArray.length >= 2 ? toNumber(historyArray[historyArray.length - 2]?.score) : null);
+  const currentTiming = testData?.current?.timing ?? null;
+  const aggregateTiming = testData?.timing ?? null;
+  const latestSessionDuration = toNumber(currentTiming?.sessionDurationMs ?? null);
+  const averageSessionDurationMs = toNumber(aggregateTiming?.averageSessionDurationMs ?? null);
+  const averageQuestionDurationMs = toNumber(
+    aggregateTiming?.averageQuestionDurationMs ?? currentTiming?.averageQuestionDurationMs ?? null,
+  );
+  const fastestQuestionMs = toNumber(aggregateTiming?.fastestQuestionMs ?? currentTiming?.fastestQuestionMs ?? null);
+  const slowestQuestionMs = toNumber(aggregateTiming?.slowestQuestionMs ?? currentTiming?.slowestQuestionMs ?? null);
 
   if (insight.notCompleted) {
     paragraphs.push(
@@ -586,6 +636,29 @@ const createTestDetailBody = (insight: TestInsight, testData: any): SectionBody 
       );
     }
 
+    const sessionDurationForNarrative = latestSessionDuration ?? averageSessionDurationMs;
+    if (sessionDurationForNarrative !== null) {
+      paragraphs.push(
+        `The most recent session ran for ${formatDuration(sessionDurationForNarrative)}, providing ${sessions} recorded response${sessions === 1 ? "" : "s"}.`,
+      );
+    }
+
+    if (averageQuestionDurationMs !== null) {
+      const fastestText = fastestQuestionMs !== null ? formatDurationShort(fastestQuestionMs) : null;
+      const slowestText = slowestQuestionMs !== null ? formatDurationShort(slowestQuestionMs) : null;
+      const rangeText =
+        fastestText && slowestText
+          ? ` (fastest ${fastestText}, slowest ${slowestText})`
+          : fastestText
+            ? ` (fastest ${fastestText})`
+            : slowestText
+              ? ` (slowest ${slowestText})`
+              : "";
+      paragraphs.push(
+        `Average response time is ${formatDuration(averageQuestionDurationMs)}${rangeText}, so build drills that keep tempo steady while gradually tightening the range.`,
+      );
+    }
+
     if (currentScore !== null) {
       if (currentScore >= 70) {
         paragraphs.push(
@@ -614,6 +687,20 @@ const createTestDetailBody = (insight: TestInsight, testData: any): SectionBody 
 
   if (previousScoreRaw !== null) {
     details.push(`Previous score benchmark: ${formatPercent(previousScoreRaw)}.`);
+  }
+
+  const sessionDurationForDetails = latestSessionDuration ?? averageSessionDurationMs;
+  if (sessionDurationForDetails !== null) {
+    details.push(`Latest session duration: ${formatDuration(sessionDurationForDetails)}.`);
+  }
+  if (averageQuestionDurationMs !== null) {
+    details.push(`Average question time: ${formatDuration(averageQuestionDurationMs)}.`);
+  }
+  if (fastestQuestionMs !== null) {
+    details.push(`Fastest recorded response: ${formatDurationShort(fastestQuestionMs)}.`);
+  }
+  if (slowestQuestionMs !== null) {
+    details.push(`Slowest recorded response: ${formatDurationShort(slowestQuestionMs)}.`);
   }
 
   details.forEach((line) => {
@@ -646,6 +733,12 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
     Array.isArray(lifestyle?.symptoms) && lifestyle.symptoms.length > 0
       ? lifestyle.symptoms.slice(0, 4).join(", ") + (lifestyle.symptoms.length > 4 ? ", ..." : "")
       : null;
+  const averageSessionDuration = toNumber(stats?.average_session_duration_ms);
+  const averageQuestionDuration = toNumber(stats?.average_question_duration_ms);
+  const globalFastestQuestion = toNumber(stats?.fastest_question_ms);
+  const globalSlowestQuestion = toNumber(stats?.slowest_question_ms);
+  const timedSessionsCount = typeof stats?.timed_sessions_count === "number" ? stats.timed_sessions_count : null;
+  const timedResponsesCount = typeof stats?.timed_responses_count === "number" ? stats.timed_responses_count : null;
 
   const summaryParagraphs = [
     `Care baseline score ${scoreText} signals ${care.label.toLowerCase()} needs. ${care.summary}`,
@@ -671,7 +764,45 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
     );
   }
 
+  if (averageSessionDuration !== null || averageQuestionDuration !== null) {
+    const clauses: string[] = [];
+    if (averageSessionDuration !== null) {
+      clauses.push(`sessions average ${formatDuration(averageSessionDuration)}`);
+    }
+    if (averageQuestionDuration !== null) {
+      let questionClause = `individual responses take about ${formatDuration(averageQuestionDuration)}`;
+      const rangePieces: string[] = [];
+      if (globalFastestQuestion !== null) {
+        rangePieces.push(`fastest ${formatDurationShort(globalFastestQuestion)}`);
+      }
+      if (globalSlowestQuestion !== null) {
+        rangePieces.push(`slowest ${formatDurationShort(globalSlowestQuestion)}`);
+      }
+      if (rangePieces.length) {
+        questionClause += ` (${rangePieces.join(", ")})`;
+      }
+      clauses.push(questionClause);
+    }
+    summaryParagraphs.push(`${clauses.join(" and ")}.`);
+  }
+
   const analysisParagraphs = buildAnalysisParagraphs(insightSummary);
+
+  if (averageSessionDuration !== null || averageQuestionDuration !== null) {
+    const parts: string[] = [];
+    if (averageSessionDuration !== null) {
+      parts.push(`time-on-task averages ${formatDuration(averageSessionDuration)}`);
+    }
+    if (averageQuestionDuration !== null) {
+      parts.push(`per-question pace holds near ${formatDuration(averageQuestionDuration)}`);
+    }
+    const countFragment = timedSessionsCount ? ` across ${timedSessionsCount} timed session${timedSessionsCount === 1 ? "" : "s"}` : "";
+    const responseCountFragment =
+      timedResponsesCount && averageQuestionDuration !== null
+        ? ` covering ${timedResponsesCount} logged response${timedResponsesCount === 1 ? "" : "s"}`
+        : "";
+    analysisParagraphs.push(`${parts.join(" while ")}${countFragment}${responseCountFragment}.`);
+  }
 
   const careMessage =
     care.trafficLight === "red"
@@ -689,6 +820,12 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
       : "Use these targeted drills daily to preserve comfortable vision stamina across all screenings.",
     careMessage,
   ];
+
+  if (averageQuestionDuration !== null) {
+    exerciseParagraphs.push(
+      `Use the built-in timers to keep each repetition near ${formatDuration(averageQuestionDuration)} before gradually trimming a few seconds to build stamina without triggering strain spikes.`,
+    );
+  }
 
   const exerciseBullets = [
     "20-20-20 focus shifts: every 20 minutes, look 20 feet away for 20 seconds to relax ciliary muscles stressed by visual acuity and reading stress results.",
@@ -770,6 +907,11 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
     "Weeks 5–8: Review results; contact your clinician if any score dips below 40% or symptoms escalate.",
     "Weeks 9–12: Maintain cross-training habits (screen breaks, lighting hygiene) and repeat the full testing cycle.",
     "Months 4–6: Schedule a formal eye exam and compare professional findings with your AIris test trends.",
+    ...(averageSessionDuration !== null
+      ? [
+          `Keep each assessment near ${formatDuration(averageSessionDuration)}; pause or reset if timers stretch longer to prevent fatigue-driven dips.`,
+        ]
+      : []),
     ...guidanceEnhancements.extraImprovementBullets,
   ];
 
@@ -843,20 +985,28 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
     `Testing coverage: ${totalTestCategories} categories across ${totalSessions} session${totalSessions === 1 ? "" : "s"}.`,
   ];
 
+  const appendKeyFinding = (value: string) => {
+    if (keyFindings.length < 6) {
+      keyFindings.push(value);
+    }
+  };
+
   if (insightSummary.topPerformer?.latest !== null) {
-    keyFindings.push(
-      `Strongest metric: ${insightSummary.topPerformer.name} at ${formatPercent(insightSummary.topPerformer.latest)}.`,
-    );
+    appendKeyFinding(`Strongest metric: ${insightSummary.topPerformer.name} at ${formatPercent(insightSummary.topPerformer.latest)}.`);
   }
 
   if (insightSummary.lowestPerformer?.latest !== null) {
-    keyFindings.push(
-      `Greatest opportunity: ${insightSummary.lowestPerformer.name} at ${formatPercent(insightSummary.lowestPerformer.latest)}.`,
-    );
+    appendKeyFinding(`Greatest opportunity: ${insightSummary.lowestPerformer.name} at ${formatPercent(insightSummary.lowestPerformer.latest)}.`);
   }
 
   if (insightSummary.pendingNames.length > 0) {
-    keyFindings.push(`Pending data: ${insightSummary.pendingNames.join(", ")}.`);
+    appendKeyFinding(`Pending data: ${insightSummary.pendingNames.join(", ")}.`);
+  }
+  if (averageSessionDuration !== null) {
+    appendKeyFinding(`Average session time: ${formatDuration(averageSessionDuration)}.`);
+  }
+  if (averageQuestionDuration !== null) {
+    appendKeyFinding(`Average response time: ${formatDuration(averageQuestionDuration)}.`);
   }
 
   return {
@@ -1024,6 +1174,7 @@ CONTENT GUIDELINES
 - Explain AI reasoning when connecting habits or symptoms to results; flag data gaps and recommend how to close them.
 - Reference trend direction (improving, declining, stable) whenever model-supplied trend values are available.
 - In exercise and nutrition sections, tie every recommendation to the specific tests or symptoms it supports, and describe the expected physiological benefit.
+- Use timing metrics (sessionDurationMs, averageQuestionDurationMs, fastest/slowest question times) to comment on pacing and response consistency.
 
 SECTION EXPECTATIONS
 1. Summary Overview — 2–3 short paragraphs covering overall score, risk level, trend, and key findings (acuity, colour perception, macular/retinal health, general function). Include one sentence that names the strongest metric and one that highlights the most vulnerable metric.
