@@ -18,6 +18,8 @@ type SectionContent = {
   htmlBullets?: string[];
 };
 
+type SectionBody = Omit<SectionContent, "title">;
+
 type TestInsight = {
   id: string;
   name: string;
@@ -39,6 +41,14 @@ type InsightSummary = {
   declining: TestInsight[];
   lowScoring: TestInsight[];
   limitedHistory: TestInsight[];
+};
+
+type GuidanceEnhancements = {
+  planningNotes: string[];
+  exerciseBullets: string[];
+  followUpParagraphs: string[];
+  improvementBullets: string[];
+  priorityTargets: TestInsight[];
 };
 
 const ACCENT_BY_TRAFFIC: Record<TrafficLight, string> = {
@@ -218,6 +228,13 @@ const renderSectionHtml = (section: SectionContent): string => {
   )}</h3>${paragraphsHtml}${bulletsHtml}</section>`;
 };
 
+const formatDate = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+};
+
 const describeTrendModifier = (trend: number | null): string => {
   if (trend === null) return "with no trend data yet";
   if (Math.abs(trend) < 0.2) return "holding steady";
@@ -278,7 +295,7 @@ const TEST_SELF_CARE_LIBRARY: Record<
 > = {
   ishihara: {
     selfCare: (insight) =>
-      `Color contrast workout: alternate between red/green object sorting and hue-matching apps for 10 minutes daily to support ${insight.name.toLowerCase()} resilience.`,
+      `Color contrast workout: alternate between red/green object sorting and hue-matching apps for 10 minutes daily to restore cone sensitivity. This directly targets the pigment pathways highlighted by your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} score.`,
     followUp: () =>
       "Discuss occupational color-vision demands during your consultation so a Farnsworth D-15 or similar diagnostic can confirm functional thresholds.",
     longTerm: (insight) =>
@@ -289,7 +306,7 @@ const TEST_SELF_CARE_LIBRARY: Record<
   },
   visual_acuity: {
     selfCare: (insight) =>
-      `Acuity stamina: perform near/far focus ladders twice daily (30 seconds per distance) to rebuild clarity for ${insight.name.toLowerCase()}.`,
+      `Acuity stamina: perform near/far focus ladders twice daily (30 seconds per distance) to recalibrate ciliary muscle control. This routine supports the clarity deficit identified by your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} reading.`,
     followUp: () =>
       "Ask whether updated refractive correction, topography, or tear-film assessment is needed if clarity continues to drift.",
     longTerm: (insight) =>
@@ -300,7 +317,7 @@ const TEST_SELF_CARE_LIBRARY: Record<
   },
   acuity: {
     selfCare: (insight) =>
-      `Acuity stamina: perform near/far focus ladders twice daily (30 seconds per distance) to rebuild clarity for ${insight.name.toLowerCase()}.`,
+      `Acuity stamina: perform near/far focus ladders twice daily (30 seconds per distance) to recalibrate ciliary muscle control. This directly addresses the performance gap shown by your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} score.`,
     followUp: () =>
       "Ask whether updated refractive correction, topography, or tear-film assessment is needed if clarity continues to drift.",
     longTerm: (insight) =>
@@ -311,7 +328,7 @@ const TEST_SELF_CARE_LIBRARY: Record<
   },
   amsler: {
     selfCare: () =>
-      "Macular vigilance: review the Amsler grid at arm's length under bright light nightly and log any waviness or new gaps immediately.",
+      "Macular vigilance: review the Amsler grid at arm's length under bright light nightly and log any waviness or new gaps immediately so macular changes are caught at onset.",
     followUp: () =>
       "Request a macular OCT or dilated fundus exam if distortions or scotomas increase—these tests visualise retinal layers in detail.",
     longTerm: (insight) =>
@@ -319,7 +336,7 @@ const TEST_SELF_CARE_LIBRARY: Record<
   },
   reading_stress: {
     selfCare: () =>
-      "Near-work pacing: use a metronome or pacing app to alternate 5-minute reading intervals with 1-minute eye-yoga and blink drills to ease reading stress.",
+      "Near-work pacing: alternate 5-minute reading intervals with 1-minute eye-yoga and blink drills to relieve accommodative fatigue and reduce the stress highlighted by near-task screenings.",
     followUp: () =>
       "Explore ergonomic adjustments (lighting, monitor distance) with your provider if strain persists despite pacing routines.",
     longTerm: (insight) =>
@@ -328,6 +345,19 @@ const TEST_SELF_CARE_LIBRARY: Record<
         Math.round((insight.latest ?? 50) + 15),
       )}% sustained comfort before extending session lengths.`,
   },
+};
+
+const TEST_NUTRITION_LIBRARY: Record<string, (insight: TestInsight) => string> = {
+  ishihara: (insight) =>
+    `Color pigment support: load meals with spinach, kale, orange peppers, and berries at least 4 times weekly. Their lutein, zeaxanthin, and anthocyanins reinforce cone health to address your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} score.`,
+  visual_acuity: (insight) =>
+    `Clarity fuel: add vitamin A and C sources—carrots, sweet potatoes, citrus—and omega-3 fats from salmon or flax three times weekly to stabilise the focus fluctuations seen in your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} results.`,
+  acuity: (insight) =>
+    `Clarity fuel: add vitamin A and C sources—carrots, sweet potatoes, citrus—and omega-3 fats from salmon or flax three times weekly to stabilise the focus fluctuations seen in your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} results.`,
+  amsler: (insight) =>
+    `Macular fortification: prioritise leafy greens, zinc-rich legumes, and oily fish (2 servings/week) to protect retinal pigment integrity and counter the distortions noted in your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} performance.`,
+  reading_stress: (insight) =>
+    `Anti-fatigue nutrition: space complex carbohydrates with magnesium (pumpkin seeds, legumes) and B-complex sources to sustain ocular muscles and reduce the strain reflected in your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} results.`,
 };
 
 const buildAnalysisParagraphs = (summary: InsightSummary): string[] => {
@@ -406,14 +436,14 @@ const buildAnalysisParagraphs = (summary: InsightSummary): string[] => {
   return paragraphs;
 };
 
-const buildGuidanceEnhancements = (summary: InsightSummary) => {
-  const extraParagraphs: string[] = [];
-  const extraGuidanceBullets: string[] = [];
+const buildGuidanceEnhancements = (summary: InsightSummary): GuidanceEnhancements => {
+  const planningNotes: string[] = [];
+  const exerciseBullets: string[] = [];
   const extraFollowUpParagraphs: string[] = [];
   const extraImprovementBullets: string[] = [];
 
   if (summary.pendingNames.length > 0) {
-    extraParagraphs.push(
+    planningNotes.push(
       `Complete the pending tests (${summary.pendingNames.join(
         ", ",
       )}) this week so AIris can calibrate personalised baselines.`,
@@ -431,9 +461,9 @@ const buildGuidanceEnhancements = (summary: InsightSummary) => {
   priorityTargets.forEach((insight) => {
     const library = TEST_SELF_CARE_LIBRARY[insight.id];
     if (library?.selfCare) {
-      extraGuidanceBullets.push(library.selfCare(insight));
+      exerciseBullets.push(library.selfCare(insight));
     } else {
-      extraGuidanceBullets.push(
+      exerciseBullets.push(
         `Dedicate five minutes daily to drills that directly challenge ${insight.name.toLowerCase()}—small, frequent reps rebuild the low score of ${formatPercent(
           insight.latest,
         )}.`,
@@ -454,7 +484,7 @@ const buildGuidanceEnhancements = (summary: InsightSummary) => {
   });
 
   if (summary.declining.length > 0) {
-    extraParagraphs.push(
+    planningNotes.push(
       `Stabilise declining metrics (${summary.declining
         .slice(0, 2)
         .map((insight) => insight.name)
@@ -469,11 +499,101 @@ const buildGuidanceEnhancements = (summary: InsightSummary) => {
   }
 
   return {
-    extraParagraphs,
-    extraGuidanceBullets,
+    planningNotes,
+    exerciseBullets,
     extraFollowUpParagraphs,
     extraImprovementBullets,
+    priorityTargets,
   };
+};
+
+const createTestDetailBody = (insight: TestInsight, testData: any): SectionBody => {
+  const paragraphs: string[] = [];
+  const plainBullets: string[] = [];
+  const htmlBullets: string[] = [];
+
+  const currentScore = insight.latest;
+  const lowestScore = insight.lowest;
+  const highestScore = insight.highest;
+  const sessions = insight.sessions;
+  const trendText = describeTrendModifier(insight.trend);
+  const currentDate = formatDate(testData?.current?.created_at);
+  const historyArray = Array.isArray(testData?.history) ? testData.history : [];
+  const previousScoreRaw =
+    toNumber(testData?.previousScore) ??
+    (historyArray.length >= 2 ? toNumber(historyArray[historyArray.length - 2]?.score) : null);
+
+  if (insight.notCompleted) {
+    paragraphs.push(
+      `${insight.name} has not been completed yet. Run this screening to establish a baseline so AIris can model personalised progress and compare future readings.`,
+    );
+  } else {
+    paragraphs.push(
+      `${insight.name} currently measures ${formatPercent(currentScore)} across ${sessions} recorded session${
+        sessions === 1 ? "" : "s"
+      }, ${trendText}.`,
+    );
+
+    if (lowestScore !== null && highestScore !== null) {
+      const rangeText = `${formatPercent(lowestScore)} – ${formatPercent(highestScore)}`;
+      paragraphs.push(
+        `Historical range spans ${rangeText}, showing how readings have varied between your softest and strongest outcomes.`,
+      );
+    }
+
+    if (previousScoreRaw !== null && currentScore !== null) {
+      const delta = Math.round((currentScore - previousScoreRaw) * 10) / 10;
+      const deltaText =
+        delta === 0
+          ? "held level with the prior session"
+          : delta > 0
+            ? `improved by ${delta.toFixed(1)} points versus the prior session`
+            : `decreased by ${Math.abs(delta).toFixed(1)} points versus the prior session`;
+      paragraphs.push(`Compared with your last measurement, the score has ${deltaText}.`);
+    }
+
+    if (sessions < 3) {
+      paragraphs.push(
+        `Only ${sessions} session${sessions === 1 ? "" : "s"} are recorded so far—continue weekly testing to confirm whether the trend stabilises or shifts.`,
+      );
+    }
+
+    if (currentScore !== null) {
+      if (currentScore >= 70) {
+        paragraphs.push(
+          `Results sitting above 70% indicate strong function for this domain. Maintain current routines to preserve the resilience reflected here.`,
+        );
+      } else if (currentScore >= 40) {
+        paragraphs.push(
+          `Scores in the 40–69% band signal caution. Reinforce symptom tracking and review the targeted drills below to nudge results upward.`,
+        );
+      } else {
+        paragraphs.push(
+          `Readings under 40% place this test in the high-priority zone. Combine structured exercises with clinical follow-up to investigate underlying causes.`,
+        );
+      }
+    }
+  }
+
+  const details: string[] = [];
+  details.push(
+    `Latest result: ${formatPercent(currentScore)}${currentDate ? ` (recorded ${currentDate})` : ""}.`,
+  );
+  details.push(`Historical low: ${formatPercent(lowestScore)}.`);
+  details.push(`Historical best: ${formatPercent(highestScore)}.`);
+  details.push(`Trend summary: ${trendText}.`);
+  details.push(`Sessions tracked: ${sessions}.`);
+
+  if (previousScoreRaw !== null) {
+    details.push(`Previous score benchmark: ${formatPercent(previousScoreRaw)}.`);
+  }
+
+  details.forEach((line) => {
+    plainBullets.push(line);
+    htmlBullets.push(`<li>${escapeHtml(line)}</li>`);
+  });
+
+  return { paragraphs, bullets: plainBullets, htmlBullets };
 };
 
 const buildFallbackReport = (dataset: any, reason?: string | null) => {
@@ -482,11 +602,12 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
   const stats = dataset.stats ?? {};
   const lifestyle = dataset.lifestyle ?? {};
   const history = Array.isArray(dataset.history) ? dataset.history : [];
-  const testBundle = summarizeTests(dataset.tests ?? {});
+  const tests = dataset.tests ?? {};
+  const testBundle = summarizeTests(tests);
   const insightSummary = computeInsightSummary(testBundle.insights);
   const care = determineCareLevel(stats);
 
-  const totalTestCategories = Object.keys(dataset.tests ?? {}).length;
+  const totalTestCategories = Object.keys(tests).length;
   const totalSessions = history.length;
   const xp = toNumber(stats?.xp) ?? 0;
   const level = toNumber(stats?.level);
@@ -532,23 +653,74 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
         : "Maintain the habits that are supporting strong scores and continue routine monitoring.";
 
   const guidanceEnhancements = buildGuidanceEnhancements(insightSummary);
+  const priorityNames = guidanceEnhancements.priorityTargets.map((entry) => entry.name);
 
-  const guidanceParagraphs = [
-    "Focus your daily routine on protecting central vision and sustaining comfortable screen habits. Implement the routines below consistently.",
+  const exerciseParagraphs = [
+    priorityNames.length
+      ? `Exercises below are tuned to lift ${priorityNames.join(", ")} by strengthening the exact visual functions those tests measure.`
+      : "Use these targeted drills daily to preserve comfortable vision stamina across all screenings.",
     careMessage,
-    ...guidanceEnhancements.extraParagraphs,
   ];
 
-  const guidanceBullets = [
-    "Eye exercise: 20-20-20 focus shifts — every 20 minutes, look 20 feet away for 20 seconds during screen use.",
-    "Grid tracking: Scan the Amsler grid for 1 minute per eye each evening, noting any new distortions.",
-    "Contrast drill: Alternate reading high-contrast and low-contrast text for 5 minutes daily to reinforce acuity stamina.",
-    "Lifestyle: Rest for 5 minutes every hour away from bright screens and aim for at least 1 hour of outdoor natural light.",
-    "Hydration and breaks: Drink water steadily (target 8 cups daily) to support tear film stability and reduce dryness.",
-    "Nutrition: Include leafy greens, orange vegetables, and fatty fish weekly for lutein, zeaxanthin, and omega-3 support.",
-    "Sample day plan — Morning: contrast reading drill in natural light; Midday: outdoor break with 20-20-20 routine; Evening: gentle grid scan and symptom log update.",
-    ...guidanceEnhancements.extraGuidanceBullets,
+  const exerciseBullets = [
+    "20-20-20 focus shifts: every 20 minutes, look 20 feet away for 20 seconds to relax ciliary muscles stressed by visual acuity and reading stress results.",
+    "Amsler grid tracking: scan the grid for 1 minute per eye nightly, logging distortions to monitor macular stability reflected in Amsler readings.",
+    "Contrast ladder drill: alternate high- and low-contrast passages for 5 minutes to sharpen cone response underlying Ishihara and acuity scores.",
+    "Blink reset with warm palming: cover closed eyes for 60 seconds after intense screen sessions to rebalance tear film and ease the fatigue seen in strain-related tests.",
+    ...guidanceEnhancements.exerciseBullets,
   ];
+
+  const symptoms = Array.isArray(lifestyle?.symptoms)
+    ? lifestyle.symptoms.map((value: any) => (typeof value === "string" ? value.toLowerCase() : "")).filter(Boolean)
+    : [];
+  const hasDryness = symptoms.some((symptom: string) => symptom.includes("dry"));
+  const hasStrain = symptoms.some((symptom: string) => symptom.includes("strain") || symptom.includes("fatigue"));
+  const hasBlur = symptoms.some((symptom: string) => symptom.includes("blur"));
+
+  const nutritionParagraphs = [
+    priorityNames.length
+      ? `Nutrition focuses on giving ${priorityNames.join(", ")} the building blocks they need to recover, using nutrients tied to each test domain.`
+      : "Adopt the following nutrition strategy to keep retinal tissue, tear film, and accommodative muscles well supplied.",
+    symptoms.length
+      ? `Symptom profile noted (${symptoms.join(", ")}). The meal plan below counters those patterns with specific nutrients.`
+      : "Even without symptom flags, staying consistent with these foods keeps visual pathways resilient between screenings.",
+  ];
+
+  const nutritionBulletSet = new Set<string>();
+  nutritionBulletSet.add(
+    "Macula-protective plate: load at least half of lunch and dinner with leafy greens, orange vegetables, and colorful berries four times per week to boost carotenoids and antioxidants.",
+  );
+  nutritionBulletSet.add(
+    "Omega-3 timing: two servings of oily fish or plant-based omega-3s weekly stabilise tear film and retinal membranes, supporting long-term test stability.",
+  );
+  nutritionBulletSet.add(
+    "Evening recovery drink: combine water with electrolytes or herbal tea to sustain hydration overnight, preventing morning blur.",
+  );
+  if (hasDryness) {
+    nutritionBulletSet.add(
+      "Dry-eye relief: add chia or flax seeds and vitamin E sources (almonds, sunflower seeds) daily to reinforce tear lipid layers.",
+    );
+  }
+  if (hasStrain) {
+    nutritionBulletSet.add(
+      "Anti-strain stack: pair magnesium-rich legumes with B-complex sources (whole grains, eggs) at dinner to relax ocular muscles before high-demand days.",
+    );
+  }
+  if (hasBlur) {
+    nutritionBulletSet.add(
+      "Clarity booster breakfast: include vitamin A (sweet potato, carrots) and vitamin C (citrus, kiwi) each morning to sharpen the focus deficits reported.",
+    );
+  }
+
+  guidanceEnhancements.priorityTargets.forEach((insight) => {
+    const nutritionBuilder = TEST_NUTRITION_LIBRARY[insight.id];
+    const note = nutritionBuilder ? nutritionBuilder(insight) : null;
+    if (note) {
+      nutritionBulletSet.add(note);
+    }
+  });
+
+  const nutritionBullets = Array.from(nutritionBulletSet);
 
   const followUpParagraphs = [
     care.trafficLight === "red"
@@ -562,6 +734,7 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
 
   const improvementParagraphs = [
     "Use the following milestone plan to stay organised across the next three to six months.",
+    ...guidanceEnhancements.planningNotes,
   ];
 
   const improvementBullets = [
@@ -578,33 +751,48 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
     "Digital screenings may miss acute changes—seek emergency care for sudden or severe symptoms.",
   ];
 
-  const sections: SectionContent[] = [
-    { title: "1. Summary Overview", paragraphs: summaryParagraphs },
-    {
-      title: "2. Detailed Test Analysis",
-      paragraphs: analysisParagraphs,
-      bullets: testBundle.plainBullets,
-      htmlBullets: testBundle.htmlBullets,
-    },
-    {
-      title: "3. Personalised Self-Care Guidance",
-      paragraphs: guidanceParagraphs,
-      bullets: guidanceBullets,
-    },
-    {
-      title: "4. Medical Follow-Up",
-      paragraphs: followUpParagraphs,
-    },
-    {
-      title: "5. Long-Term Improvement Plan",
-      paragraphs: improvementParagraphs,
-      bullets: improvementBullets,
-    },
-    {
-      title: "6. Disclaimers",
-      bullets: disclaimersBullets,
-    },
-  ];
+  const sections: SectionContent[] = [];
+  let sectionCounter = 1;
+
+  const addNumberedSection = (label: string, body: SectionBody) => {
+    sections.push({ title: `${sectionCounter}. ${label}`, ...body });
+    sectionCounter += 1;
+  };
+  const addUnnumberedSection = (label: string, body: SectionBody) => {
+    sections.push({ title: label, ...body });
+  };
+
+  addNumberedSection("Summary Overview", { paragraphs: summaryParagraphs });
+  addNumberedSection("Detailed Test Analysis", {
+    paragraphs: analysisParagraphs,
+    bullets: testBundle.plainBullets,
+    htmlBullets: testBundle.htmlBullets,
+  });
+
+  insightSummary.all.forEach((insight) => {
+    const testData = tests[insight.id];
+    const body = createTestDetailBody(insight, testData);
+    addUnnumberedSection(`Test Focus – ${insight.name}`, body);
+  });
+
+  addNumberedSection("Personalised Eye Exercises", {
+    paragraphs: exerciseParagraphs,
+    bullets: exerciseBullets,
+  });
+
+  addNumberedSection("Targeted Nutrition Strategy", {
+    paragraphs: nutritionParagraphs,
+    bullets: nutritionBullets,
+  });
+
+  addNumberedSection("Medical Follow-Up", { paragraphs: followUpParagraphs });
+
+  addNumberedSection("Long-Term Improvement Plan", {
+    paragraphs: improvementParagraphs,
+    bullets: improvementBullets,
+  });
+
+  addNumberedSection("Disclaimers", { bullets: disclaimersBullets });
 
   const plainTextDocument = sections
     .map((section) => {
@@ -772,24 +960,30 @@ REQUIRED JSON SCHEMA
       "blocks": ["HTML strings…"]
     },
     {
-      "title": "3. Personalised Self-Care Guidance",
+      "title": "3. Personalised Eye Exercises",
       "blocks": ["HTML strings…"]
     },
     {
-      "title": "4. Medical Follow-Up",
+      "title": "4. Targeted Nutrition Strategy",
       "blocks": ["HTML strings…"]
     },
     {
-      "title": "5. Long-Term Improvement Plan",
+      "title": "5. Medical Follow-Up",
       "blocks": ["HTML strings…"]
     },
     {
-      "title": "6. Disclaimers",
+      "title": "6. Long-Term Improvement Plan",
+      "blocks": ["HTML strings…"]
+    },
+    {
+      "title": "7. Disclaimers",
       "blocks": ["HTML strings…"]
     }
   ],
   "key_findings": ["plain-text highlight strings…"]
 }
+
+NOTE: After the second section, insert an additional section titled "Test Focus – {Test Name}" for every test present in the dataset. These sections must appear before section 3.
 
 CONTENT GUIDELINES
 - HTML blocks: use semantic tags (section, h1, h2, h3, p, ul, li) with inline styles inspired by the AIris palette (purples/blues/soft gradients). HTML must be valid and self-contained.
@@ -797,18 +991,20 @@ CONTENT GUIDELINES
 - key_findings: 3–6 concise strings capturing the most important takeaways.
 - Tone: clinical, clear, empathetic. No emojis or informal language.
 - Base each statement strictly on the dataset (scores, prior results, lifestyle, symptoms). If no prior measurement exists, write "no prior data for comparison".
-- If a test was not completed, state “not completed” without speculating on causes.
+- If a test was not completed, state “not completed” without speculating on causes and explain how to gather the missing data.
 - Spotlight the strongest and weakest test domains with exact scores, mentioning how many sessions informed the conclusion.
 - Explain AI reasoning when connecting habits or symptoms to results; flag data gaps and recommend how to close them.
 - Reference trend direction (improving, declining, stable) whenever model-supplied trend values are available.
+- In exercise and nutrition sections, tie every recommendation to the specific tests or symptoms it supports, and describe the expected physiological benefit.
 
 SECTION EXPECTATIONS
-1. Summary Overview — 2–3 short paragraphs covering overall score, risk level, trend, and key findings (acuity, color perception, macular/retinal health, general function). Include one sentence that names the strongest metric and one that highlights the most vulnerable metric.
-2. Detailed Test Analysis — one HTML block per test present; include current score, interpretation, comparison to prior results where available, and data-backed explanations. Integrate AI commentary describing likely contributing factors only when data supports it.
-3. Personalised Self-Care Guidance — eye exercises (3–5 routines with frequency), lifestyle advice, and nutrition guidance tied to user data; include a sample day plan when nutrition info exists. Connect each recommendation to the specific tests or symptoms it is meant to improve.
-4. Medical Follow-Up — professional exam recommendation plus justified diagnostics (only if supported by data) with brief rationale. Mention timelines (e.g., urgent, 2–4 weeks, routine) matching the severity level.
-5. Long-Term Improvement Plan — 3–6 month roadmap with retest cadence, habit metrics, and measurable targets based on current values. Insert at least one measurable goal (percentage or session milestone) per key area of concern.
-6. Disclaimers — neutral reminder that the report is informational only and not a substitute for professional care.
+1. Summary Overview — 2–3 short paragraphs covering overall score, risk level, trend, and key findings (acuity, colour perception, macular/retinal health, general function). Include one sentence that names the strongest metric and one that highlights the most vulnerable metric.
+2. Detailed Test Analysis — provide an overview paragraph plus the aggregated bullet list. Then create a dedicated "Test Focus – {Test Name}" section for each test with current score, historical range, trend interpretation, and data-backed rationale (no speculation).
+3. Personalised Eye Exercises — list 3–5 drills with frequency and duration, explicitly stating which test results or symptoms each drill improves and why.
+4. Targeted Nutrition Strategy — outline meal patterns and specific nutrients mapped to the flagged tests/symptoms, including how often to consume them and the visual function they support.
+5. Medical Follow-Up — professional exam recommendation plus justified diagnostics (only if supported by data) with brief rationale. Mention timelines (e.g., urgent, 2–4 weeks, routine) matching the severity level.
+6. Long-Term Improvement Plan — 3–6 month roadmap with retest cadence, habit metrics, and measurable targets based on current values. Insert at least one measurable goal (percentage or session milestone) per key area of concern.
+7. Disclaimers — neutral reminder that the report is informational only and not a substitute for professional care.
 
 VALIDATION CHECKLIST BEFORE RESPONDING
 - Ensure trafficLight and urgency align with indicators in the dataset.
