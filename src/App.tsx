@@ -8,6 +8,8 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Friends from "./pages/Friends";
 import Reports from "./pages/Reports";
+import Blogs from "./pages/Blogs";
+import BlogArticle from "./pages/BlogArticle";
 import Setup from "./pages/Setup";
 import Statistics from "./pages/Statistics";
 import IshiharaTest from "./pages/tests/IshiharaTest";
@@ -32,6 +34,8 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/blogs" element={<Blogs />} />
+          <Route path="/blogs/:slug" element={<BlogArticle />} />
           <Route path="/statistics" element={<Statistics />} />
           <Route path="/tests/ishihara" element={<IshiharaTest />} />
           <Route path="/tests/visual-acuity" element={<VisualAcuityTest />} />
