@@ -308,6 +308,11 @@ export default function Dashboard() {
       action: () => navigate("/statistics"),
     },
     {
+      label: "Read Eye Care Blogs",
+      icon: BookOpen,
+      action: () => navigate("/blogs"),
+    },
+    {
       label: "Invite Friends",
       icon: Users,
       action: () => navigate("/friends"),
@@ -339,19 +344,23 @@ export default function Dashboard() {
             </div>
           </div>
           <nav className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => navigate("/friends")}> 
+            <Button variant="ghost" onClick={() => navigate("/friends")}>
               <Users className="mr-2 h-4 w-4" />
               Friends
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/reports")}> 
+            <Button variant="ghost" onClick={() => navigate("/reports")}>
               <FileText className="mr-2 h-4 w-4" />
               Reports
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/statistics")}> 
+            <Button variant="ghost" onClick={() => navigate("/statistics")}>
               <Award className="mr-2 h-4 w-4" />
               Statistics
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/profile")}> 
+            <Button variant="ghost" onClick={() => navigate("/blogs")}>
+              <BookOpen className="mr-2 h-4 w-4" />
+              Blogs
+            </Button>
+            <Button variant="ghost" onClick={() => navigate("/profile")}>
               <User className="mr-2 h-4 w-4" />
               Profile
             </Button>
