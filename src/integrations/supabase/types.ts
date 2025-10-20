@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          id: string;
+          slug: string;
+          title: string;
+          description: string;
+          hero_gradient: string;
+          read_time: string;
+          publish_date: string;
+          sections: Json;
+          key_takeaways: string[];
+          resources: Json | null;
+          tags: string[];
+          related_slugs: string[];
+          author_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          title: string;
+          description: string;
+          hero_gradient: string;
+          read_time: string;
+          publish_date: string;
+          sections?: Json;
+          key_takeaways?: string[];
+          resources?: Json | null;
+          tags?: string[];
+          related_slugs?: string[];
+          author_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          title?: string;
+          description?: string;
+          hero_gradient?: string;
+          read_time?: string;
+          publish_date?: string;
+          sections?: Json;
+          key_takeaways?: string[];
+          resources?: Json | null;
+          tags?: string[];
+          related_slugs?: string[];
+          author_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       user_preferences: {
         Row: {
           id: string;

@@ -21,6 +21,7 @@ import {
   Sparkles,
   PlayCircle,
   LineChart as LineChartIcon,
+  Settings2,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 
@@ -92,6 +93,7 @@ const formatTestLabel = (type: string | null) => {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const isStaff = user?.user_metadata?.role === "staff";
   const { xp } = useXP(user?.id);
   const [profile, setProfile] = useState<any>(null);
   const [testStats, setTestStats] = useState<{ avgScore: number, testsCompleted: number }>({ avgScore: 0, testsCompleted: 0 });
@@ -308,6 +310,20 @@ export default function Dashboard() {
       action: () => navigate("/statistics"),
     },
     {
+      label: "Read Eye Care Blogs",
+      icon: BookOpen,
+      action: () => navigate("/blogs"),
+    },
+    ...(isStaff
+      ? [
+          {
+            label: "Manage Blog Posts",
+            icon: Settings2,
+            action: () => navigate("/blogs/manage"),
+          },
+        ]
+      : []),
+    {
       label: "Invite Friends",
       icon: Users,
       action: () => navigate("/friends"),
@@ -339,19 +355,29 @@ export default function Dashboard() {
             </div>
           </div>
           <nav className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => navigate("/friends")}> 
+            <Button variant="ghost" onClick={() => navigate("/friends")}>
               <Users className="mr-2 h-4 w-4" />
               Friends
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/reports")}> 
+            <Button variant="ghost" onClick={() => navigate("/reports")}>
               <FileText className="mr-2 h-4 w-4" />
               Reports
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/statistics")}> 
+            <Button variant="ghost" onClick={() => navigate("/statistics")}>
               <Award className="mr-2 h-4 w-4" />
               Statistics
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/profile")}> 
+            <Button variant="ghost" onClick={() => navigate("/blogs")}>
+              <BookOpen className="mr-2 h-4 w-4" />
+              Blogs
+            </Button>
+            {isStaff && (
+              <Button variant="ghost" onClick={() => navigate("/blogs/manage")}>
+                <Settings2 className="mr-2 h-4 w-4" />
+                Manage
+              </Button>
+            )}
+            <Button variant="ghost" onClick={() => navigate("/profile")}>
               <User className="mr-2 h-4 w-4" />
               Profile
             </Button>
