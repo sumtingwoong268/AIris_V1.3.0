@@ -32,7 +32,7 @@ export const BLOG_POSTS: BlogPost[] = [
     publishDate: "February 2025",
     sections: [
       {
-        heading: "Start Your Day with Eye-Friendly Rituals",
+        heading: "Start Your Day with Eye-Friendly Rituals; Especially those which invite less disease",
         paragraphs: [
           "Before screens take over your morning, hydrate and nourish your eyes. A glass of water replenishes tears that evaporated overnight, while a breakfast rich in vitamins A, C, and E provides antioxidants that protect the retina.",
           "When you check your phone, lower the brightness or enable night mode. Sudden bursts of blue light can make eyes feel dry before the day truly begins."
