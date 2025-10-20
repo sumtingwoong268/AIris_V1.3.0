@@ -1,78 +1,12 @@
-import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, BookOpenText, Clock, Plus, Search } from "lucide-react";
+import { ArrowLeft, BookOpenText, Clock, Plus } from "lucide-react";
 import logo from "@/assets/logo.png";
-import { getBlogPosts } from "@/api/blogs";
+import { BLOG_POSTS } from "@/utils/blogPosts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/hooks/useAuth";
-
-const BLOG_QUERY_KEY = ["blog-posts"];
 
 export default function Blogs() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { data: posts = [], isLoading } = useQuery({
-    queryKey: BLOG_QUERY_KEY,
-    queryFn: () => getBlogPosts({ fallbackToSeed: true }),
-  });
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeTags, setActiveTags] = useState<string[]>([]);
-
-  const formatPublishDate = (value: string) => {
-    if (!value) {
-      return "";
-    }
-
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) {
-      return value;
-    }
-
-    return new Intl.DateTimeFormat("en", { month: "short", year: "numeric" }).format(parsed);
-  };
-
-  const allTags = useMemo(() => {
-    const unique = new Set<string>();
-    posts.forEach((post) => {
-      post.tags.forEach((tag) => unique.add(tag));
-    });
-    return Array.from(unique).sort();
-  }, [posts]);
-
-  const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
-      const query = searchTerm.trim().toLowerCase();
-      const matchesQuery =
-        query.length === 0 ||
-        post.title.toLowerCase().includes(query) ||
-        post.description.toLowerCase().includes(query) ||
-        post.tags.some((tag) => tag.toLowerCase().includes(query));
-
-      if (!matchesQuery) {
-        return false;
-      }
-
-      if (activeTags.length === 0) {
-        return true;
-      }
-
-      return activeTags.every((tag) => post.tags.includes(tag));
-    });
-  }, [posts, searchTerm, activeTags]);
-
-  const handleToggleTag = (tag: string) => {
-    setActiveTags((current) =>
-      current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag],
-    );
-  };
-
-  const isStaff = user?.user_metadata?.role === "staff";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
@@ -129,140 +63,48 @@ export default function Blogs() {
                 Click any title to open the full article. We will keep expanding this library with new perspectives.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              {isStaff && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/blogs/manage")}
-                  className="border-primary/40 text-primary hover:bg-primary/10 dark:border-primary/30 dark:hover:bg-primary/20"
-                >
-                  Manage posts
-                </Button>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                className="inline-flex items-center gap-2 text-primary hover:bg-primary/10 dark:hover:bg-primary/20"
-                disabled
-              >
-                New features coming soon
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              className="inline-flex items-center gap-2 text-primary hover:bg-primary/10 dark:hover:bg-primary/20"
+              disabled
+            >
+              Coming soon
+            </Button>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3 rounded-3xl border border-border/40 bg-white/80 p-4 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-900/70 sm:flex-row sm:items-center sm:justify-between">
-              <div className="relative w-full sm:max-w-xs">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search by topic, keyword, or tag"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              {allTags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {allTags.map((tag) => {
-                    const isActive = activeTags.includes(tag);
-                    return (
-                      <button
-                        type="button"
-                        key={tag}
-                        onClick={() => handleToggleTag(tag)}
-                        className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.2em] transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-950 ${
-                          isActive
-                            ? "border-primary bg-primary text-primary-foreground shadow"
-                            : "border-primary/40 bg-white text-primary hover:bg-primary/10 dark:border-primary/30 dark:bg-transparent"
-                        }`}
-                      >
-                        {tag.replace(/-/g, " ")}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {isLoading ? (
-              <div className="grid gap-6 sm:grid-cols-2">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <Card key={index} className="overflow-hidden border border-transparent bg-white/80 shadow-lg dark:bg-slate-900/70">
-                    <CardHeader className="space-y-3">
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-2/3" />
-                    </CardHeader>
-                    <CardContent className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                      <Skeleton className="h-4 w-16" />
-                      <Skeleton className="h-4 w-20" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : filteredPosts.length > 0 ? (
-              <div className="grid gap-6 sm:grid-cols-2">
-                {filteredPosts.map((post) => (
-                  <Card
-                    key={post.slug}
-                    className="group relative overflow-hidden border border-transparent bg-white/80 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-2xl dark:bg-slate-900/70"
+          <div className="grid gap-6 sm:grid-cols-2">
+            {BLOG_POSTS.map((post) => (
+              <Card
+                key={post.slug}
+                className="group relative overflow-hidden border border-transparent bg-white/80 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-2xl dark:bg-slate-900/70"
+              >
+                <span className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${post.heroGradient} opacity-0 transition-opacity duration-500 group-hover:opacity-10`} />
+                <CardHeader className="relative space-y-3">
+                  <CardTitle
+                    onClick={() => navigate(`/blogs/${post.slug}`)}
+                    className="cursor-pointer text-xl font-semibold text-slate-900 transition-colors hover:text-primary dark:text-slate-50 dark:hover:text-primary"
                   >
-                    <span className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${post.heroGradient} opacity-0 transition-opacity duration-500 group-hover:opacity-10`} />
-                    <CardHeader className="relative space-y-3">
-                      <CardTitle
-                        onClick={() => navigate(`/blogs/${post.slug}`)}
-                        className="cursor-pointer text-xl font-semibold text-slate-900 transition-colors hover:text-primary dark:text-slate-50 dark:hover:text-primary"
-                      >
-                        {post.title}
-                      </CardTitle>
-                      <CardDescription className="text-sm text-slate-600 dark:text-slate-300">
-                        {post.description}
-                      </CardDescription>
-                      {post.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {post.tags.map((tag) => (
-                            <Badge key={`${post.slug}-${tag}`} variant="secondary" className="bg-primary/10 text-[10px] uppercase tracking-[0.2em] text-primary">
-                              {tag.replace(/-/g, " ")}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </CardHeader>
-                    <CardContent className="relative flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                      <span>{formatPublishDate(post.publishDate)}</span>
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {post.readTime}
-                      </span>
-                    </CardContent>
-                    <button
-                      onClick={() => navigate(`/blogs/${post.slug}`)}
-                      className="absolute inset-0"
-                      aria-label={`Read ${post.title}`}
-                    />
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card className="border border-dashed border-primary/30 bg-white/70 p-8 text-center dark:border-primary/20 dark:bg-slate-900/60">
-                <CardHeader className="space-y-3">
-                  <CardTitle className="text-xl">No matching articles yet</CardTitle>
-                  <CardDescription>
-                    Adjust your search or tags to explore our current library. We publish new stories frequently, so check back soon.
+                    {post.title}
+                  </CardTitle>
+                  <CardDescription className="text-sm text-slate-600 dark:text-slate-300">
+                    {post.description}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Button variant="outline" onClick={() => {
-                    setSearchTerm("");
-                    setActiveTags([]);
-                  }}>
-                    Clear filters
-                  </Button>
+                <CardContent className="relative flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  <span>{post.publishDate}</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {post.readTime}
+                  </span>
                 </CardContent>
+                <button
+                  onClick={() => navigate(`/blogs/${post.slug}`)}
+                  className="absolute inset-0"
+                  aria-label={`Read ${post.title}`}
+                />
               </Card>
-            )}
+            ))}
           </div>
         </section>
       </main>

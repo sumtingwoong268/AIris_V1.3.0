@@ -10,7 +10,6 @@ export type BlogResource = {
 };
 
 export type BlogPost = {
-  id?: string;
   slug: string;
   title: string;
   description: string;
@@ -20,12 +19,9 @@ export type BlogPost = {
   sections: BlogSection[];
   keyTakeaways: string[];
   resources?: BlogResource[];
-  tags: string[];
-  relatedSlugs?: string[];
-  authorId?: string | null;
 };
 
-export const SEED_BLOG_POSTS: BlogPost[] = [
+export const BLOG_POSTS: BlogPost[] = [
   {
     slug: "protect-your-vision-daily-habits",
     title: "Protect Your Vision: Daily Habits That Support Healthy Eyes",
@@ -33,7 +29,7 @@ export const SEED_BLOG_POSTS: BlogPost[] = [
       "Discover simple, science-backed routines that reduce digital eye strain and keep your vision sharp from morning to night.",
     heroGradient: "from-sky-500 via-blue-500 to-indigo-500",
     readTime: "6 min read",
-    publishDate: "2025-02-01",
+    publishDate: "February 2025",
     sections: [
       {
         heading: "Start Your Day with Eye-Friendly Rituals",
@@ -77,9 +73,7 @@ export const SEED_BLOG_POSTS: BlogPost[] = [
     resources: [
       { label: "American Academy of Ophthalmology: Digital Eye Strain", url: "https://www.aao.org/eye-health/tips-prevention/computer-usage" },
       { label: "National Eye Institute: Healthy Vision Tips", url: "https://www.nei.nih.gov/learn-about-eye-health/healthy-vision" }
-    ],
-    tags: ["daily-habits", "digital-health", "self-care"],
-    relatedSlugs: ["nutrition-for-clear-vision", "how-to-talk-to-your-eye-doctor"]
+    ]
   },
   {
     slug: "nutrition-for-clear-vision",
@@ -88,7 +82,7 @@ export const SEED_BLOG_POSTS: BlogPost[] = [
       "Fuel your eyes with nutrient-dense meals featuring carotenoids, omega-3s, and hydration strategies that protect sight long term.",
     heroGradient: "from-emerald-500 via-teal-500 to-cyan-500",
     readTime: "7 min read",
-    publishDate: "2025-01-01",
+    publishDate: "January 2025",
     sections: [
       {
         heading: "Why Your Retina Loves Colorful Produce",
@@ -132,9 +126,7 @@ export const SEED_BLOG_POSTS: BlogPost[] = [
     resources: [
       { label: "Harvard School of Public Health: Fats and Cholesterol", url: "https://www.hsph.harvard.edu/nutritionsource/what-should-you-eat/fats-and-cholesterol/" },
       { label: "National Eye Institute: Nutrition", url: "https://www.nei.nih.gov/learn-about-eye-health/healthy-vision/nutrition" }
-    ],
-    tags: ["nutrition", "eye-health", "wellness"],
-    relatedSlugs: ["protect-your-vision-daily-habits"]
+    ]
   },
   {
     slug: "how-to-talk-to-your-eye-doctor",
@@ -143,7 +135,7 @@ export const SEED_BLOG_POSTS: BlogPost[] = [
       "Walk into your next eye exam prepared. These conversation starters ensure you understand changes in your vision and leave with a tailored action plan.",
     heroGradient: "from-fuchsia-500 via-purple-500 to-blue-500",
     readTime: "5 min read",
-    publishDate: "2024-12-01",
+    publishDate: "December 2024",
     sections: [
       {
         heading: "Share a Complete Vision Story",
@@ -187,8 +179,6 @@ export const SEED_BLOG_POSTS: BlogPost[] = [
     resources: [
       { label: "American Optometric Association: Comprehensive Eye Exam", url: "https://www.aoa.org/healthy-eyes/caring-for-your-eyes/eye-exam" },
       { label: "Centers for Disease Control and Prevention: Eye Care", url: "https://www.cdc.gov/visionhealth/resources/features/keep-eye-on-vision-health.html" }
-    ],
-    tags: ["doctor-visits", "communication", "care-planning"],
-    relatedSlugs: ["protect-your-vision-daily-habits"]
+    ]
   }
 ];

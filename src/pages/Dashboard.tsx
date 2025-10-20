@@ -314,15 +314,6 @@ export default function Dashboard() {
       icon: BookOpen,
       action: () => navigate("/blogs"),
     },
-    ...(isStaff
-      ? [
-          {
-            label: "Manage Blog Posts",
-            icon: Settings2,
-            action: () => navigate("/blogs/manage"),
-          },
-        ]
-      : []),
     {
       label: "Invite Friends",
       icon: Users,
@@ -371,12 +362,6 @@ export default function Dashboard() {
               <BookOpen className="mr-2 h-4 w-4" />
               Blogs
             </Button>
-            {isStaff && (
-              <Button variant="ghost" onClick={() => navigate("/blogs/manage")}>
-                <Settings2 className="mr-2 h-4 w-4" />
-                Manage
-              </Button>
-            )}
             <Button variant="ghost" onClick={() => navigate("/profile")}>
               <User className="mr-2 h-4 w-4" />
               Profile
