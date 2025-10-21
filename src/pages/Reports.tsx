@@ -102,11 +102,73 @@ function buildGeminiDataset(
     };
   };
 
+  const deriveIshiharaInsights = (details: any, currentScore: number | null) => {
+    if (!details || typeof details !== "object") return null;
+    const summary = details.analysisSummary ?? details.analysis_summary ?? null;
+    const matched = summary?.matched_outcomes ?? details.matchedOutcomes ?? {};
+    const segments = summary?.segments ?? details.segments ?? null;
+    const control = summary?.control ?? details.control ?? null;
+    const suspected =
+      summary?.suspected_deficiency ?? details.suspectedDeficiency ?? details.subtype ?? null;
+    const focus = summary?.focus_type ?? details.focusType ?? null;
+    const secondary = summary?.secondary_type ?? details.secondaryType ?? null;
+    const totalPlates =
+      details.totalPlates ??
+      (Array.isArray(details.answers) ? details.answers.length : summary?.totalPlates ?? null);
+    const correctCount = details.correctCount ?? summary?.correct_count ?? null;
+    const totalMistakes = typeof matched?.totalMistakes === "number" ? matched.totalMistakes : null;
+    const suspectedKey =
+      typeof suspected === "string" ? suspected.toLowerCase().replace(/[^a-z0-9]+/g, "_") : null;
+    const suspectedMatches =
+      suspectedKey && typeof matched === "object" ? matched[suspectedKey] ?? null : null;
+
+    let confidence: "high" | "medium" | "low" | "undetermined" = "undetermined";
+    if (suspectedKey === "normal") {
+      const ratio =
+        correctCount !== null && totalPlates ? correctCount / totalPlates : currentScore !== null ? currentScore / 100 : null;
+      if (ratio !== null) {
+        confidence = ratio >= 0.9 ? "high" : ratio >= 0.75 ? "medium" : "low";
+      }
+    } else if (typeof suspectedMatches === "number") {
+      confidence = suspectedMatches >= 3 ? "high" : suspectedMatches >= 2 ? "medium" : "low";
+    } else if (totalMistakes !== null) {
+      confidence = totalMistakes >= 4 ? "medium" : "low";
+    }
+
+    const answered = Array.isArray(details.answers) ? details.answers : [];
+    const mistakeBreakdown = answered
+      .filter((entry) => entry && typeof entry === "object" && entry.correct === false)
+      .map((entry) => ({
+        plateId: entry.plateId ?? null,
+        userAnswer: entry.answer ?? entry.normalizedAnswer ?? null,
+        matchedOutcome: entry.matchedOutcome ?? null,
+        plateType: entry.plateTypeNormalized ?? entry.plateType ?? null,
+      }));
+
+    return {
+      suspectedDeficiency: suspectedKey,
+      suspectedDeficiencyDisplay: typeof suspected === "string" ? suspected : null,
+      confidence,
+      focusType: focus,
+      secondaryType: secondary,
+      control,
+      segments,
+      matchedOutcomes: matched,
+      totalPlates,
+      correctCount,
+      score: currentScore,
+      totalMistakes,
+      mistakeBreakdown,
+    };
+  };
+
   const chronologicalHistory = (type: string) =>
     results
       .filter((entry) => entry.test_type === type)
       .slice()
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+  let ishiharaOverview: any = null;
 
   Object.entries(latestByType).forEach(([testType, latest]) => {
     const history = chronologicalHistory(testType).map((item) => ({
@@ -168,6 +230,24 @@ function buildGeminiDataset(
         slowestQuestionMs,
       },
     };
+
+    if (testType === "ishihara") {
+      const analysis = deriveIshiharaInsights(latest?.details ?? null, latestScore);
+      if (analysis) {
+        (tests[testType] as any).analysis = analysis;
+        ishiharaOverview = {
+          ...analysis,
+          trend,
+          previousScore,
+          history: history.map((entry) => ({
+            score: entry.score,
+            created_at: entry.created_at,
+            suspectedDeficiency:
+              deriveIshiharaInsights(entry.details ?? null, entry.score ?? null)?.suspectedDeficiency ?? null,
+          })),
+        };
+      }
+    }
   });
 
   const allCurrentScores = Object.values(latestByType)
@@ -292,6 +372,7 @@ function buildGeminiDataset(
       timed_responses_count: overallQuestionDurations.length,
     },
     tests,
+    color_vision: ishiharaOverview,
     history: results.map((entry) => ({
       test_type: entry.test_type,
       score: entry.score ?? null,

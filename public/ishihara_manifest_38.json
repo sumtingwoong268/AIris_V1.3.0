@@ -4,8 +4,13 @@
       "id": 1,
       "image": "ishihara/plate_01.png",
       "analysis": {
-        "raw": "Normal view: 12",
-        "normal": "12"
+        "raw": "Everyone should see number 12",
+        "normal": "12",
+        "second_line": "",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {},
+        "type_inferred": "control",
+        "plate_class": "control_plate"
       }
     },
     {
@@ -13,127 +18,207 @@
       "image": "ishihara/plate_02.png",
       "analysis": {
         "raw": "Normal view: 8",
-        "normal": "8"
+        "normal": "8",
+        "second_line": "Red-green deficiency: 3",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"protanopia": "3"},
+        "type_inferred": "protanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 3,
       "image": "ishihara/plate_03.png",
       "analysis": {
-        "raw": "Normal view: 29",
-        "normal": "29"
+        "raw": "Normal view: 6",
+        "normal": "6",
+        "second_line": "Red-green deficiency: 5",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"protanopia" : "5"},
+        "type_inferred": "protanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 4,
       "image": "ishihara/plate_04.png",
       "analysis": {
-        "raw": "Normal view: 5",
-        "normal": "5"
+        "raw": "Normal view: 29",
+        "normal": "29",
+        "second_line": "Red-green deficiency: 70",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"protanopia": "70"},
+        "type_inferred": "protanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 5,
       "image": "ishihara/plate_05.png",
       "analysis": {
-        "raw": "Normal view: 3",
-        "normal": "3"
+        "raw": "Normal view: 57",
+        "normal": "57",
+        "second_line": "Red-green deficiency: 35",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"protanopia": "35"},
+        "type_inferred": "protanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 6,
       "image": "ishihara/plate_06.png",
       "analysis": {
-        "raw": "Normal view: 15",
-        "normal": "15"
+        "raw": "Normal view: 5",
+        "normal": "5",
+        "second_line": "Red-green deficiency: 2",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"deutanopia": "2"},
+        "type_inferred": "deutanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 7,
       "image": "ishihara/plate_07.png",
       "analysis": {
-        "raw": "Normal view: 74",
-        "normal": "74"
+        "raw": "Normal view: 3",
+        "normal": "3",
+        "second_line": "Red-green deficiency: 5",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"deutanopia": "5"},
+        "type_inferred": "deutanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 8,
       "image": "ishihara/plate_08.png",
       "analysis": {
-        "raw": "Normal view: 6",
-        "normal": "6"
+        "raw": "Normal view: 15",
+        "normal": "15",
+        "second_line": "Red-green deficiency: 17",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"deutanopia": "17"},
+        "type_inferred": "deutanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 9,
       "image": "ishihara/plate_09.png",
       "analysis": {
-        "raw": "Normal view: 45",
-        "normal": "45"
+        "raw": "Normal view: 74",
+        "normal": "74",
+        "second_line": "Red-green deficiency: 21",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"deutanopia": "21"},
+        "type_inferred": "deutanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 10,
       "image": "ishihara/plate_10.png",
       "analysis": {
-        "raw": "Normal view: 5",
-        "normal": "5"
+        "raw": "Normal view: 2",
+        "normal": "2",
+        "second_line": "Red-green deficiency: most people don’t see anything or see something wrong.",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"protanopia": "nothing"},
+        "type_inferred": "protanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 11,
       "image": "ishihara/plate_11.png",
       "analysis": {
-        "raw": "Normal view: 7",
-        "normal": "7"
+        "raw": "Normal view: 6",
+        "normal": "6",
+        "second_line": "Red-green deficiency: most people don’t see anything or see something wrong.",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"protanopia": "nothing"},
+        "type_inferred": "protanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 12,
       "image": "ishihara/plate_12.png",
       "analysis": {
-        "raw": "Normal view: 16",
-        "normal": "16"
+        "raw": "Normal view: 97",
+        "normal": "97",
+        "second_line": "Red-green deficiency: most people don’t see anything or see something wrong.",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"protanopia": "nothing"},
+        "type_inferred": "protanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 13,
       "image": "ishihara/plate_13.png",
       "analysis": {
-        "raw": "Normal view: 73",
-        "normal": "73"
+        "raw": "Normal view: 45",
+        "normal": "45",
+        "second_line": "Red-green deficiency: most people don’t see anything or see something wrong.",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"protanopia": "nothing"},
+        "type_inferred": "protanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 14,
       "image": "ishihara/plate_14.png",
       "analysis": {
-        "raw": "Normal view: nothing",
-        "normal": "nothing"
+        "raw": "Normal view: 5",
+        "normal": "5",
+        "second_line": "Red-green deficiency: most people don’t see anything or see something wrong.",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"deutanopia": "nothing"},
+        "type_inferred": "deutanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 15,
       "image": "ishihara/plate_15.png",
       "analysis": {
-        "raw": "Normal view: nothing",
-        "normal": "nothing"
+        "raw": "Normal view: 7",
+        "normal": "7",
+        "second_line": "Red-green deficiency: most people don’t see anything or see something wrong.",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"deutanopia": "nothing"},
+        "type_inferred": "deutanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 16,
       "image": "ishihara/plate_16.png",
       "analysis": {
-        "raw": "Normal view: 26",
-        "normal": "26"
+        "raw": "Normal view: 16",
+        "normal": "16",
+        "second_line": "Red-green deficiency: most people don’t see anything or see something wrong.",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"deutanopia": "nothing"},
+        "type_inferred": "deutanopia",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 17,
       "image": "ishihara/plate_17.png",
       "analysis": {
-        "raw": "Normal view: 42",
-        "normal": "42"
+        "raw": "Normal view: 73",
+        "normal": "73",
+        "second_line": "Red-green deficiency: most people don’t see anything or see something wrong.",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"deutanopia": "nothing"},
+        "type_inferred": "deutanopia",
+        "plate_class": "numeral"
       }
     },
     {
@@ -141,7 +226,12 @@
       "image": "ishihara/plate_18.png",
       "analysis": {
         "raw": "Normal view: nothing",
-        "normal": "nothing"
+        "normal": "nothing",
+        "second_line": "Red-green deficiency: 5",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"red-green deficiency": "5"},
+        "type_inferred": "red-green deficiency",
+        "plate_class": "hidden_numeral"
       }
     },
     {
@@ -149,7 +239,12 @@
       "image": "ishihara/plate_19.png",
       "analysis": {
         "raw": "Normal view: nothing",
-        "normal": "nothing"
+        "normal": "nothing",
+        "second_line": "Red-green deficiency: 2",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"red-green deficiency": "2"},
+        "type_inferred": "red-green deficiency",
+        "plate_class": "hidden_numeral"
       }
     },
     {
@@ -157,7 +252,12 @@
       "image": "ishihara/plate_20.png",
       "analysis": {
         "raw": "Normal view: nothing",
-        "normal": "nothing"
+        "normal": "nothing",
+        "second_line": "Red-green deficiency: 45",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"red-green deficiency": "45"},
+        "type_inferred": "red-green deficiency",
+        "plate_class": "hidden_numeral"
       }
     },
     {
@@ -165,31 +265,64 @@
       "image": "ishihara/plate_21.png",
       "analysis": {
         "raw": "Normal view: nothing",
-        "normal": "nothing"
+        "normal": "nothing",
+        "second_line": "Red-green deficiency: 73",
+        "color_blindness_if_other_raw": "",
+        "color_blindness_if_other": {"red-green deficiency": "73"},
+        "type_inferred": "red-green deficiency",
+        "plate_class": "hidden_numeral"
       }
     },
     {
       "id": 22,
       "image": "ishihara/plate_22.png",
       "analysis": {
-        "raw": "Normal view: nothing",
-        "normal": "nothing"
+        "raw": "Normal view: 26",
+        "normal": "26",
+        "second_line": "Protanopia or protanomaly: 6",
+        "color_blindness_if_other_raw": "Deuteranopia or deuteranomaly: 2",
+        "color_blindness_if_other": {"protanopia": "6", "deuteranopia": "2"},
+        "type_inferred": "diagnostic_red_green",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 23,
       "image": "ishihara/plate_23.png",
       "analysis": {
-        "raw": "Normal view: nothing",
-        "normal": "nothing"
+        "raw": "Normal view: 42",
+        "normal": "42",
+        "second_line": "Protanopia or protanomaly: 2",
+        "color_blindness_if_other_raw": "Deuteranopia or deuteranomaly: 4",
+        "color_blindness_if_other": {"deutanopia": "4", "protanopia": "2"},
+        "type_inferred": "diagnostic_red_green",
+        "plate_class": "numeral"
       }
     },
     {
       "id": 24,
       "image": "ishihara/plate_24.png",
       "analysis": {
-        "raw": "Normal view: nothing",
-        "normal": "nothing"
+        "raw": "Normal view: 35",
+        "normal": "35",
+        "second_line": "Protanopia or protanomaly: 5",
+        "color_blindness_if_other_raw": "Deuteranopia or deuteranomaly: 3",
+        "color_blindness_if_other": {"deutanopia": "3", "protanopia": "5"},
+        "type_inferred": "diagnostic_red_green",
+        "plate_class": "numeral"
+      }
+    },
+    {
+      "id": 25,
+      "image": "ishihara/plate_25.png",
+      "analysis": {
+        "raw": "Normal view: 96",
+        "normal": "96",
+        "second_line": "Protanopia or protanomaly: 6",
+        "color_blindness_if_other_raw": "Deuteranopia or deuteranomaly: 9",
+        "color_blindness_if_other": {"deutanopia": "9", "protanopia": "6"},
+        "type_inferred": "diagnostic_red_green",
+        "plate_class": "numeral"
       }
     }
   ]
