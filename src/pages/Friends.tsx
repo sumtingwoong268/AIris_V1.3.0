@@ -81,16 +81,21 @@ export default function Friends() {
 
   const fetchRequests = async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("friend_requests")
       .select(`
         id,
         sender_id,
         created_at,
-        profiles!friend_requests_sender_id_fkey(id, display_name, username, avatar_url)
+        sender:profiles!friend_requests_sender_id_fkey(id, display_name, username, avatar_url)
       `)
       .eq("receiver_id", user.id)
       .eq("status", "pending");
+
+    if (error) {
+      console.error("fetchRequests error:", error);
+      return;
+    }
 
     if (data) {
       setRequests(data);
@@ -473,26 +478,26 @@ export default function Friends() {
                       className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm dark:border-white/10 dark:bg-slate-900/60"
                     >
                       <div className="flex items-center gap-3">
-                        {request.profiles?.avatar_url ? (
+                        {request.sender?.avatar_url ? (
                           <img
-                            src={request.profiles.avatar_url}
-                            alt={request.profiles.display_name || request.profiles?.username}
+                            src={request.sender.avatar_url}
+                            alt={request.sender.display_name || request.sender?.username}
                             className="h-10 w-10 rounded-full object-cover"
                           />
                         ) : (
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary font-bold text-white">
                             {(
-                              request.profiles?.display_name?.[0] ??
-                              request.profiles?.username?.[1] ??
+                              request.sender?.display_name?.[0] ??
+                              request.sender?.username?.[1] ??
                               "?"
                             ).toUpperCase()}
                           </div>
                         )}
                         <div>
                           <p className="font-semibold">
-                            {request.profiles?.display_name || request.profiles?.username}
+                            {request.sender?.display_name || request.sender?.username}
                           </p>
-                          <p className="text-xs text-muted-foreground">{request.profiles?.username}</p>
+                          <p className="text-xs text-muted-foreground">{request.sender?.username}</p>
                           <p className="text-xs text-muted-foreground">
                             {new Date(request.created_at).toLocaleDateString()}
                           </p>

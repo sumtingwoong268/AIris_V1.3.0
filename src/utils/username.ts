@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-const ASCII_PATTERN = /^[\u0020-\u007E]+$/;
+const NON_ASCII_REGEX = /[^\u0020-\u007E]+/g;
 
 export const USERNAME_REGEX = /^@[a-z0-9_.-]{1,19}$/;
 export const USERNAME_MAX_LENGTH = 20;
@@ -9,10 +9,17 @@ export const USERNAME_MAX_LENGTH = 20;
 export const sanitizeUsername = (value: string | null | undefined): string | null => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
-  if (!trimmed || !ASCII_PATTERN.test(trimmed)) {
+  if (!trimmed) {
     return null;
   }
-  const withoutAt = trimmed.startsWith("@") ? trimmed.slice(1) : trimmed;
+
+  const asciiOnly = trimmed.replace(NON_ASCII_REGEX, "");
+  if (!asciiOnly) {
+    return null;
+  }
+
+  const normalizedInput = asciiOnly.startsWith("@") ? asciiOnly : `@${asciiOnly}`;
+  const withoutAt = normalizedInput.slice(1);
   if (!withoutAt) {
     return null;
   }
@@ -20,6 +27,7 @@ export const sanitizeUsername = (value: string | null | undefined): string | nul
   if (withoutAt.length > USERNAME_MAX_LENGTH - 1) {
     return null;
   }
+
   const normalized = `@${withoutAt.toLowerCase()}`;
   if (!USERNAME_REGEX.test(normalized)) {
     return null;

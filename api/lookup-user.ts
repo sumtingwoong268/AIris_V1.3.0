@@ -5,6 +5,7 @@ const anonKey = process.env.SUPABASE_ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const ASCII_PATTERN = /^[\u0020-\u007E]+$/;
+const NON_ASCII_REGEX = /[^\u0020-\u007E]+/g;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_PATTERN = /^@[a-z0-9_.-]{1,19}$/;
 
@@ -31,13 +32,25 @@ const normalizeEmail = (value: string | null | undefined) => {
 const normalizeUsername = (value: string | null | undefined) => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
-  if (!trimmed || !ASCII_PATTERN.test(trimmed)) {
+  if (!trimmed) {
     return null;
   }
-  const withoutAt = trimmed.startsWith("@") ? trimmed.slice(1) : trimmed;
+
+  const asciiOnly = trimmed.replace(NON_ASCII_REGEX, "");
+  if (!asciiOnly) {
+    return null;
+  }
+
+  const normalizedInput = asciiOnly.startsWith("@") ? asciiOnly : `@${asciiOnly}`;
+  const withoutAt = normalizedInput.slice(1);
   if (!withoutAt) {
     return null;
   }
+
+  if (withoutAt.length > 19) {
+    return null;
+  }
+
   const candidate = `@${withoutAt.toLowerCase()}`;
   if (!USERNAME_PATTERN.test(candidate)) {
     return null;
