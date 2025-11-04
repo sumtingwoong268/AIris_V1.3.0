@@ -1,13 +1,29 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const anonKey = process.env.SUPABASE_ANON_KEY;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
 const ASCII_PATTERN = /^[\u0020-\u007E]+$/;
 const NON_ASCII_REGEX = /[^\u0020-\u007E]+/g;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_PATTERN = /^@[a-z0-9_.-]{1,19}$/;
+
+const sanitizeEnvVar = (name: string, rawValue: string | undefined): string | null => {
+  if (typeof rawValue !== "string") {
+    return null;
+  }
+  const trimmed = rawValue.trim();
+  if (!trimmed) {
+    console.error(`lookup-user ${name} is empty after trimming`);
+    return null;
+  }
+  if (!ASCII_PATTERN.test(trimmed)) {
+    console.error(`lookup-user ${name} contains non-ASCII characters`);
+    return null;
+  }
+  return trimmed;
+};
+
+const supabaseUrl = sanitizeEnvVar("SUPABASE_URL", process.env.SUPABASE_URL);
+const anonKey = sanitizeEnvVar("SUPABASE_ANON_KEY", process.env.SUPABASE_ANON_KEY);
+const serviceKey = sanitizeEnvVar("SUPABASE_SERVICE_ROLE_KEY", process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 type RequestLike = {
   method?: string;
@@ -74,8 +90,15 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
     }
 
     if (!supabaseUrl || !anonKey || !serviceKey) {
-      console.error("lookup-user missing env vars", { hasUrl: !!supabaseUrl, hasAnon: !!anonKey, hasService: !!serviceKey });
-      res.status(500).json({ error: "Server missing Supabase credentials" });
+      const invalid = [
+        !supabaseUrl ? "SUPABASE_URL" : null,
+        !anonKey ? "SUPABASE_ANON_KEY" : null,
+        !serviceKey ? "SUPABASE_SERVICE_ROLE_KEY" : null,
+      ].filter(Boolean);
+      console.error("lookup-user missing or invalid env vars", { invalid });
+      res.status(500).json({
+        error: "Server Supabase credentials are missing or contain unsupported characters. Double-check SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY.",
+      });
       return;
     }
 
@@ -240,6 +263,12 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
   } catch (error: unknown) {
     console.error("lookup-user error:", error);
     const message = error instanceof Error ? error.message : "Internal Server Error";
+    if (message.includes("ByteString")) {
+      res.status(500).json({
+        error: "Server Supabase credentials contain invalid characters (replace any … with plain ASCII).",
+      });
+      return;
+    }
     res.status(500).json({ error: message });
   }
 }
