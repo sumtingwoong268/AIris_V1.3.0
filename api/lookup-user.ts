@@ -21,9 +21,36 @@ const sanitizeEnvVar = (name: string, rawValue: string | undefined): string | nu
   return trimmed;
 };
 
-const supabaseUrl = sanitizeEnvVar("SUPABASE_URL", process.env.SUPABASE_URL);
-const anonKey = sanitizeEnvVar("SUPABASE_ANON_KEY", process.env.SUPABASE_ANON_KEY);
-const serviceKey = sanitizeEnvVar("SUPABASE_SERVICE_ROLE_KEY", process.env.SUPABASE_SERVICE_ROLE_KEY);
+const withFallback = (primaryName: string, fallbackName: string, primary?: string, fallback?: string): string | null => {
+  const primaryValue = sanitizeEnvVar(primaryName, primary);
+  if (primaryValue) {
+    return primaryValue;
+  }
+  const fallbackValue = sanitizeEnvVar(fallbackName, fallback);
+  if (fallbackValue) {
+    console.warn(`lookup-user falling back to ${fallbackName} for ${primaryName}`);
+  }
+  return fallbackValue;
+};
+
+const supabaseUrl = withFallback(
+  "SUPABASE_URL",
+  "VITE_SUPABASE_URL",
+  process.env.SUPABASE_URL,
+  process.env.VITE_SUPABASE_URL,
+);
+const anonKey = withFallback(
+  "SUPABASE_ANON_KEY",
+  "VITE_SUPABASE_PUBLISHABLE_KEY",
+  process.env.SUPABASE_ANON_KEY,
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+);
+const serviceKey = withFallback(
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "VITE_SUPABASE_SERVICE_ROLE_KEY",
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
+);
 
 type RequestLike = {
   method?: string;
