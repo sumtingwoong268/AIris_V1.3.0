@@ -38,6 +38,8 @@ export default function Auth() {
     checkSetupStatus();
   }, [user, navigate]);
 
+  const redirectBase = import.meta.env.VITE_SUPABASE_REDIRECT_URL || window.location.origin;
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -55,7 +57,7 @@ export default function Auth() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/setup`,
+            emailRedirectTo: `${redirectBase}/setup`,
           },
         });
         if (error) throw error;
@@ -90,7 +92,7 @@ export default function Auth() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/setup`,
+          redirectTo: `${redirectBase}/setup`,
         },
       });
       if (error) throw error;
