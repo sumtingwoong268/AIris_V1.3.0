@@ -134,11 +134,20 @@ export default function Setup() {
       return;
     }
 
-    const userId = user?.id;
-    if (!userId) {
-      toast({ title: "Session expired", description: "Please sign in again before completing setup.", variant: "destructive" });
+    const { data: liveUserData, error: liveUserError } = await supabase.auth.getUser();
+    if (liveUserError) {
+      console.error("Failed to verify auth user during setup:", liveUserError);
+    }
+    const activeUser = user ?? liveUserData?.user ?? null;
+    if (!activeUser?.id) {
+      toast({
+        title: "Session expired",
+        description: "Please sign in again before completing setup.",
+        variant: "destructive",
+      });
       return;
     }
+    const userId = activeUser.id;
 
     if (sanitizedUsername !== currentUsername) {
       setCheckingUsername(true);
