@@ -141,18 +141,8 @@ export default function Setup() {
         console.error("Failed to verify auth session during setup:", sessionError);
       }
       activeUser = sessionData?.session?.user ?? null;
-
       if (!activeUser?.id) {
-        const { data: liveUserData, error: liveUserError } = await supabase.auth.getUser();
-        if (liveUserError) {
-          const message = (liveUserError as { message?: string }).message ?? String(liveUserError);
-          if (message.includes("Auth session missing")) {
-            console.warn("Supabase auth session missing while completing setup.");
-          } else {
-            console.error("Failed to verify auth user during setup:", liveUserError);
-          }
-        }
-        activeUser = liveUserData?.user ?? null;
+        console.warn("Supabase auth session missing while completing setup.");
       }
     }
 
