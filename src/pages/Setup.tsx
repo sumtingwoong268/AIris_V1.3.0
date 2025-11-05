@@ -134,10 +134,16 @@ export default function Setup() {
       return;
     }
 
-    if (user && sanitizedUsername !== currentUsername) {
+    const userId = user?.id;
+    if (!userId) {
+      toast({ title: "Session expired", description: "Please sign in again before completing setup.", variant: "destructive" });
+      return;
+    }
+
+    if (sanitizedUsername !== currentUsername) {
       setCheckingUsername(true);
       try {
-        const available = await usernameIsAvailable(supabase, sanitizedUsername, user.id);
+        const available = await usernameIsAvailable(supabase, sanitizedUsername, userId);
         if (!available) {
           setUsernameError("That username is already taken.");
           toast({ title: "Username taken", description: "Please choose another username.", variant: "destructive" });
@@ -159,9 +165,9 @@ export default function Setup() {
       let avatar_url = "";
 
       // Upload avatar if selected
-      if (avatarFile && user) {
+      if (avatarFile) {
         const fileExt = avatarFile.name.split(".").pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        const fileName = `${userId}/${Date.now()}.${fileExt}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("avatars")
           .upload(fileName, avatarFile, { upsert: true });
@@ -203,7 +209,7 @@ export default function Setup() {
           setup_completed: true,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", user?.id);
+        .eq("id", userId);
 
       if (error) throw error;
 
