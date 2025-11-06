@@ -39,12 +39,16 @@ export default function Auth() {
   }, [user, navigate]);
 
   const redirectEnv = import.meta.env.VITE_SUPABASE_REDIRECT_URL;
+  const defaultRedirect =
+    typeof window !== "undefined" && window.location.hostname.includes("localhost")
+      ? `${window.location.origin}/setup`
+      : "https://airis.care/setup";
   const redirectUrl =
     typeof redirectEnv === "string" && redirectEnv.length > 0
       ? redirectEnv.startsWith("http")
         ? redirectEnv
         : `${window.location.origin}${redirectEnv.startsWith("/") ? "" : "/"}${redirectEnv}`
-      : `${window.location.origin}/setup`;
+      : defaultRedirect;
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
