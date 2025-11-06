@@ -38,35 +38,6 @@ export default function Friends() {
   const [selfCountdown, setSelfCountdown] = useState<string>("");
   const hasRefetchedSelfOnExpiry = useRef(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchFriends();
-      fetchLeaderboard();
-      void refreshPending();
-      void fetchSelfProfile();
-    }
-  }, [user, refreshPending, fetchSelfProfile]);
-
-  useEffect(() => {
-    if (!selfStreakStatus) {
-      setSelfCountdown("");
-      return;
-    }
-    hasRefetchedSelfOnExpiry.current = false;
-    const deadlineMs = selfStreakStatus.nextDeadline.getTime();
-    const updateCountdown = () => {
-      const ms = deadlineMs - Date.now();
-      setSelfCountdown(formatCountdownParts(getCountdownParts(ms)));
-      if (ms <= 0 && !hasRefetchedSelfOnExpiry.current) {
-        hasRefetchedSelfOnExpiry.current = true;
-        void fetchSelfProfile();
-      }
-    };
-    updateCountdown();
-    const timer = window.setInterval(updateCountdown, 1000);
-    return () => window.clearInterval(timer);
-  }, [selfStreakStatus, fetchSelfProfile]);
-
   const fetchSelfProfile = useCallback(async () => {
     if (!user) return;
     const { data, error } = await supabase
@@ -101,6 +72,35 @@ export default function Friends() {
       }
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchFriends();
+      fetchLeaderboard();
+      void refreshPending();
+      void fetchSelfProfile();
+    }
+  }, [user, refreshPending, fetchSelfProfile]);
+
+  useEffect(() => {
+    if (!selfStreakStatus) {
+      setSelfCountdown("");
+      return;
+    }
+    hasRefetchedSelfOnExpiry.current = false;
+    const deadlineMs = selfStreakStatus.nextDeadline.getTime();
+    const updateCountdown = () => {
+      const ms = deadlineMs - Date.now();
+      setSelfCountdown(formatCountdownParts(getCountdownParts(ms)));
+      if (ms <= 0 && !hasRefetchedSelfOnExpiry.current) {
+        hasRefetchedSelfOnExpiry.current = true;
+        void fetchSelfProfile();
+      }
+    };
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, [selfStreakStatus, fetchSelfProfile]);
 
   const fetchFriends = async () => {
     if (!user) return;
