@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useFriendRequests } from "@/context/FriendRequestsContext";
+import { formatCountdownParts, getCountdownParts, syncProfileStreak, type StreakStatus } from "@/utils/streak";
 
 // Eye health tips for daily rotation
 const EYE_TIPS = [
@@ -102,6 +103,9 @@ export default function Dashboard() {
   const [testTypeStats, setTestTypeStats] = useState<
     Array<{ key: string; label: string; average: number; best: number; attempts: number; recent: number }>
   >([]);
+  const [streakStatus, setStreakStatus] = useState<StreakStatus | null>(null);
+  const [countdown, setCountdown] = useState<string>("");
+  const hasFetchedOnExpiry = useRef(false);
 
   // Fetch test stats
   useEffect(() => {
@@ -199,19 +203,52 @@ export default function Dashboard() {
     }
   }, [user, authLoading, navigate]);
 
-  useEffect(() => {
-    if (user) {
-      const fetchProfile = async () => {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        setProfile(data);
-      };
-      fetchProfile();
+  const loadProfile = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      const { profile: syncedProfile, status } = await syncProfileStreak(data, user.id);
+      setProfile(syncedProfile);
+      setStreakStatus(status);
+      hasFetchedOnExpiry.current = false;
+    } catch (error) {
+      console.error("Failed to load profile:", error);
     }
   }, [user]);
+
+  useEffect(() => {
+    void loadProfile();
+  }, [loadProfile]);
+
+  useEffect(() => {
+    if (!streakStatus) {
+      setCountdown("");
+      return;
+    }
+
+    const deadlineMs = streakStatus.nextDeadline.getTime();
+    const updateCountdown = () => {
+      const ms = deadlineMs - Date.now();
+      setCountdown(formatCountdownParts(getCountdownParts(ms)));
+      if (ms <= 0 && !hasFetchedOnExpiry.current) {
+        hasFetchedOnExpiry.current = true;
+        void loadProfile();
+      }
+    };
+
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, [streakStatus, loadProfile]);
 
   if (authLoading || !user) {
     return (
@@ -269,6 +306,7 @@ export default function Dashboard() {
     performanceData.length > 0
       ? performanceData[performanceData.length - 1].score
       : testStats.avgScore;
+  const streakValue = streakStatus?.effectiveStreak ?? profile?.current_streak ?? 0;
 
   const highlightStats = [
     {
@@ -283,7 +321,7 @@ export default function Dashboard() {
     },
     {
       label: "Current Streak",
-      value: `${profile?.current_streak || 0} weeks`,
+      value: `${streakValue} week${streakValue === 1 ? "" : "s"}`,
       subLabel: "Consistent check-ins",
     },
     {
@@ -403,6 +441,34 @@ export default function Dashboard() {
                 Start With Ishihara
               </Button>
             </div>
+
+            {streakStatus && (
+              <div className="flex flex-col gap-3 rounded-3xl border border-white/60 bg-white/85 p-5 text-slate-900 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-100">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300/80">
+                      Weekly streak
+                    </p>
+                    <p className="text-lg font-semibold">
+                      {streakValue} week{streakValue === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <div className="text-right sm:text-left">
+                    <p className="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300/80">
+                      Resets Sunday 11:59 PM GMT
+                    </p>
+                    <p className="text-sm font-mono text-primary dark:text-blue-400">
+                      {countdown || "00h 00m 00s"}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300/80">
+                  {streakStatus.isActiveThisWeek
+                    ? "Great job! You've already logged a test this week—keep the momentum going."
+                    : "Complete any vision test before the deadline to keep your streak alive."}
+                </p>
+              </div>
+            )}
 
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               {tests.map((test) => (

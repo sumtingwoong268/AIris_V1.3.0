@@ -12,6 +12,7 @@ import logo from "@/assets/logo.png";
 import { XPBar } from "@/components/XPBar";
 import { useTestTimer, type QuestionTimingRecord } from "@/hooks/useTestTimer";
 import { TestTimerDisplay } from "@/components/tests/TestTimerDisplay";
+import { recordTestCompletionStreak } from "@/utils/streak";
 
 interface PlateData {
   id: number;
@@ -612,26 +613,7 @@ export default function IshiharaTest() {
         p_xp_delta: xpEarned,
       });
 
-      const now = new Date();
-      const currentWeek = `${now.getFullYear()}-W${String(
-        Math.ceil((now.getDate() + new Date(now.getFullYear(), 0, 1).getDay()) / 7),
-      ).padStart(2, "0")}`;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("last_active_week, current_streak")
-        .eq("id", user.id)
-        .single();
-
-      if (profile && profile.last_active_week !== currentWeek) {
-        await supabase
-          .from("profiles")
-          .update({
-            current_streak: (profile.current_streak || 0) + 1,
-            last_active_week: currentWeek,
-          })
-          .eq("id", user.id);
-      }
+      await recordTestCompletionStreak(user.id);
 
       await refetchXP();
 

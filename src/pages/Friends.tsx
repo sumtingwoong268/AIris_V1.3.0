@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,13 @@ import { ArrowLeft, Copy, Flame, Trophy, UserPlus, Check, X } from "lucide-react
 import logo from "@/assets/logo.png";
 import { sanitizeUsername } from "@/utils/username";
 import { useFriendRequests } from "@/context/FriendRequestsContext";
+import {
+  computeStreakStatus,
+  formatCountdownParts,
+  getCountdownParts,
+  syncProfileStreak,
+  type StreakStatus,
+} from "@/utils/streak";
 
 export default function Friends() {
   const navigate = useNavigate();
@@ -20,23 +27,51 @@ export default function Friends() {
   const [friends, setFriends] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [usernameInput, setUsernameInput] = useState("");
-  const [selfProfile, setSelfProfile] = useState<{ display_name: string | null; username: string; avatar_url: string | null } | null>(null);
+  const [selfProfile, setSelfProfile] = useState<{
+    display_name: string | null;
+    username: string;
+    avatar_url: string | null;
+    current_streak?: number | null;
+  } | null>(null);
   const [addingFriend, setAddingFriend] = useState(false);
+  const [selfStreakStatus, setSelfStreakStatus] = useState<StreakStatus | null>(null);
+  const [selfCountdown, setSelfCountdown] = useState<string>("");
+  const hasRefetchedSelfOnExpiry = useRef(false);
 
   useEffect(() => {
     if (user) {
       fetchFriends();
       fetchLeaderboard();
       void refreshPending();
-      fetchSelfProfile();
+      void fetchSelfProfile();
     }
-  }, [user, refreshPending]);
+  }, [user, refreshPending, fetchSelfProfile]);
 
-  const fetchSelfProfile = async () => {
+  useEffect(() => {
+    if (!selfStreakStatus) {
+      setSelfCountdown("");
+      return;
+    }
+    hasRefetchedSelfOnExpiry.current = false;
+    const deadlineMs = selfStreakStatus.nextDeadline.getTime();
+    const updateCountdown = () => {
+      const ms = deadlineMs - Date.now();
+      setSelfCountdown(formatCountdownParts(getCountdownParts(ms)));
+      if (ms <= 0 && !hasRefetchedSelfOnExpiry.current) {
+        hasRefetchedSelfOnExpiry.current = true;
+        void fetchSelfProfile();
+      }
+    };
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, [selfStreakStatus, fetchSelfProfile]);
+
+  const fetchSelfProfile = useCallback(async () => {
     if (!user) return;
     const { data, error } = await supabase
       .from("profiles")
-      .select("display_name, username, avatar_url")
+      .select("display_name, username, avatar_url, current_streak, last_active_week")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -45,13 +80,27 @@ export default function Friends() {
       return;
     }
     if (data) {
-      setSelfProfile({
-        display_name: data.display_name ?? null,
-        username: data.username,
-        avatar_url: data.avatar_url ?? null,
-      });
+      try {
+        const { profile: syncedProfile, status } = await syncProfileStreak(data, user.id);
+        setSelfProfile({
+          display_name: syncedProfile.display_name ?? null,
+          username: syncedProfile.username,
+          avatar_url: syncedProfile.avatar_url ?? null,
+          current_streak: syncedProfile.current_streak ?? 0,
+        });
+        setSelfStreakStatus(status);
+      } catch (syncError) {
+        console.error("Failed to sync streak status:", syncError);
+        setSelfProfile({
+          display_name: data.display_name ?? null,
+          username: data.username,
+          avatar_url: data.avatar_url ?? null,
+          current_streak: data.current_streak ?? 0,
+        });
+        setSelfStreakStatus(computeStreakStatus(data));
+      }
     }
-  };
+  }, [user]);
 
   const fetchFriends = async () => {
     if (!user) return;
@@ -308,6 +357,28 @@ export default function Friends() {
                             <p className="text-xs text-muted-foreground">
                               Friends can add you by entering this handle.
                             </p>
+                            {selfStreakStatus && (
+                              <div className="mt-2 space-y-1 text-xs text-muted-foreground dark:text-slate-300/80">
+                                <p>
+                                  Weekly streak:{" "}
+                                  <span className="font-semibold text-slate-900 dark:text-slate-100">
+                                    {selfStreakStatus.effectiveStreak} week
+                                    {selfStreakStatus.effectiveStreak === 1 ? "" : "s"}
+                                  </span>
+                                </p>
+                                <p>
+                                  Resets in{" "}
+                                  <span className="font-mono text-primary dark:text-blue-400">
+                                    {selfCountdown || "00h 00m 00s"}
+                                  </span>
+                                </p>
+                                {!selfStreakStatus.isActiveThisWeek && (
+                                  <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                                    No test logged yet this week—complete one to stay on track.
+                                  </p>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                         <Button

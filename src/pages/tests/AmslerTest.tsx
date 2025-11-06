@@ -12,6 +12,7 @@ import { ArrowLeft } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useTestTimer } from "@/hooks/useTestTimer";
 import { TestTimerDisplay } from "@/components/tests/TestTimerDisplay";
+import { recordTestCompletionStreak } from "@/utils/streak";
 
 export default function AmslerTest() {
   const navigate = useNavigate();
@@ -97,6 +98,8 @@ export default function AmslerTest() {
         p_user_id: user.id,
         p_xp_delta: xpEarned,
       });
+
+      await recordTestCompletionStreak(user.id);
 
       toast({
         title: "Test Complete!",

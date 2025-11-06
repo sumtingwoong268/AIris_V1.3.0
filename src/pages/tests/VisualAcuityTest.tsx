@@ -11,6 +11,7 @@ import logo from "@/assets/logo.png";
 import { XPBar } from "@/components/XPBar";
 import { useTestTimer, type QuestionTimingRecord } from "@/hooks/useTestTimer";
 import { TestTimerDisplay } from "@/components/tests/TestTimerDisplay";
+import { recordTestCompletionStreak } from "@/utils/streak";
 
 export default function VisualAcuityTest() {
   const navigate = useNavigate();
@@ -116,6 +117,7 @@ export default function VisualAcuityTest() {
         p_user_id: user.id,
         p_xp_delta: xpEarned,
       });
+      await recordTestCompletionStreak(user.id);
       toast({
         title: "Test Complete!",
         description: `You earned ${xpEarned} XP!`,
