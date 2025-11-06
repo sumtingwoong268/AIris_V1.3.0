@@ -1,36 +1,64 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+
+type PendingRequest = {
+  id: string;
+  sender_id: string;
+  status: string | null;
+  created_at: string;
+  sender: {
+    id: string;
+    display_name: string | null;
+    username: string;
+    avatar_url: string | null;
+  } | null;
+};
 
 type FriendRequestContextValue = {
   pendingCount: number;
   refreshPending: () => Promise<void>;
   loading: boolean;
+  pendingRequests: PendingRequest[];
 };
 
 const FriendRequestContext = createContext<FriendRequestContextValue | undefined>(undefined);
 
-export const FriendRequestProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+type FriendRequestProviderProps = {
+  children: ReactNode;
+};
+
+export const FriendRequestProvider = ({ children }: FriendRequestProviderProps) => {
   const { user } = useAuth();
-  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refreshPending = useCallback(async () => {
     if (!user?.id) {
-      setPendingCount(0);
+      setPendingRequests([]);
       setLoading(false);
       return;
     }
 
+    setLoading(true);
     try {
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from("friend_requests")
-        .select("id", { count: "exact", head: true })
+        .select(
+          `
+          id,
+          sender_id,
+          status,
+          created_at,
+          sender:profiles!friend_requests_sender_id_fkey(id, display_name, username, avatar_url)
+        `,
+        )
         .eq("receiver_id", user.id)
-        .eq("status", "pending");
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setPendingCount(count ?? 0);
+      setPendingRequests((data as PendingRequest[]) ?? []);
     } catch (error) {
       console.error("Failed to load pending friend requests:", error);
     } finally {
@@ -39,7 +67,6 @@ export const FriendRequestProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [user?.id]);
 
   useEffect(() => {
-    setLoading(true);
     void refreshPending();
   }, [refreshPending]);
 
@@ -73,11 +100,12 @@ export const FriendRequestProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const value = useMemo(
     () => ({
-      pendingCount,
+      pendingCount: pendingRequests.length,
+      pendingRequests,
       refreshPending,
       loading,
     }),
-    [pendingCount, refreshPending, loading],
+    [pendingRequests, refreshPending, loading],
   );
 
   return <FriendRequestContext.Provider value={value}>{children}</FriendRequestContext.Provider>;

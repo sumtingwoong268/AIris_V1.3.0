@@ -16,10 +16,9 @@ export default function Friends() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { refreshPending } = useFriendRequests();
+  const { refreshPending, pendingRequests, loading: pendingLoading } = useFriendRequests();
   const [friends, setFriends] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [requests, setRequests] = useState<any[]>([]);
   const [usernameInput, setUsernameInput] = useState("");
   const [selfProfile, setSelfProfile] = useState<{ display_name: string | null; username: string; avatar_url: string | null } | null>(null);
   const [addingFriend, setAddingFriend] = useState(false);
@@ -28,10 +27,10 @@ export default function Friends() {
     if (user) {
       fetchFriends();
       fetchLeaderboard();
-      fetchRequests();
+      void refreshPending();
       fetchSelfProfile();
     }
-  }, [user]);
+  }, [user, refreshPending]);
 
   const fetchSelfProfile = async () => {
     if (!user) return;
@@ -79,30 +78,6 @@ export default function Friends() {
     if (data) {
       setLeaderboard(data);
     }
-  };
-
-  const fetchRequests = async () => {
-    if (!user) return;
-    const { data, error } = await supabase
-      .from("friend_requests")
-      .select(`
-        id,
-        sender_id,
-        created_at,
-        sender:profiles!friend_requests_sender_id_fkey(id, display_name, username, avatar_url)
-      `)
-      .eq("receiver_id", user.id)
-      .eq("status", "pending");
-
-    if (error) {
-      console.error("fetchRequests error:", error);
-      return;
-    }
-
-    if (data) {
-      setRequests(data);
-    }
-    void refreshPending();
   };
 
   const handleAddFriend = async () => {
@@ -221,7 +196,6 @@ export default function Friends() {
       toast({ title: "Friend request accepted!" });
       
       fetchFriends();
-      fetchRequests();
       void refreshPending();
     } catch (error: any) {
       console.error("Accept request error:", error);
@@ -241,7 +215,6 @@ export default function Friends() {
         .eq("id", requestId);
 
       toast({ title: "Friend request rejected" });
-      fetchRequests();
       void refreshPending();
     } catch (error: any) {
       console.error("Reject request error:", error);
@@ -336,7 +309,7 @@ export default function Friends() {
               My Friends ({friends.length})
             </TabsTrigger>
             <TabsTrigger className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-500 data-[state=active]:text-white" value="requests">
-              Requests {requests.length > 0 && `(${requests.length})`}
+              Requests {pendingRequests.length > 0 && `(${pendingRequests.length})`}
             </TabsTrigger>
           </TabsList>
 
@@ -472,12 +445,16 @@ export default function Friends() {
                 <CardTitle>Friend Requests</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {requests.length === 0 ? (
+                {pendingLoading ? (
+                  <p className="rounded-2xl border border-dashed border-muted py-8 text-center text-muted-foreground">
+                    Loading pending requests…
+                  </p>
+                ) : pendingRequests.length === 0 ? (
                   <p className="rounded-2xl border border-dashed border-muted py-8 text-center text-muted-foreground">
                     No pending friend requests
                   </p>
                 ) : (
-                  requests.map((request: any) => (
+                  pendingRequests.map((request) => (
                     <div
                       key={request.id}
                       className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm dark:border-white/10 dark:bg-slate-900/60"
