@@ -248,7 +248,7 @@ DROP POLICY IF EXISTS "Users can insert own friendships" ON friendships;
 CREATE POLICY "Users can insert own friendships" 
   ON friendships FOR INSERT 
   TO authenticated 
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (auth.uid() = user_id OR auth.uid() = friend_id);
 
 DROP POLICY IF EXISTS "Users can delete own friendships" ON friendships;
 CREATE POLICY "Users can delete own friendships" 
