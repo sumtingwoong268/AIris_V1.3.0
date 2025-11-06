@@ -14,7 +14,22 @@
 -- =====================================================
 -- 1. PROFILES TABLE
 -- =====================================================
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+DO $$
+DECLARE
+  role_name TEXT;
+BEGIN
+  FOREACH role_name IN ARRAY ARRAY['postgres', 'supabase_admin', 'auth_admin', 'anon', 'authenticated', 'service_role']
+  LOOP
+    BEGIN
+      EXECUTE format('GRANT USAGE ON SCHEMA extensions TO %I', role_name);
+    EXCEPTION
+      WHEN undefined_object THEN
+        NULL;
+    END;
+  END LOOP;
+END;
+$$;
 
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -67,7 +82,7 @@ DECLARE
   candidate TEXT;
 BEGIN
   LOOP
-    candidate := '@' || substr(encode(gen_random_bytes(6), 'hex'), 1, 10);
+    candidate := '@' || substr(encode(extensions.gen_random_bytes(6), 'hex'), 1, 10);
     EXIT WHEN NOT EXISTS (SELECT 1 FROM public.profiles WHERE username = candidate);
     -- Keep looping until we find a unique candidate
   END LOOP;

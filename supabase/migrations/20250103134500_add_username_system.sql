@@ -13,7 +13,7 @@ DECLARE
   candidate TEXT;
 BEGIN
   LOOP
-    candidate := '@' || substr(encode(gen_random_bytes(6), 'hex'), 1, 10);
+    candidate := '@' || substr(encode(extensions.gen_random_bytes(6), 'hex'), 1, 10);
     EXIT WHEN NOT EXISTS (
       SELECT 1 FROM public.profiles WHERE username = candidate
     );
