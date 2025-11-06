@@ -10,11 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Copy, Flame, Trophy, UserPlus, Check, X } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { sanitizeUsername } from "@/utils/username";
+import { useFriendRequests } from "@/context/FriendRequestsContext";
 
 export default function Friends() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { refreshPending } = useFriendRequests();
   const [friends, setFriends] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
@@ -100,6 +102,7 @@ export default function Friends() {
     if (data) {
       setRequests(data);
     }
+    void refreshPending();
   };
 
   const handleAddFriend = async () => {
@@ -219,6 +222,7 @@ export default function Friends() {
       
       fetchFriends();
       fetchRequests();
+      void refreshPending();
     } catch (error: any) {
       console.error("Accept request error:", error);
       toast({
@@ -238,6 +242,7 @@ export default function Friends() {
 
       toast({ title: "Friend request rejected" });
       fetchRequests();
+      void refreshPending();
     } catch (error: any) {
       console.error("Reject request error:", error);
       toast({

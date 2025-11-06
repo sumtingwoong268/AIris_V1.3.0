@@ -17,6 +17,7 @@ import VisualAcuityTest from "./pages/tests/VisualAcuityTest";
 import AmslerTest from "./pages/tests/AmslerTest";
 import ReadingStressTest from "./pages/tests/ReadingStressTest";
 import NotFound from "./pages/NotFound";
+import { FriendRequestProvider } from "./context/FriendRequestsContext";
 
 const queryClient = new QueryClient();
 
@@ -26,24 +27,26 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Auth />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/setup" element={<Setup />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/friends" element={<Friends />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/blogs" element={<Blogs />} />
-          <Route path="/blogs/:slug" element={<BlogArticle />} />
-          <Route path="/statistics" element={<Statistics />} />
-          <Route path="/tests/ishihara" element={<IshiharaTest />} />
-          <Route path="/tests/visual-acuity" element={<VisualAcuityTest />} />
-          <Route path="/tests/amsler" element={<AmslerTest />} />
-          <Route path="/tests/reading-stress" element={<ReadingStressTest />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <FriendRequestProvider>
+          <Routes>
+            <Route path="/" element={<Auth />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/setup" element={<Setup />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/blogs" element={<Blogs />} />
+            <Route path="/blogs/:slug" element={<BlogArticle />} />
+            <Route path="/statistics" element={<Statistics />} />
+            <Route path="/tests/ishihara" element={<IshiharaTest />} />
+            <Route path="/tests/visual-acuity" element={<VisualAcuityTest />} />
+            <Route path="/tests/amsler" element={<AmslerTest />} />
+            <Route path="/tests/reading-stress" element={<ReadingStressTest />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </FriendRequestProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

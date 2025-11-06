@@ -23,6 +23,7 @@ import {
   LineChart as LineChartIcon,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { useFriendRequests } from "@/context/FriendRequestsContext";
 
 // Eye health tips for daily rotation
 const EYE_TIPS = [
@@ -93,6 +94,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { xp } = useXP(user?.id);
+  const { pendingCount: pendingFriendRequests } = useFriendRequests();
   const [profile, setProfile] = useState<any>(null);
   const [testStats, setTestStats] = useState<{ avgScore: number, testsCompleted: number }>({ avgScore: 0, testsCompleted: 0 });
   const [recentTests, setRecentTests] = useState<DashboardTestResult[]>([]);
@@ -344,9 +346,14 @@ export default function Dashboard() {
             </div>
           </div>
           <nav className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => navigate("/friends")}>
+            <Button variant="ghost" onClick={() => navigate("/friends")} className="relative">
               <Users className="mr-2 h-4 w-4" />
               Friends
+              {pendingFriendRequests > 0 && (
+                <span className="absolute -right-1 top-0">
+                  <span className="block h-2 w-2 rounded-full bg-red-500 shadow-[0_0_0_2px_rgba(255,255,255,0.9)] dark:shadow-[0_0_0_2px_rgba(15,23,42,1)]" />
+                </span>
+              )}
             </Button>
             <Button variant="ghost" onClick={() => navigate("/reports")}>
               <FileText className="mr-2 h-4 w-4" />
