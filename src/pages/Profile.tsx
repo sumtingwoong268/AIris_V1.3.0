@@ -275,11 +275,10 @@ export default function Profile() {
 
   const toggleDarkMode = async () => {
     const newMode = !darkMode;
-    setDarkMode(newMode);
-    if (newMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+    try {
+      await setDarkMode(newMode);
+    } catch (error) {
+      console.error("Failed to update dark mode:", error);
     }
   };
 

@@ -18,6 +18,7 @@ import AmslerTest from "./pages/tests/AmslerTest";
 import ReadingStressTest from "./pages/tests/ReadingStressTest";
 import NotFound from "./pages/NotFound";
 import { FriendRequestProvider } from "./context/FriendRequestsContext";
+import { ThemeToggle } from "./components/ThemeToggle";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <FriendRequestProvider>
+          <ThemeToggle />
           <Routes>
             <Route path="/" element={<Auth />} />
             <Route path="/auth" element={<Auth />} />
