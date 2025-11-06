@@ -55,17 +55,47 @@ export default function Friends() {
 
   const fetchFriends = async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("friendships")
-      .select(`
-        friend_id,
-        profiles!friendships_friend_id_fkey(id, display_name, username, avatar_url, current_streak, xp)
-      `)
+      .select("friend_id")
       .eq("user_id", user.id);
 
-    if (data) {
-      setFriends(data.map(f => f.profiles).filter(Boolean));
+    if (error) {
+      console.error("fetchFriends error:", error);
+      setFriends([]);
+      return;
     }
+
+    const rows = data ?? [];
+    if (rows.length === 0) {
+      setFriends([]);
+      return;
+    }
+
+    const friendIds = Array.from(new Set(rows.map((row) => row.friend_id).filter(Boolean)));
+    if (friendIds.length === 0) {
+      setFriends([]);
+      return;
+    }
+
+    const { data: profilesData, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, display_name, username, avatar_url, current_streak, xp")
+      .in("id", friendIds);
+
+    if (profilesError) {
+      console.error("fetchFriend profiles error:", profilesError);
+      setFriends([]);
+      return;
+    }
+
+    // Preserve original order based on friendships query
+    const profileMap = new Map((profilesData ?? []).map((profile) => [profile.id, profile]));
+    const ordered = friendIds
+      .map((id) => profileMap.get(id))
+      .filter((profile): profile is NonNullable<typeof profile> => Boolean(profile));
+
+    setFriends(ordered);
   };
 
   const fetchLeaderboard = async () => {

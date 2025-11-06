@@ -42,23 +42,47 @@ export const FriendRequestProvider = ({ children }: FriendRequestProviderProps) 
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: requestRows, error } = await supabase
         .from("friend_requests")
-        .select(
-          `
-          id,
-          sender_id,
-          status,
-          created_at,
-          sender:profiles!friend_requests_sender_id_fkey(id, display_name, username, avatar_url)
-        `,
-        )
+        .select("id, sender_id, status, created_at")
         .eq("receiver_id", user.id)
         .eq("status", "pending")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setPendingRequests((data as PendingRequest[]) ?? []);
+
+      const rows = requestRows ?? [];
+      if (rows.length === 0) {
+        setPendingRequests([]);
+        return;
+      }
+
+      const senderIds = Array.from(new Set(rows.map((row) => row.sender_id)));
+      const { data: senderProfiles, error: senderError } = await supabase
+        .from("profiles")
+        .select("id, display_name, username, avatar_url")
+        .in("id", senderIds);
+
+      if (senderError) throw senderError;
+
+      const senderMap = new Map(
+        (senderProfiles ?? []).map((profile) => [
+          profile.id,
+          {
+            id: profile.id,
+            display_name: profile.display_name ?? null,
+            username: profile.username,
+            avatar_url: profile.avatar_url ?? null,
+          },
+        ]),
+      );
+
+      const enhanced = rows.map((row) => ({
+        ...row,
+        sender: senderMap.get(row.sender_id) ?? null,
+      }));
+
+      setPendingRequests(enhanced);
     } catch (error) {
       console.error("Failed to load pending friend requests:", error);
     } finally {
