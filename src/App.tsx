@@ -12,6 +12,7 @@ import Blogs from "./pages/Blogs";
 import BlogArticle from "./pages/BlogArticle";
 import Setup from "./pages/Setup";
 import Statistics from "./pages/Statistics";
+import Achievements from "./pages/Achievements";
 import IshiharaTest from "./pages/tests/IshiharaTest";
 import VisualAcuityTest from "./pages/tests/VisualAcuityTest";
 import AmslerTest from "./pages/tests/AmslerTest";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/friends" element={<Friends />} />
+            <Route path="/achievements" element={<Achievements />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/blogs/:slug" element={<BlogArticle />} />

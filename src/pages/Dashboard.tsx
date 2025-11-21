@@ -343,6 +343,11 @@ export default function Dashboard() {
       action: () => navigate("/reports"),
     },
     {
+      label: "Log Achievements",
+      icon: Sparkles,
+      action: () => navigate("/achievements"),
+    },
+    {
       label: "See Statistics",
       icon: LineChartIcon,
       action: () => navigate("/statistics"),
@@ -393,7 +398,11 @@ export default function Dashboard() {
                 </span>
               )}
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/reports")}>
+            <Button variant="ghost" onClick={() => navigate("/achievements")}> 
+              <Sparkles className="mr-2 h-4 w-4" />
+              Achievements
+            </Button>
+            <Button variant="ghost" onClick={() => navigate("/reports")}> 
               <FileText className="mr-2 h-4 w-4" />
               Reports
             </Button>
