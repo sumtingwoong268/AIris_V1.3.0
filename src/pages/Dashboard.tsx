@@ -398,11 +398,11 @@ export default function Dashboard() {
                 </span>
               )}
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/achievements")}> 
+            <Button variant="ghost" onClick={() => navigate("/achievements")}>
               <Sparkles className="mr-2 h-4 w-4" />
               Achievements
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/reports")}> 
+            <Button variant="ghost" onClick={() => navigate("/reports")}>
               <FileText className="mr-2 h-4 w-4" />
               Reports
             </Button>
