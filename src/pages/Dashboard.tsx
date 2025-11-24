@@ -398,11 +398,11 @@ export default function Dashboard() {
                 </span>
               )}
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/achievements")}> 
+            <Button variant="ghost" onClick={() => navigate("/achievements")}>
               <Sparkles className="mr-2 h-4 w-4" />
               Achievements
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/reports")}> 
+            <Button variant="ghost" onClick={() => navigate("/reports")}>
               <FileText className="mr-2 h-4 w-4" />
               Reports
             </Button>
@@ -435,7 +435,7 @@ export default function Dashboard() {
                   Explore & grow
                 </p>
                 <h2 className="mt-1 text-3xl font-bold text-slate-900 dark:text-slate-50 sm:text-4xl">
-                  Jump back into your vision journey
+                  Jump back into your vision journey testing
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm text-slate-700 dark:text-slate-200">
                   Start with a quick assessment and keep your streak alive. Each test is crafted to monitor a different
