@@ -312,8 +312,8 @@ export default function Achievements() {
               </Tabs>
             </div>
 
-            <div className="grid gap-3 lg:grid-cols-4">
-              <div className="col-span-2 flex items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm dark:bg-slate-900">
+            <div className="flex flex-wrap gap-3">
+              <div className="flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm dark:bg-slate-900">
                 <Search className="h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search titles or descriptions"
@@ -322,7 +322,7 @@ export default function Achievements() {
                   className="border-0 shadow-none focus-visible:ring-0"
                 />
               </div>
-              <div className="flex items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm dark:bg-slate-900">
+              <div className="flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm dark:bg-slate-900">
                 <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                 <Input
                   type="date"
@@ -338,12 +338,12 @@ export default function Achievements() {
                   className="border-0 shadow-none focus-visible:ring-0"
                 />
               </div>
-              <div className="flex items-center justify-end gap-2">
+              <div className="flex w-full flex-wrap items-center gap-2 rounded-xl border bg-white px-3 py-3 shadow-sm dark:bg-slate-900 sm:justify-between">
                 <Select
                   value={filters.media}
                   onValueChange={(val) => setFilters((prev) => ({ ...prev, media: val as "any" | "with" | "without" }))}
                 >
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="min-w-[140px] flex-1 sm:flex-none">
                     <SelectValue placeholder="Media" />
                   </SelectTrigger>
                   <SelectContent>
@@ -356,7 +356,7 @@ export default function Achievements() {
                   value={filters.category}
                   onValueChange={(val) => setFilters((prev) => ({ ...prev, category: val as AchievementCategory | "all" }))}
                 >
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="min-w-[140px] flex-1 sm:flex-none">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -366,10 +366,11 @@ export default function Achievements() {
                     <SelectItem value="reflections">Reflections</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="ghost" size="icon" onClick={() => setFilters({ search: "", category: "all", from: "", to: "", media: "any" })}>
+                <Button variant="ghost" className="flex-1 gap-2 sm:flex-none" onClick={() => setFilters({ search: "", category: "all", from: "", to: "", media: "any" })}>
                   <Filter className="h-4 w-4" />
+                  Clear filters
                 </Button>
-                <Button onClick={openNewEntry}>
+                <Button className="flex-1 sm:flex-none" onClick={openNewEntry}>
                   <Plus className="mr-2 h-4 w-4" /> New Entry
                 </Button>
               </div>
