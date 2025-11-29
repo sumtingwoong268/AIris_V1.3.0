@@ -1,0 +1,69 @@
+import type { Lab } from "@/lib/colourUtils";
+
+export interface HueCap {
+  capId: string;
+  lab: Lab; // [L*, a*, b*]
+  isFixed: boolean;
+  panelType: "D15" | "LD15";
+}
+
+// Farnsworth D-15 (Illuminant C) approximate CIELAB values from published xyY coordinates.
+// Pilot cap is fixed; remaining caps are movable. Neutral end anchor keeps two unmovable references.
+export const D15_CAPS: HueCap[] = [
+  { capId: "D15_PILOT", lab: [51.0, -8.7, -25.9], isFixed: true, panelType: "D15" },
+  { capId: "D15_01", lab: [51.6, -9.6, -19.2], isFixed: false, panelType: "D15" },
+  { capId: "D15_02", lab: [52.0, -11.2, -13.5], isFixed: false, panelType: "D15" },
+  { capId: "D15_03", lab: [52.3, -12.1, -8.3], isFixed: false, panelType: "D15" },
+  { capId: "D15_04", lab: [52.5, -13.3, -2.3], isFixed: false, panelType: "D15" },
+  { capId: "D15_05", lab: [52.6, -14.5, 4.5], isFixed: false, panelType: "D15" },
+  { capId: "D15_06", lab: [52.4, -16.5, 14.0], isFixed: false, panelType: "D15" },
+  { capId: "D15_07", lab: [51.3, -15.9, 22.4], isFixed: false, panelType: "D15" },
+  { capId: "D15_08", lab: [49.5, -11.7, 28.0], isFixed: false, panelType: "D15" },
+  { capId: "D15_09", lab: [47.9, -5.7, 28.4], isFixed: false, panelType: "D15" },
+  { capId: "D15_10", lab: [46.2, 3.1, 26.0], isFixed: false, panelType: "D15" },
+  { capId: "D15_11", lab: [45.7, 9.2, 20.8], isFixed: false, panelType: "D15" },
+  { capId: "D15_12", lab: [46.0, 14.0, 14.8], isFixed: false, panelType: "D15" },
+  { capId: "D15_13", lab: [47.0, 16.8, 5.6], isFixed: false, panelType: "D15" },
+  { capId: "D15_14", lab: [48.0, 15.5, -4.1], isFixed: false, panelType: "D15" },
+  { capId: "D15_15", lab: [49.5, 11.0, -13.3], isFixed: false, panelType: "D15" },
+  { capId: "D15_ANCHOR_END", lab: [51.0, -8.7, -25.9], isFixed: true, panelType: "D15" },
+];
+
+export const LD15_CAPS: HueCap[] = [
+  {
+    capId: "LD15_ANCHOR_START",
+    lab: [50.0, 0.0, 0.0],
+    isFixed: true,
+    panelType: "LD15",
+  },
+  {
+    capId: "LD15_09",
+    lab: [63.12, -3.45, -19.82],
+    isFixed: false,
+    panelType: "LD15",
+  },
+  {
+    capId: "LD15_04",
+    lab: [58.3, 12.2, -12.9],
+    isFixed: false,
+    panelType: "LD15",
+  },
+  {
+    capId: "LD15_11",
+    lab: [60.9, -15.2, -6.1],
+    isFixed: false,
+    panelType: "LD15",
+  },
+  {
+    capId: "LD15_14",
+    lab: [55.7, 7.4, 21.6],
+    isFixed: false,
+    panelType: "LD15",
+  },
+  {
+    capId: "LD15_ANCHOR_END",
+    lab: [65.0, 0.0, 0.0],
+    isFixed: true,
+    panelType: "LD15",
+  },
+];

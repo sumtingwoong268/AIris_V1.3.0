@@ -17,6 +17,7 @@ import IshiharaTest from "./pages/tests/IshiharaTest";
 import VisualAcuityTest from "./pages/tests/VisualAcuityTest";
 import AmslerTest from "./pages/tests/AmslerTest";
 import ReadingStressTest from "./pages/tests/ReadingStressTest";
+import D15Test from "./pages/tests/D15Test";
 import NotFound from "./pages/NotFound";
 import { FriendRequestProvider } from "./context/FriendRequestsContext";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -45,12 +46,13 @@ const App = () => (
               <Route path="/blogs/:slug" element={<BlogArticle />} />
               <Route path="/statistics" element={<Statistics />} />
               <Route path="/tests/ishihara" element={<IshiharaTest />} />
-              <Route path="/tests/visual-acuity" element={<VisualAcuityTest />} />
-              <Route path="/tests/amsler" element={<AmslerTest />} />
-              <Route path="/tests/reading-stress" element={<ReadingStressTest />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Route path="/tests/visual-acuity" element={<VisualAcuityTest />} />
+            <Route path="/tests/amsler" element={<AmslerTest />} />
+            <Route path="/tests/reading-stress" element={<ReadingStressTest />} />
+            <Route path="/tests/d15" element={<D15Test />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
           </FriendRequestProvider>
         </BrowserRouter>
       </div>
