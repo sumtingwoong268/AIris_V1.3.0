@@ -1,12 +1,16 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Loader2, RotateCcw, Shuffle, Palette, Lock } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, RotateCcw, Shuffle, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { deltaE76, confusionAxisAngle, labToSrgb, type Lab } from "@/lib/colourUtils";
 import { D15_CAPS, LD15_CAPS, type HueCap } from "@/modules/color-vision/d15/caps";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useXP } from "@/hooks/useXP";
+import { recordTestCompletionStreak } from "@/utils/streak";
 import logo from "@/assets/logo.png";
 
 type Stage = "calibration" | "practice" | "test" | "summary";
@@ -69,23 +73,47 @@ const calculateCrossings = (labs: Lab[]): number => {
   return crossings;
 };
 
-const classifyArrangement = (labs: Lab[], pairDeltaEs: number[], totalDeltaE: number): ArrangementMetrics => {
+const classifyArrangement = (
+  labs: Lab[],
+  pairDeltaEs: number[],
+  totalDeltaE: number,
+  arrangement: HueCap[],
+  referenceCaps: HueCap[],
+): ArrangementMetrics & { score: number } => {
   const axisAngle = confusionAxisAngle(labs);
   const crossings = calculateCrossings(labs);
 
-  // Heuristic severity bands; refine with clinical tuning.
+  const movableOrder = arrangement.filter((c) => !c.isFixed).map((c) => c.capId);
+  const idealOrder = referenceCaps.filter((c) => !c.isFixed).map((c) => c.capId);
+  const reversedIdeal = [...idealOrder].reverse();
+
+  const isPerfect =
+    movableOrder.join("|") === idealOrder.join("|") || movableOrder.join("|") === reversedIdeal.join("|");
+
+  const indexMap = new Map<string, number>();
+  idealOrder.forEach((id, idx) => indexMap.set(id, idx));
+  let displacement = 0;
+  movableOrder.forEach((id, idx) => {
+    const idealIdx = indexMap.get(id) ?? idx;
+    displacement += Math.abs(idx - idealIdx);
+  });
+  const maxDisplacement = (idealOrder.length * (idealOrder.length - 1)) / 2 || 1;
+  const score = isPerfect ? 100 : Math.max(0, Math.round(100 * (1 - displacement / maxDisplacement)));
+
   const severity =
-    totalDeltaE < 140
+    score >= 90 && crossings === 0
       ? "Normal"
-      : totalDeltaE < 220
-        ? "Mild"
-        : totalDeltaE < 320
-          ? "Moderate"
-          : "Severe";
+      : totalDeltaE < 140
+        ? "Normal"
+        : totalDeltaE < 220
+          ? "Mild"
+          : totalDeltaE < 320
+            ? "Moderate"
+            : "Severe";
 
   const angle = axisAngle;
   let suspected: ArrangementMetrics["suspected"] = "Inconclusive";
-  if (totalDeltaE < 140 && crossings === 0) {
+  if (isPerfect || (score >= 90 && crossings === 0)) {
     suspected = "Normal";
   } else if ((angle >= 330 || angle < 30) || (angle >= 150 && angle < 210)) {
     suspected = "Protan";
@@ -95,7 +123,7 @@ const classifyArrangement = (labs: Lab[], pairDeltaEs: number[], totalDeltaE: nu
     suspected = "Tritan";
   }
 
-  return { totalDeltaE, pairDeltaEs, axisAngle, crossings, severity, suspected };
+  return { totalDeltaE, pairDeltaEs, axisAngle, crossings, severity, suspected, score };
 };
 
 const createInitialArrangement = (caps: HueCap[]) => {
@@ -112,19 +140,25 @@ const createInitialArrangement = (caps: HueCap[]) => {
 export default function D15Test() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { xp, refetch: refetchXp } = useXP(user?.id);
   const [stage, setStage] = useState<Stage>("calibration");
   const [panelType, setPanelType] = useState<PanelType>("D15");
   const [arrangement, setArrangement] = useState<HueCap[]>(createInitialArrangement(D15_CAPS));
   const [dragging, setDragging] = useState<string | null>(null);
   const [interactions, setInteractions] = useState<InteractionLog[]>([]);
   const [startMs, setStartMs] = useState<number | null>(null);
-  const [metrics, setMetrics] = useState<ArrangementMetrics | null>(null);
+  const [metrics, setMetrics] = useState<(ArrangementMetrics & { score: number }) | null>(null);
   const [lightingAcknowledged, setLightingAcknowledged] = useState(false);
   const [blueLightDisabled, setBlueLightDisabled] = useState(false);
   const [brightnessAdjusted, setBrightnessAdjusted] = useState(false);
   const [distanceChecked, setDistanceChecked] = useState(false);
-  const [practiceOrder, setPracticeOrder] = useState<string[]>(["warm", "neutral", "cool"]);
+  const [practiceOrder, setPracticeOrder] = useState<string[]>(["cool", "neutral", "warm"]);
   const [practiceDrag, setPracticeDrag] = useState<string | null>(null);
+  const [shuffleCount, setShuffleCount] = useState(0);
+  const [resetCount, setResetCount] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [tick, setTick] = useState(0);
 
   const caps = useMemo(() => (panelType === "D15" ? D15_CAPS : LD15_CAPS), [panelType]);
 
@@ -133,7 +167,15 @@ export default function D15Test() {
     setInteractions([]);
     setMetrics(null);
     setStartMs(Date.now());
+    setShuffleCount(0);
+    setResetCount(0);
   }, [caps]);
+
+  useEffect(() => {
+    if (stage !== "test" || !startMs) return;
+    const interval = window.setInterval(() => setTick(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, [stage, startMs]);
 
   const handleDragStart = (capId: string, isFixed: boolean) => {
     if (isFixed) return;
@@ -154,27 +196,81 @@ export default function D15Test() {
     setDragging(null);
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
+    if (submitting) return;
+    setSubmitting(true);
     const labs = arrangement.map((cap) => cap.lab);
     const pairDeltaEs: number[] = [];
     for (let i = 0; i < labs.length - 1; i += 1) {
       pairDeltaEs.push(deltaE76(labs[i], labs[i + 1]));
     }
     const totalDeltaE = pairDeltaEs.reduce((sum, v) => sum + v, 0);
-    const summary = classifyArrangement(labs, pairDeltaEs, totalDeltaE);
+    const summary = classifyArrangement(labs, pairDeltaEs, totalDeltaE, arrangement, caps);
     setMetrics(summary);
     setStage("summary");
+    const runtimeMs = startMs ? Date.now() - startMs : null;
+
+    const score = summary.score ?? 0;
     toast({
       title: "Analysis complete",
       description: `${summary.suspected} | ${summary.severity}`,
     });
+
+    if (user) {
+      try {
+        const xpEarned = Math.round(30 + (score / 100) * 20);
+        const reordersByCap = interactions.reduce<Record<string, number>>((acc, log) => {
+          acc[log.capId] = (acc[log.capId] ?? 0) + 1;
+          return acc;
+        }, {});
+
+        await supabase.from("test_results").insert({
+          user_id: user.id,
+          test_type: "d15",
+          score,
+          xp_earned: xpEarned,
+          details: {
+            arrangement: arrangement.map((c) => c.capId),
+            panelType,
+            metrics: summary,
+            interactions,
+            interactionStats: { total: interactions.length, reordersByCap },
+            shuffleCount,
+            resetCount,
+            runtimeMs,
+            timing: {
+              sessionDurationMs: runtimeMs,
+              averageQuestionDurationMs: null,
+              perQuestion: [],
+            },
+          },
+        });
+
+        await supabase.rpc("update_user_xp", {
+          p_user_id: user.id,
+          p_xp_delta: xpEarned,
+        });
+
+        await recordTestCompletionStreak(user.id);
+        await refetchXp();
+      } catch (err: any) {
+        console.error("Failed to save D15 result", err);
+        toast({
+          title: "Could not save result",
+          description: err?.message ?? "Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+    setSubmitting(false);
   };
 
   const handleReset = () => {
     setArrangement(createInitialArrangement(caps));
     setInteractions([]);
     setMetrics(null);
-    setStartMs(Date.now());
+    setStartMs((prev) => prev ?? Date.now());
+    setResetCount((c) => c + 1);
   };
 
   const handlePracticeDrop = (target: string) => {
@@ -188,7 +284,7 @@ export default function D15Test() {
     setPracticeDrag(null);
   };
 
-  const practiceComplete = practiceOrder.join(",") === "warm,neutral,cool";
+  const practiceComplete = practiceOrder.join(",") === "cool,neutral,warm";
 
   const neutralBg =
     "bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950";
@@ -340,7 +436,7 @@ export default function D15Test() {
                 <div>
                   <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">Practice (3 caps)</h2>
                   <p className="text-sm text-muted-foreground">
-                    Drag the caps into smooth order: warm → neutral → cool. Caps snap into place.
+                    Drag the caps into smooth order: cool → neutral → warm. Caps snap into place.
                   </p>
                 </div>
               </div>
@@ -359,11 +455,14 @@ export default function D15Test() {
                 ))}
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <Button variant="ghost" size="sm" onClick={() => setPracticeOrder(["warm", "neutral", "cool"])}>
+                <Button variant="ghost" size="sm" onClick={() => setPracticeOrder(["cool", "neutral", "warm"])}>
                   Reset
                 </Button>
                 <Button
-                  onClick={() => setStage("test")}
+                  onClick={() => {
+                    setStartMs(Date.now());
+                    setStage("test");
+                  }}
                   disabled={!practiceComplete}
                   className="rounded-full"
                 >
@@ -395,6 +494,10 @@ export default function D15Test() {
                 <span>Runtime: {startMs ? Math.round((Date.now() - startMs) / 1000) : 0}s</span>
                 <span aria-hidden>•</span>
                 <span>Interaction logs: {interactions.length}</span>
+                <span aria-hidden>•</span>
+                <span>Shuffles: {shuffleCount}</span>
+                <span aria-hidden>•</span>
+                <span>Resets: {resetCount}</span>
               </div>
 
               <div className="overflow-x-auto rounded-xl border border-border/60 bg-muted/20 p-3">
@@ -428,7 +531,7 @@ export default function D15Test() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <Button onClick={handleAnalyze} className="rounded-full">
+                <Button onClick={handleAnalyze} disabled={submitting} className="rounded-full">
                   Submit & analyse
                 </Button>
                 <Button variant="outline" onClick={handleReset} className="rounded-full">
@@ -437,7 +540,11 @@ export default function D15Test() {
                 </Button>
                 <Button
                   variant="ghost"
-                  onClick={() => setArrangement((prev) => createInitialArrangement(prev))}
+                  onClick={() => {
+                    setArrangement(createInitialArrangement(caps));
+                    setShuffleCount((c) => c + 1);
+                    setStartMs((prev) => prev ?? Date.now());
+                  }}
                   className="rounded-full"
                 >
                   <Shuffle className="mr-2 h-4 w-4" />
@@ -469,6 +576,12 @@ export default function D15Test() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Score</p>
+                  <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
+                    {metrics.score.toFixed(0)} / 100
+                  </p>
+                </div>
                 <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">Suspected pathway</p>
                   <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">{metrics.suspected}</p>
@@ -511,7 +624,15 @@ export default function D15Test() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <Button onClick={() => setStage("test")} className="rounded-full">
+                <Button
+                  onClick={() => {
+                    setStage("test");
+                    setStartMs(Date.now());
+                    setMetrics(null);
+                    setInteractions([]);
+                  }}
+                  className="rounded-full"
+                >
                   Back to caps
                 </Button>
                 <Button variant="outline" onClick={() => navigate("/dashboard")} className="rounded-full">

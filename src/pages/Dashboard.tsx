@@ -47,6 +47,7 @@ const TEST_LABELS: Record<string, string> = {
   acuity: "Visual Acuity Test",
   amsler: "Amsler Grid Test",
   reading_stress: "Reading Stress Test",
+  d15: "Farnsworth D-15",
 };
 
 const TEST_ICONS: Record<string, typeof Eye> = {
