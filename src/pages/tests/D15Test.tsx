@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Loader2, RotateCcw, Shuffle, Palette } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, RotateCcw, Shuffle, Palette, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -223,26 +223,26 @@ export default function D15Test() {
       </header>
 
       <main className="container mx-auto max-w-5xl space-y-8 px-4 py-10">
-        <Card className="border-none bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white shadow-2xl">
-          <CardContent className="space-y-5 p-8">
+        <Card className="border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
+          <CardContent className="space-y-6 p-8">
             <div className="flex items-center gap-3">
-              <Palette className="h-10 w-10 text-primary" />
+              <Palette className="h-10 w-10 text-white" />
               <div>
-                <p className="text-sm uppercase tracking-[0.35rem] text-white/60">Farnsworth D-15</p>
-                <h1 className="text-3xl font-semibold">Hue arrangement screening for colour vision</h1>
+                <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Farnsworth D-15</p>
+                <h1 className="text-3xl font-semibold">Arrange 15 hue caps to screen colour vision</h1>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl bg-white/10 p-4 text-sm shadow-lg backdrop-blur">
-                <p className="text-xs uppercase tracking-wide text-white/60">Purpose</p>
+              <div className="rounded-2xl bg-white/15 p-4 text-sm shadow-lg backdrop-blur">
+                <p className="text-xs uppercase tracking-wide text-white/70">Purpose</p>
                 <p className="mt-1 text-white/90">Screens red-green and blue-yellow pathways; complements Ishihara.</p>
               </div>
-              <div className="rounded-2xl bg-white/10 p-4 text-sm shadow-lg backdrop-blur">
-                <p className="text-xs uppercase tracking-wide text-white/60">Basis</p>
-                <p className="mt-1 text-white/90">15 hue caps arranged on the CIELAB circle; fixed anchors.</p>
+              <div className="rounded-2xl bg-white/15 p-4 text-sm shadow-lg backdrop-blur">
+                <p className="text-xs uppercase tracking-wide text-white/70">Basis</p>
+                <p className="mt-1 text-white/90">15 hue caps arranged on the CIELAB circle with fixed anchors.</p>
               </div>
-              <div className="rounded-2xl bg-white/10 p-4 text-sm shadow-lg backdrop-blur">
-                <p className="text-xs uppercase tracking-wide text-white/60">Disclaimer</p>
+              <div className="rounded-2xl bg-white/15 p-4 text-sm shadow-lg backdrop-blur">
+                <p className="text-xs uppercase tracking-wide text-white/70">Disclaimers</p>
                 <p className="mt-1 text-white/90">
                   Screening tool only. Display and lighting affect results. Clinician interpretation required.
                 </p>
@@ -300,6 +300,26 @@ export default function D15Test() {
                   />
                   <span>Hold device at arm&apos;s length; keep screen straight-on.</span>
                 </label>
+              </div>
+              <div className="space-y-2 rounded-xl border border-border/60 bg-muted/30 p-4">
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Brightness check</p>
+                <p className="text-xs text-muted-foreground">
+                  You should see distinct steps from black to white. Adjust display brightness until all steps are visible.
+                </p>
+                <div className="flex gap-1 rounded-lg border border-border/70 bg-white p-2 dark:bg-slate-900">
+                  {Array.from({ length: 12 }).map((_, idx) => {
+                    const v = Math.round((idx / 11) * 255);
+                    const hex = v.toString(16).padStart(2, "0");
+                    return (
+                      <div
+                        key={idx}
+                        className="h-8 flex-1 rounded-sm"
+                        style={{ background: `#${hex}${hex}${hex}` }}
+                        aria-label={`Grey ${v}`}
+                      />
+                    );
+                  })}
+                </div>
               </div>
               <Button
                 onClick={() => setStage("practice")}
@@ -367,7 +387,7 @@ export default function D15Test() {
                   Arrange the hue caps
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Drag the movable caps into the smoothest colour circle between the fixed anchors. Identical shape and luminance to prevent cues.
+                  Drag the movable caps into the smoothest colour circle between the fixed anchors. Identical shape and luminance prevent cues.
                 </p>
               </div>
 
@@ -377,34 +397,34 @@ export default function D15Test() {
                 <span>Interaction logs: {interactions.length}</span>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {arrangement.map((cap) => {
-                  const [r, g, b] = labToSrgb(cap.lab);
-                  const color = rgbToHex([r, g, b]);
-                  return (
-                    <div
-                      key={cap.capId}
-                      draggable={!cap.isFixed}
-                      onDragStart={() => handleDragStart(cap.capId, cap.isFixed)}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={() => handleDrop(cap.capId)}
-                      className="flex items-center gap-3 rounded-xl border border-border/70 bg-white/80 p-3 shadow-sm transition hover:-translate-y-0.5 dark:bg-slate-900/70"
-                    >
+              <div className="overflow-x-auto rounded-xl border border-border/60 bg-muted/20 p-3">
+                <div className="flex min-w-full items-center gap-3">
+                  {arrangement.map((cap) => {
+                    const [r, g, b] = labToSrgb(cap.lab);
+                    const color = rgbToHex([r, g, b]);
+                    return (
                       <div
-                        className="h-12 w-12 shrink-0 rounded-full border border-border"
-                        style={{ background: color }}
-                        aria-label={`Cap ${cap.capId}`}
-                      />
-                      <div className="flex flex-col text-sm">
-                        <span className="font-semibold text-slate-900 dark:text-slate-50">
-                          {cap.capId}
-                          {cap.isFixed && " (fixed)"}
-                        </span>
-                        <span className="text-xs text-muted-foreground">L*,a*,b*: {cap.lab.map((n) => n.toFixed(1)).join(", ")}</span>
+                        key={cap.capId}
+                        draggable={!cap.isFixed}
+                        onDragStart={() => handleDragStart(cap.capId, cap.isFixed)}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => handleDrop(cap.capId)}
+                        className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-border/80 bg-white shadow-sm transition hover:-translate-y-0.5 dark:bg-slate-900"
+                        aria-label={cap.isFixed ? "Fixed anchor cap" : "Movable cap"}
+                      >
+                        <div
+                          className={cap.isFixed ? "h-12 w-12 rounded-full ring-2 ring-primary/70 ring-offset-2 ring-offset-white dark:ring-offset-slate-900" : "h-12 w-12 rounded-full"}
+                          style={{ background: color, border: cap.isFixed ? undefined : "1px solid hsl(var(--border))" }}
+                        />
+                        {cap.isFixed && (
+                          <span className="absolute -bottom-2 rounded-full bg-primary px-2 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
+                            Fixed
+                          </span>
+                        )}
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
