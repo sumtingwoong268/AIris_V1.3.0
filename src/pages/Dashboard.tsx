@@ -373,7 +373,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Header */}
       <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4 lg:px-6">
+        <div className="container mx-auto flex flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between lg:px-6">
           <div
             className="flex items-center gap-3 cursor-pointer group"
             onClick={() => navigate("/dashboard")}
@@ -388,8 +388,8 @@ export default function Dashboard() {
               </span>
             </div>
           </div>
-          <nav className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => navigate("/friends")} className="relative">
+          <nav className="flex w-full flex-wrap items-center justify-center gap-2 md:w-auto md:justify-end md:gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="relative px-3">
               <Users className="mr-2 h-4 w-4" />
               Friends
               {pendingFriendRequests > 0 && (
@@ -398,23 +398,23 @@ export default function Dashboard() {
                 </span>
               )}
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/achievements")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/achievements")} className="px-3">
               <Sparkles className="mr-2 h-4 w-4" />
               Achievements
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/reports")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/reports")} className="px-3">
               <FileText className="mr-2 h-4 w-4" />
               Reports
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/statistics")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/statistics")} className="px-3">
               <Award className="mr-2 h-4 w-4" />
               Statistics
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/blogs")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/blogs")} className="px-3">
               <BookOpen className="mr-2 h-4 w-4" />
               Blogs
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/profile")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="px-3">
               <User className="mr-2 h-4 w-4" />
               Profile
             </Button>
