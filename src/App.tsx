@@ -28,30 +28,32 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <FriendRequestProvider>
-          <ThemeToggle />
-          <Routes>
-            <Route path="/" element={<Auth />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/setup" element={<Setup />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/achievements" element={<Achievements />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/blogs" element={<Blogs />} />
-            <Route path="/blogs/:slug" element={<BlogArticle />} />
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/tests/ishihara" element={<IshiharaTest />} />
-            <Route path="/tests/visual-acuity" element={<VisualAcuityTest />} />
-            <Route path="/tests/amsler" element={<AmslerTest />} />
-            <Route path="/tests/reading-stress" element={<ReadingStressTest />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </FriendRequestProvider>
-      </BrowserRouter>
+      <div className="min-h-screen w-full bg-background text-foreground">
+        <BrowserRouter>
+          <FriendRequestProvider>
+            <ThemeToggle />
+            <Routes>
+              <Route path="/" element={<Auth />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/setup" element={<Setup />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/friends" element={<Friends />} />
+              <Route path="/achievements" element={<Achievements />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/blogs" element={<Blogs />} />
+              <Route path="/blogs/:slug" element={<BlogArticle />} />
+              <Route path="/statistics" element={<Statistics />} />
+              <Route path="/tests/ishihara" element={<IshiharaTest />} />
+              <Route path="/tests/visual-acuity" element={<VisualAcuityTest />} />
+              <Route path="/tests/amsler" element={<AmslerTest />} />
+              <Route path="/tests/reading-stress" element={<ReadingStressTest />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </FriendRequestProvider>
+        </BrowserRouter>
+      </div>
     </TooltipProvider>
   </QueryClientProvider>
 );
