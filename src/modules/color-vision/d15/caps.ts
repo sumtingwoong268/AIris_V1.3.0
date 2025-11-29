@@ -29,7 +29,7 @@ export const D15_CAPS: HueCap[] = [
   { capId: "D15_ANCHOR_END", lab: [49.5, 11.0, -13.3], isFixed: true, panelType: "D15" },
 ];
 
-export const LD15_CAPS: HueCap[] = [
+const RAW_LD15_CAPS: HueCap[] = [
   { capId: "LD15_PILOT", lab: [78.8, -3.5, -10.4], isFixed: true, panelType: "LD15" },
   { capId: "LD15_01", lab: [79.0, -3.8, -7.7], isFixed: false, panelType: "LD15" },
   { capId: "LD15_02", lab: [79.2, -4.5, -5.4], isFixed: false, panelType: "LD15" },
@@ -47,3 +47,12 @@ export const LD15_CAPS: HueCap[] = [
   { capId: "LD15_14", lab: [77.5, 6.2, -1.6], isFixed: false, panelType: "LD15" },
   { capId: "LD15_15", lab: [78.2, 4.4, -5.3], isFixed: true, panelType: "LD15" },
 ];
+
+// Slightly increase chroma for better visual separability while keeping lightness and hue relationships intact.
+const SATURATION_FACTOR = 1.08; // gentle bump
+
+export const LD15_CAPS: HueCap[] = RAW_LD15_CAPS.map((cap) => {
+  const [L, a, b] = cap.lab;
+  const boosted: Lab = [L, Number((a * SATURATION_FACTOR).toFixed(2)), Number((b * SATURATION_FACTOR).toFixed(2))];
+  return { ...cap, lab: boosted };
+});
