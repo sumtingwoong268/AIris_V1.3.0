@@ -21,7 +21,8 @@ import {
   Sparkles,
   PlayCircle,
   LineChart as LineChartIcon,
-} from "lucide-react";
+  } from "lucide-react";
+import { Palette } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useFriendRequests } from "@/context/FriendRequestsContext";
 import { formatCountdownParts, getCountdownParts, syncProfileStreak, type StreakStatus } from "@/utils/streak";
@@ -293,6 +294,14 @@ export default function Dashboard() {
       xp: "15 XP",
       path: "/tests/reading-stress",
       gradient: "from-purple-400 to-violet-500",
+    },
+    {
+      title: "Farnsworth D-15",
+      description: "Arrange hue caps to screen colour vision",
+      icon: Palette,
+      xp: "35 XP",
+      path: "/tests/d15",
+      gradient: "from-amber-400 to-rose-500",
     },
   ];
 
