@@ -48,6 +48,7 @@ const TEST_LABELS: Record<string, string> = {
   amsler: "Amsler Grid Test",
   reading_stress: "Reading Stress Test",
   d15: "Farnsworth D-15",
+  d15_desaturated: "Farnsworth D-15 (Desaturated)",
 };
 
 const TEST_ICONS: Record<string, typeof Eye> = {
@@ -303,6 +304,14 @@ export default function Dashboard() {
       xp: "35 XP",
       path: "/tests/d15",
       gradient: "from-amber-400 to-rose-500",
+    },
+    {
+      title: "D-15 (Desaturated)",
+      description: "More tritan-sensitive Lanthony variant",
+      icon: Palette,
+      xp: "35 XP",
+      path: "/tests/d15-desaturated",
+      gradient: "from-amber-500 to-slate-500",
     },
   ];
 

@@ -137,13 +137,19 @@ const createInitialArrangement = (caps: HueCap[]) => {
   return [...start, ...shuffled, ...middle, ...end];
 };
 
-export default function D15Test() {
+type D15Props = {
+  initialPanelType?: PanelType;
+  lockPanelType?: boolean;
+  titleOverride?: string;
+};
+
+export default function D15Test({ initialPanelType = "D15", lockPanelType = false, titleOverride }: D15Props) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const { xp, refetch: refetchXp } = useXP(user?.id);
   const [stage, setStage] = useState<Stage>("calibration");
-  const [panelType, setPanelType] = useState<PanelType>("D15");
+  const [panelType, setPanelType] = useState<PanelType>(initialPanelType);
   const [arrangement, setArrangement] = useState<HueCap[]>(createInitialArrangement(D15_CAPS));
   const [dragging, setDragging] = useState<string | null>(null);
   const [interactions, setInteractions] = useState<InteractionLog[]>([]);
@@ -159,6 +165,12 @@ export default function D15Test() {
   const [resetCount, setResetCount] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    if (lockPanelType) {
+      setPanelType(initialPanelType);
+    }
+  }, [initialPanelType, lockPanelType]);
 
   const caps = useMemo(() => (panelType === "D15" ? D15_CAPS : LD15_CAPS), [panelType]);
 
@@ -218,6 +230,12 @@ export default function D15Test() {
 
     if (user) {
       try {
+        const resultTestType =
+          lockPanelType && initialPanelType === "LD15"
+            ? "d15_desaturated"
+            : panelType === "LD15"
+              ? "d15_desaturated"
+              : "d15";
         const xpEarned = Math.round(30 + (score / 100) * 20);
         const reordersByCap = interactions.reduce<Record<string, number>>((acc, log) => {
           acc[log.capId] = (acc[log.capId] ?? 0) + 1;
@@ -226,7 +244,7 @@ export default function D15Test() {
 
         await supabase.from("test_results").insert({
           user_id: user.id,
-          test_type: "d15",
+          test_type: resultTestType,
           score,
           xp_earned: xpEarned,
           details: {
@@ -298,22 +316,30 @@ export default function D15Test() {
           </Button>
           <img src={logo} alt="AIris" className="h-10" />
           <div className="ml-auto flex items-center gap-2">
-            <Button
-              variant={panelType === "D15" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setPanelType("D15")}
-              className="rounded-full"
-            >
-              Standard D-15
-            </Button>
-            <Button
-              variant={panelType === "LD15" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setPanelType("LD15")}
-              className="rounded-full"
-            >
-              Desaturated (Lanthony)
-            </Button>
+            {lockPanelType ? (
+              <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                {panelType === "LD15" ? "Desaturated D-15" : "Standard D-15"}
+              </span>
+            ) : (
+              <>
+                <Button
+                  variant={panelType === "D15" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPanelType("D15")}
+                  className="rounded-full"
+                >
+                  Standard D-15
+                </Button>
+                <Button
+                  variant={panelType === "LD15" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPanelType("LD15")}
+                  className="rounded-full"
+                >
+                  Desaturated (Lanthony)
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -325,7 +351,9 @@ export default function D15Test() {
               <Palette className="h-10 w-10 text-white" />
               <div>
                 <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Farnsworth D-15</p>
-                <h1 className="text-3xl font-semibold">Arrange 15 hue caps to screen colour vision</h1>
+                <h1 className="text-3xl font-semibold">
+                  {titleOverride ?? "Arrange 15 hue caps to screen colour vision"}
+                </h1>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-3">

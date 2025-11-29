@@ -59,6 +59,7 @@ const TEST_TYPES: TestTypeConfig[] = [
   { id: "amsler", keys: ["amsler"], name: "Amsler Grid Test", gradient: "from-emerald-500 to-green-600", icon: Grid3x3 },
   { id: "reading_stress", keys: ["reading_stress"], name: "Reading Stress Test", gradient: "from-purple-500 to-fuchsia-500", icon: BookOpen },
   { id: "d15", keys: ["d15"], name: "Farnsworth D-15", gradient: "from-amber-500 to-rose-500", icon: Palette },
+  { id: "d15_desaturated", keys: ["d15_desaturated"], name: "D-15 (Desaturated)", gradient: "from-amber-500 to-slate-500", icon: Palette },
 ];
 
 const CHART_COLORS = [
