@@ -301,11 +301,12 @@ export default function IshiharaTest() {
     return planned;
   };
 
-  const handleControlAnswer = () => {
+  const handleControlAnswer = (overrideAnswer?: string) => {
     if (!controlPlate) return;
-    if (!userInput.trim()) return;
+    const rawInput = overrideAnswer ?? userInput;
+    if (!rawInput.trim()) return;
 
-    const normalizedInput = normalizeAnswer(userInput);
+    const normalizedInput = normalizeAnswer(rawInput);
     const expected = normalizeAnswer(controlPlate.analysis.normal || "");
     const attemptNumber = controlAttempts + 1;
     setControlAttempts(attemptNumber);
@@ -323,19 +324,20 @@ export default function IshiharaTest() {
     }
   };
 
-  const handleAnswer = () => {
+  const handleAnswer = (overrideAnswer?: string) => {
     if (!manifest || completed || submitting) return;
     if (phase === "control") {
-      handleControlAnswer();
+      handleControlAnswer(overrideAnswer);
       return;
     }
-    if (!userInput.trim()) return;
+    const rawAnswer = overrideAnswer ?? userInput;
+    if (!rawAnswer.trim()) return;
 
     const currentPlate = testPlates[currentPlateIndex];
     if (!currentPlate) return;
 
     const { normalizedAnswer, expectedNormal, alternateOutcomes, matchedOutcome, matchedOutcomeLabel, correct } =
-      evaluateAnswer(currentPlate, userInput);
+      evaluateAnswer(currentPlate, rawAnswer);
 
     const timingPayload = completeQuestion(`plate-${currentPlate.id}`, `Plate ${currentPlate.id}`);
 
@@ -343,7 +345,7 @@ export default function IshiharaTest() {
 
     const newAnswer: TestAnswer = {
       plateId: currentPlate.id,
-      answer: userInput,
+      answer: rawAnswer,
       normalizedAnswer,
       expectedNormal,
       alternateOutcomes,
@@ -773,7 +775,12 @@ export default function IshiharaTest() {
                     autoFocus
                   />
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    <Button variant="outline" onClick={() => setUserInput("nothing")} className="flex-1 rounded-2xl">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleAnswer("nothing")}
+                      disabled={submitting}
+                      className="flex-1 rounded-2xl"
+                    >
                       Mark as Nothing
                     </Button>
                     <Button
