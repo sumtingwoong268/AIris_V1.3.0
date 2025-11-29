@@ -501,7 +501,7 @@ export default function D15Test() {
               </div>
 
               <div className="overflow-x-auto rounded-xl border border-border/60 bg-muted/20 p-3">
-                <div className="flex min-w-full items-center gap-3">
+                <div className="flex min-w-max items-center gap-2">
                   {arrangement.map((cap) => {
                     const [r, g, b] = labToSrgb(cap.lab);
                     const color = rgbToHex([r, g, b]);
@@ -512,11 +512,15 @@ export default function D15Test() {
                         onDragStart={() => handleDragStart(cap.capId, cap.isFixed)}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={() => handleDrop(cap.capId)}
-                        className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-border/80 bg-white shadow-sm transition hover:-translate-y-0.5 dark:bg-slate-900"
+                        className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border/80 bg-white shadow-sm transition hover:-translate-y-0.5 dark:bg-slate-900 sm:h-12 sm:w-12 md:h-14 md:w-14"
                         aria-label={cap.isFixed ? "Fixed anchor cap" : "Movable cap"}
                       >
                         <div
-                          className={cap.isFixed ? "h-12 w-12 rounded-full ring-2 ring-primary/70 ring-offset-2 ring-offset-white dark:ring-offset-slate-900" : "h-12 w-12 rounded-full"}
+                          className={
+                            cap.isFixed
+                              ? "h-12 w-12 rounded-full ring-2 ring-primary/70 ring-offset-1 ring-offset-white dark:ring-offset-slate-900 sm:h-10 sm:w-10"
+                              : "h-12 w-12 rounded-full sm:h-10 sm:w-10"
+                          }
                           style={{ background: color, border: cap.isFixed ? undefined : "1px solid hsl(var(--border))" }}
                         />
                         {cap.isFixed && (
