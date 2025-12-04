@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useXP } from "@/hooks/useXP";
 import { XPBar } from "@/components/XPBar";
@@ -433,9 +433,11 @@ export default function Dashboard() {
               <BookOpen className="mr-2 h-4 w-4" />
               Blogs
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="px-3">
-              <User className="mr-2 h-4 w-4" />
-              Profile
+            <Button asChild variant="ghost" size="sm" className="px-3">
+              <Link to="/profile">
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </Link>
             </Button>
           </nav>
         </div>
