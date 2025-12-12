@@ -165,6 +165,8 @@ export default function Friends() {
     const { data, error } = await supabase
       .from("profiles")
       .select("id, display_name, username, avatar_url, current_streak, xp")
+      .order("current_streak", { ascending: false, nullsLast: true })
+      .order("xp", { ascending: false, nullsLast: true })
       .order("display_name", { ascending: true, nullsFirst: true })
       .order("username", { ascending: true });
 
