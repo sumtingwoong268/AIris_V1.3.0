@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Copy, Flame, Trophy, UserPlus, Check, X } from "lucide-react";
+import { ArrowLeft, Copy, Flame, Trophy, UserPlus, Check, X, Users } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { sanitizeUsername } from "@/utils/username";
 import { useFriendRequests } from "@/context/FriendRequestsContext";
@@ -26,6 +26,7 @@ export default function Friends() {
   const { refreshPending, pendingRequests, loading: pendingLoading } = useFriendRequests();
   const [friends, setFriends] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [usernameInput, setUsernameInput] = useState("");
   const [selfProfile, setSelfProfile] = useState<{
     display_name: string | null;
@@ -77,6 +78,7 @@ export default function Friends() {
     if (user) {
       fetchFriends();
       fetchLeaderboard();
+      fetchAllUsers();
       void refreshPending();
       void fetchSelfProfile();
     }
@@ -157,6 +159,22 @@ export default function Friends() {
     if (data) {
       setLeaderboard(data);
     }
+  };
+
+  const fetchAllUsers = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, display_name, username, avatar_url, current_streak, xp")
+      .order("display_name", { ascending: true, nullsFirst: true })
+      .order("username", { ascending: true });
+
+    if (error) {
+      console.error("fetchAllUsers error:", error);
+      setAllUsers([]);
+      return;
+    }
+
+    setAllUsers(data ?? []);
   };
 
   const handleAddFriend = async () => {
@@ -415,49 +433,122 @@ export default function Friends() {
           </TabsList>
 
           <TabsContent value="leaderboard" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-level" />
+            <Tabs defaultValue="weekly" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-white/60 p-1 shadow-inner backdrop-blur dark:bg-slate-900/60">
+                <TabsTrigger
+                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-500 data-[state=active]:text-white"
+                  value="weekly"
+                >
                   Weekly Streak Leaders
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {leaderboard.map((profile, index) => (
-                  <div
-                    key={profile.id}
-                    className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 transition-transform hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-slate-900/60"
-                  >
-                    <div className="flex items-center gap-4">
+                </TabsTrigger>
+                <TabsTrigger
+                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-500 data-[state=active]:text-white"
+                  value="all-users"
+                >
+                  All Users
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="weekly" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-level" />
+                      Weekly Streak Leaders
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {leaderboard.map((profile, index) => (
                       <div
-                        className={`flex h-8 w-8 items-center justify-center rounded-full font-bold ${
-                          index === 0
-                            ? "bg-level text-white"
-                            : index === 1
-                            ? "bg-muted-foreground/20"
-                            : index === 2
-                            ? "bg-streak/20"
-                            : "bg-muted"
-                        }`}
+                        key={profile.id}
+                        className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 transition-transform hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-slate-900/60"
                       >
-                        {index + 1}
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`flex h-8 w-8 items-center justify-center rounded-full font-bold ${
+                              index === 0
+                                ? "bg-level text-white"
+                                : index === 1
+                                ? "bg-muted-foreground/20"
+                                : index === 2
+                                ? "bg-streak/20"
+                                : "bg-muted"
+                            }`}
+                          >
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900 dark:text-slate-100">
+                              {profile.display_name || profile.username}
+                            </p>
+                            <p className="text-sm text-muted-foreground">{profile.username}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Level {Math.floor((profile.xp || 0) / 100) + 1}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-streak">
+                          <Flame className="h-5 w-5" />
+                          <span className="text-lg font-bold">{profile.current_streak}</span>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-slate-900 dark:text-slate-100">
-                          {profile.display_name || profile.username}
-                        </p>
-                        <p className="text-sm text-muted-foreground">{profile.username}</p>
-                        <p className="text-sm text-muted-foreground">Level {Math.floor(profile.xp / 100) + 1}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-streak">
-                      <Flame className="h-5 w-5" />
-                      <span className="text-lg font-bold">{profile.current_streak}</span>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+                    ))}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="all-users" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-primary" />
+                      All Users
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {allUsers.length === 0 ? (
+                      <p className="rounded-2xl border border-dashed border-muted py-8 text-center text-muted-foreground">
+                        No users found yet.
+                      </p>
+                    ) : (
+                      allUsers.map((profile) => (
+                        <div
+                          key={profile.id}
+                          className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-slate-900/60"
+                        >
+                          <div className="flex items-center gap-3">
+                            {profile.avatar_url ? (
+                              <img
+                                src={profile.avatar_url}
+                                alt={profile.display_name || profile.username}
+                                className="h-10 w-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary font-bold text-white">
+                                {(profile.display_name?.[0] || profile.username?.[1] || "?").toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-semibold text-slate-900 dark:text-slate-100">
+                                {profile.display_name || profile.username}
+                              </p>
+                              <p className="text-sm text-muted-foreground">{profile.username}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Level {Math.floor((profile.xp || 0) / 100) + 1} • Streak: {profile.current_streak} weeks
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 text-primary">
+                            <Flame className="h-5 w-5" />
+                            <span className="font-semibold">{profile.current_streak}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="friends" className="space-y-4">

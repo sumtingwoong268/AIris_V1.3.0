@@ -21,17 +21,53 @@ export default function Auth() {
   useEffect(() => {
     const checkSetupStatus = async () => {
       if (user) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("profiles")
-          .select("setup_completed")
+          .select("id, setup_completed, display_name, username, privacy_accepted")
           .eq("id", user.id)
-          .single();
-        
-        if (data && !data.setup_completed) {
-          navigate("/setup");
-        } else {
+          .maybeSingle();
+
+        if (error) {
+          console.error("Failed to fetch profile during auth:", error);
           navigate("/dashboard");
+          return;
         }
+
+        if (!data) {
+          const { error: insertError } = await supabase.from("profiles").insert({
+            id: user.id,
+            display_name: user.user_metadata?.full_name ?? user.email ?? null,
+            avatar_url: user.user_metadata?.avatar_url ?? null,
+            privacy_accepted: false,
+          });
+          if (insertError) {
+            console.error("Failed to create missing profile during auth:", insertError);
+          }
+          navigate("/setup");
+          return;
+        }
+
+        if (data.setup_completed) {
+          navigate("/dashboard");
+          return;
+        }
+
+        const hasExistingDetails = Boolean(data.display_name && data.username);
+        if (hasExistingDetails) {
+          const { error: autoCompleteError } = await supabase
+            .from("profiles")
+            .update({ setup_completed: true, updated_at: new Date().toISOString() })
+            .eq("id", user.id);
+          if (autoCompleteError) {
+            console.error("Failed to auto-complete setup flag:", autoCompleteError);
+            navigate("/setup");
+            return;
+          }
+          navigate("/dashboard");
+          return;
+        }
+
+        navigate("/setup");
       }
     };
     
