@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseConfigError } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 const STORAGE_KEY = "airis-theme";
@@ -32,6 +32,13 @@ export function useDarkModePreference() {
       setDarkMode(value);
       setLoading(false);
     };
+
+    if (supabaseConfigError) {
+      apply(readLocalPreference() ?? false);
+      return () => {
+        cancelled = true;
+      };
+    }
 
     if (!user) {
       apply(readLocalPreference() ?? false);
@@ -74,7 +81,7 @@ export function useDarkModePreference() {
   const updateDarkMode = useCallback(
     async (value: boolean) => {
       setDarkMode(value);
-      if (!user) {
+      if (!user || supabaseConfigError) {
         writeLocalPreference(value);
         return;
       }

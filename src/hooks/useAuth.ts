@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseConfigError } from "@/integrations/supabase/client";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -8,6 +8,12 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (supabaseConfigError) {
+      console.error(supabaseConfigError);
+      setLoading(false);
+      return;
+    }
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
@@ -28,6 +34,7 @@ export function useAuth() {
   }, []);
 
   const signOut = async () => {
+    if (supabaseConfigError) return;
     await supabase.auth.signOut();
   };
 

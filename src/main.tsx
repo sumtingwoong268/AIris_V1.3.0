@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { supabase } from "./integrations/supabase/client";
+import { supabase, supabaseConfigError } from "./integrations/supabase/client";
 
 const STORAGE_KEY = "airis-theme";
 
@@ -19,9 +19,20 @@ const ensureInitialTheme = async () => {
     applyTheme(prefersDark);
   }
 
+  if (supabaseConfigError) {
+    console.error(supabaseConfigError);
+    return;
+  }
+
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
+
+  if (userError) {
+    console.error("Failed to load user for theme preference:", userError);
+    return;
+  }
 
   if (!user) return;
 
