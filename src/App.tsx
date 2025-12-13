@@ -33,7 +33,7 @@ const App = () => (
       <LanguageProvider>
         <Toaster />
         <Sonner />
-        <div className="min-h-screen w-full bg-background text-foreground">
+        <div className="min-h-screen w-full bg-background text-foreground" data-translate-root>
           <BrowserRouter>
             <FriendRequestProvider>
               <div className="fixed right-[4.5rem] top-3 z-[100] flex gap-2">

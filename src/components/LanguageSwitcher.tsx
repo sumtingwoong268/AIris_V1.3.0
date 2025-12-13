@@ -3,8 +3,6 @@ import { Languages } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { LANGUAGE_OPTIONS, type LanguageCode, useLanguage } from "@/context/LanguageContext";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +14,6 @@ interface LanguageSwitcherProps {
 
 export function LanguageSwitcher({ compact = false, className, size = "default" }: LanguageSwitcherProps) {
   const { language, setLanguage, t } = useLanguage();
-  const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -25,17 +22,9 @@ export function LanguageSwitcher({ compact = false, className, size = "default" 
   const handleLanguageChange = async (code: LanguageCode) => {
     if (code === language) return;
     const nextLabel = LANGUAGE_OPTIONS.find((option) => option.code === code)?.label ?? code;
-    setLanguage(code);
-    if (!user) return;
-
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ preferred_language: code, updated_at: new Date().toISOString() })
-        .eq("id", user.id);
-
-      if (error) throw error;
+      setLanguage(code);
       toast({
         title: t("nav.language"),
         description: `${currentLanguageLabel} → ${nextLabel}`,
@@ -44,7 +33,7 @@ export function LanguageSwitcher({ compact = false, className, size = "default" 
       console.error("Failed to update language", error);
       toast({
         title: "Language not saved",
-        description: error.message ?? "We couldn't save your language preference.",
+        description: error.message ?? "We couldn't switch your language.",
         variant: "destructive",
       });
     } finally {

@@ -15,7 +15,7 @@ import { ArrowLeft, Moon, Sun, Upload, Trophy, Star, Zap, Shield } from "lucide-
 import { useDarkModePreference } from "@/hooks/useDarkModePreference";
 import logo from "@/assets/logo.png";
 import { sanitizeUsername, usernameIsAvailable, USERNAME_MAX_LENGTH } from "@/utils/username";
-import { useLanguage, LANGUAGE_OPTIONS, type LanguageCode } from "@/context/LanguageContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ export default function Profile() {
   const { xp } = useXP(user?.id);
   const level = Math.floor(xp / 100) + 1;
   const { toast } = useToast();
-  const { t, setLanguage, language } = useLanguage();
+  const { t } = useLanguage();
   const symptomOptions = [
     "blurred_distance",
     "near_strain",
@@ -47,9 +47,6 @@ export default function Profile() {
   ];
 
   const familyOptions = ["high_myopia", "glaucoma", "color_blindness", "macular_disease", "keratoconus"];
-
-  const ensureLanguageCode = (value: string | null | undefined): LanguageCode =>
-    LANGUAGE_OPTIONS.some((option) => option.code === value) ? (value as LanguageCode) : "en";
 
   // Username management
   const [username, setUsername] = useState("");
@@ -88,7 +85,6 @@ export default function Profile() {
     !!normalizedUsernameDraft && normalizedUsernameDraft !== username && usernameTiming.canChange;
 
   // Profile fields
-  const [preferredLanguage, setPreferredLanguage] = useState<LanguageCode>(language);
   const [displayName, setDisplayName] = useState("");
   const [fullName, setFullName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -171,14 +167,11 @@ export default function Profile() {
           setMedicationDetails(profile.medication_details || "");
           setBio(profile.bio || "");
           setAvatarUrl(profile.avatar_url || "");
-          const preferred = ensureLanguageCode(profile.preferred_language);
-          setPreferredLanguage(preferred);
-          setLanguage(preferred);
         }
       };
       fetchProfile();
     }
-  }, [setLanguage, user]);
+  }, [user]);
 
   const handleUsernameUpdate = async () => {
     if (!user) return;
@@ -270,7 +263,6 @@ export default function Profile() {
           medication_details: medicationDetails,
           bio,
           avatar_url: avatarUrl,
-          preferred_language: preferredLanguage,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
@@ -572,29 +564,6 @@ export default function Profile() {
                   <div>
                     <Label>Ethnicity (Optional)</Label>
                     <Input value={ethnicity} onChange={(e) => setEthnicity(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label>{t("profile.preferredLanguage")}</Label>
-                    <Select
-                      value={preferredLanguage}
-                      onValueChange={(val) => {
-                        const nextLanguage = ensureLanguageCode(val);
-                        setPreferredLanguage(nextLanguage);
-                        setLanguage(nextLanguage);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("profile.preferredLanguage")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {LANGUAGE_OPTIONS.map((option) => (
-                          <SelectItem key={option.code} value={option.code}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="mt-1 text-xs text-muted-foreground">{t("profile.preferredLanguageHelper")}</p>
                   </div>
                 </div>
               </div>

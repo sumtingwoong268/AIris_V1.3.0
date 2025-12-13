@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { restoreTree, translateTree } from "@/utils/translation";
 
 export const LANGUAGE_OPTIONS = [
   { code: "en", label: "English" },
@@ -141,6 +142,39 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLanguage = (code: LanguageCode) => {
     setLanguageState(code);
   };
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.lang = language;
+
+    const root = document.querySelector<HTMLElement>("[data-translate-root]");
+    if (!root) return;
+
+    if (language === "en") {
+      restoreTree(root);
+      return;
+    }
+
+    const controller = new AbortController();
+    const runTranslation = () =>
+      translateTree(root, language, controller.signal).catch((error) => {
+        if (error?.name === "AbortError") return;
+        console.error("Automatic translation failed", error);
+      });
+
+    runTranslation();
+
+    const observer = new MutationObserver(() => {
+      runTranslation();
+    });
+
+    observer.observe(root, { childList: true, subtree: true, characterData: true });
+
+    return () => {
+      controller.abort();
+      observer.disconnect();
+    };
+  }, [language]);
 
   const t = (key: TranslationKey) => {
     const translation = translationTable[language]?.[key] ?? translationTable.en[key];
