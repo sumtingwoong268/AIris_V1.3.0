@@ -12,11 +12,13 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { sanitizeUsername, usernameIsAvailable, USERNAME_MAX_LENGTH } from "@/utils/username";
+import { LANGUAGE_OPTIONS, type LanguageCode, useLanguage } from "@/context/LanguageContext";
 
 export default function Setup() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setLanguage, language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
@@ -24,6 +26,9 @@ export default function Setup() {
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
+
+  const ensureLanguageCode = (value: string | null | undefined): LanguageCode =>
+    LANGUAGE_OPTIONS.some((option) => option.code === value) ? (value as LanguageCode) : "en";
   
   const [formData, setFormData] = useState({
     display_name: "",
@@ -40,6 +45,7 @@ export default function Setup() {
     eye_surgeries: "",
     uses_eye_medication: false,
     medication_details: "",
+    preferred_language: ensureLanguageCode(language),
     privacy_accepted: false,
   });
 
@@ -222,6 +228,7 @@ export default function Setup() {
           symptoms: mergedSymptoms,
           eye_conditions: mergedEyeConditions,
           family_history: mergedFamilyHistory,
+          preferred_language: ensureLanguageCode(formData.preferred_language),
           setup_completed: true,
           updated_at: new Date().toISOString(),
         })
@@ -379,6 +386,27 @@ export default function Setup() {
                   <div>
                     <Label>Ethnicity (Optional)</Label>
                     <Input value={formData.ethnicity} onChange={e => setFormData({...formData, ethnicity: e.target.value})} />
+                  </div>
+                  <div>
+                    <Label>Preferred Language</Label>
+                    <Select
+                      value={formData.preferred_language}
+                      onValueChange={(val) => {
+                        const nextLanguage = ensureLanguageCode(val);
+                        setFormData({ ...formData, preferred_language: nextLanguage });
+                        setLanguage(nextLanguage);
+                      }}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGE_OPTIONS.map((option) => (
+                          <SelectItem key={option.code} value={option.code}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="mt-1 text-xs text-muted-foreground">This helps personalize your experience.</p>
                   </div>
                 </div>
               </div>

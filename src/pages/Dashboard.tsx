@@ -11,6 +11,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/airis-logo-new.png";
 import { XPBanner } from "@/components/dashboard/XPBanner";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   Eye,
   Grid3x3,
@@ -102,6 +104,7 @@ export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const { xp } = useXP(user?.id);
   const { pendingCount: pendingFriendRequests } = useFriendRequests();
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<any>(null);
   const [testStats, setTestStats] = useState<{ avgScore: number, testsCompleted: number }>({ avgScore: 0, testsCompleted: 0 });
   const [recentTests, setRecentTests] = useState<DashboardTestResult[]>([]);
@@ -411,34 +414,35 @@ export default function Dashboard() {
           <nav className="hidden md:flex items-center gap-1">
             <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
               <Users className="mr-2 h-4 w-4 text-emerald-500" />
-              Friends
+              {t("nav.friends")}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/achievements")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
               <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
-              Achievements
+              {t("nav.achievements")}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/reports")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
               <FileText className="mr-2 h-4 w-4 text-blue-500" />
-              Reports
+              {t("nav.reports")}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/statistics")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
               <Award className="mr-2 h-4 w-4 text-purple-500" />
-              Statistics
+              {t("nav.statistics")}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/blogs")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
               <BookOpen className="mr-2 h-4 w-4 text-indigo-500" />
-              Blogs
+              {t("nav.blogs")}
             </Button>
           </nav>
 
           <nav className="flex items-center gap-2">
+            <LanguageSwitcher compact size="sm" />
             <Button asChild variant="ghost" size="sm" className="rounded-full px-2 lg:px-4 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
               <Link to="/profile" className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold dark:from-indigo-900 dark:to-violet-900 dark:border-indigo-800 dark:text-indigo-300">
                   {profile?.username?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
                 </div>
                 <span className="hidden lg:block text-sm font-medium text-slate-700 dark:text-slate-200">
-                  {profile?.username || "Profile"}
+                  {profile?.username || t("nav.profile")}
                 </span>
               </Link>
             </Button>

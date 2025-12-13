@@ -22,42 +22,49 @@ import D15DesaturatedTest from "./pages/tests/D15DesaturatedTest";
 import NotFound from "./pages/NotFound";
 import { FriendRequestProvider } from "./context/FriendRequestsContext";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { LanguageProvider } from "./context/LanguageContext";
+import { LanguageSwitcher } from "./components/LanguageSwitcher";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <div className="min-h-screen w-full bg-background text-foreground">
-        <BrowserRouter>
-          <FriendRequestProvider>
-            <ThemeToggle />
-            <Routes>
-              <Route path="/" element={<Auth />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/setup" element={<Setup />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/friends" element={<Friends />} />
-              <Route path="/achievements" element={<Achievements />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/blogs" element={<Blogs />} />
-              <Route path="/blogs/:slug" element={<BlogArticle />} />
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/tests/ishihara" element={<IshiharaTest />} />
-            <Route path="/tests/visual-acuity" element={<VisualAcuityTest />} />
-            <Route path="/tests/amsler" element={<AmslerTest />} />
-            <Route path="/tests/reading-stress" element={<ReadingStressTest />} />
-            <Route path="/tests/d15" element={<D15Test />} />
-            <Route path="/tests/d15-desaturated" element={<D15DesaturatedTest />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          </FriendRequestProvider>
-        </BrowserRouter>
-      </div>
+      <LanguageProvider>
+        <Toaster />
+        <Sonner />
+        <div className="min-h-screen w-full bg-background text-foreground">
+          <BrowserRouter>
+            <FriendRequestProvider>
+              <div className="fixed right-[4.5rem] top-3 z-[100] flex gap-2">
+                <LanguageSwitcher compact size="sm" />
+              </div>
+              <ThemeToggle />
+              <Routes>
+                <Route path="/" element={<Auth />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/setup" element={<Setup />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/friends" element={<Friends />} />
+                <Route path="/achievements" element={<Achievements />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/blogs" element={<Blogs />} />
+                <Route path="/blogs/:slug" element={<BlogArticle />} />
+                <Route path="/statistics" element={<Statistics />} />
+                <Route path="/tests/ishihara" element={<IshiharaTest />} />
+                <Route path="/tests/visual-acuity" element={<VisualAcuityTest />} />
+                <Route path="/tests/amsler" element={<AmslerTest />} />
+                <Route path="/tests/reading-stress" element={<ReadingStressTest />} />
+                <Route path="/tests/d15" element={<D15Test />} />
+                <Route path="/tests/d15-desaturated" element={<D15DesaturatedTest />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </FriendRequestProvider>
+          </BrowserRouter>
+        </div>
+      </LanguageProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
