@@ -136,122 +136,130 @@ export default function VisualAcuityTest() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-slate-900/70 supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-900/40">
         <div className="container mx-auto flex items-center gap-3 px-4 py-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-white/20">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <img src={logo} alt="AIris" className="h-10" />
+          <div className="flex items-center gap-2" onClick={() => navigate("/dashboard")}>
+            <img src={logo} alt="AIris" className="h-8 drop-shadow-md cursor-pointer" />
+            <span className="font-bold tracking-tight">Visual Acuity</span>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto max-w-3xl space-y-8 px-4 py-10">
-        <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
-          <span className="pointer-events-none absolute -left-12 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-white/25 blur-3xl" />
-          <span className="pointer-events-none absolute -right-10 bottom-0 h-36 w-36 rounded-full bg-sky-400/30 blur-3xl" />
-          <CardContent className="relative z-10 space-y-6 p-8">
-            <div className="space-y-3">
-              <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Visual acuity</p>
-              <h1 className="text-3xl font-semibold">Measure how sharply you can recognize directional cues</h1>
-              <p className="text-sm text-white/80">
-                Work through eight stages of gradually shrinking arrows. Stay focused to maximize your score and earn up
-                to 25 XP.
+        <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 shadow-2xl text-white">
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+          <div className="relative z-10 grid gap-8 md:grid-cols-[1.5fr,1fr] items-center">
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-white/70">Visual acuity</p>
+                <h1 className="text-3xl font-bold md:text-4xl">Measure your focus</h1>
+              </div>
+              <p className="text-indigo-100 max-w-lg leading-relaxed">
+                Work through eight stages of gradually shrinking arrows. Identify the direction to test your sharpness.
               </p>
             </div>
-            <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
-              <p className="text-xs uppercase tracking-wide text-white/70">Your current XP</p>
-              <div className="mt-3">
-                <XPBar xp={xp} />
+            <div className="rounded-2xl bg-white/10 border border-white/10 p-6 backdrop-blur-md">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-white/80">Potential XP Reward</span>
+                <span className="text-lg font-bold text-yellow-300">up to 40 XP</span>
               </div>
+              <XPBar xp={xp} />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {!started ? (
-          <Card>
+          <Card className="glass-card">
             <CardContent className="space-y-6 p-8 text-center">
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Before you begin</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Before you begin</h2>
+              <p className="text-base text-muted-foreground max-w-lg mx-auto">
                 Make sure your screen brightness is comfortable and you’re seated about arm’s length from the display.
               </p>
-              <div className="space-y-2 rounded-2xl border border-white/60 bg-white/70 p-6 text-left text-sm text-muted-foreground shadow-sm dark:border-white/10 dark:bg-slate-900/60">
-                <p className="font-semibold text-slate-900 dark:text-slate-100">Instructions</p>
-                <ul className="list-disc space-y-1 pl-6">
-                  <li>Identify which direction the arrow is pointing.</li>
-                  <li>Arrows shrink at each level to challenge your acuity.</li>
-                  <li>Complete all 8 rounds to earn the full XP reward.</li>
-                </ul>
-              </div>
-              <Button
-                size="lg"
-                onClick={handleStart}
-                className="w-full bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
-              >
-                Start Test
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="space-y-8 p-8">
-              <div className="text-center">
-                <p className="mb-4 text-sm text-muted-foreground">
-                  Level {level} of 8 • Correct answers {correct} / 8
-                </p>
-                <div className="flex items-center justify-center py-12">
-                  {direction === "up" && <ArrowUp size={iconSize} className="text-primary" />}
-                  {direction === "down" && <ArrowDown size={iconSize} className="text-primary" />}
-                  {direction === "left" && <ArrowLeft size={iconSize} className="text-primary" />}
-                  {direction === "right" && <ArrowRight size={iconSize} className="text-primary" />}
+
+              <div className="grid gap-4 md:grid-cols-3 text-left">
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
+                  <h3 className="font-semibold mb-1">Identify</h3>
+                  <p className="text-xs text-muted-foreground">Recognize the arrow's direction correctly.</p>
+                </div>
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
+                  <h3 className="font-semibold mb-1">Focus</h3>
+                  <p className="text-xs text-muted-foreground">Arrows shrink at each level to challenge you.</p>
+                </div>
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
+                  <h3 className="font-semibold mb-1">Complete</h3>
+                  <p className="text-xs text-muted-foreground">Finish all 8 rounds to earn full XP.</p>
                 </div>
               </div>
 
-              <TestTimerDisplay
-                sessionMs={sessionElapsedMs}
-                questionMs={questionElapsedMs}
-                questionLabel={activeQuestionLabel || `Level ${level}`}
-              />
+              <div className="pt-4">
+                <Button
+                  size="lg"
+                  onClick={handleStart}
+                  className="w-full max-w-xs rounded-full bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-105 transition-all duration-300"
+                >
+                  Start Sensitivity Test
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="glass-card border-none shadow-none bg-transparent">
+            <CardContent className="space-y-8 p-0">
+              <div className="flex flex-col items-center justify-center py-10 min-h-[400px] rounded-3xl bg-white/50 border border-white/20 backdrop-blur-sm dark:bg-slate-900/50">
+                <div className="mb-8 flex items-center gap-4 text-sm font-medium text-muted-foreground bg-white/40 px-4 py-2 rounded-full border border-white/20 dark:bg-slate-800/40">
+                  <span>Level {level} of 8</span>
+                  <div className="h-4 w-px bg-border" />
+                  <span>Correct: {correct}</span>
+                </div>
 
-              <div className="space-y-3">
-                <p className="text-center font-medium text-slate-900 dark:text-slate-100">
-                  Which direction is the arrow pointing?
+                <div className="relative flex items-center justify-center h-48 w-48 transition-all">
+                  {/* We use a key to force re-animation if needed, or just standard render */}
+                  <div key={`${level}-${direction}`} className="animate-in zoom-in-50 duration-300">
+                    {direction === "up" && <ArrowUp size={iconSize} className="text-primary drop-shadow-lg" />}
+                    {direction === "down" && <ArrowDown size={iconSize} className="text-primary drop-shadow-lg" />}
+                    {direction === "left" && <ArrowLeft size={iconSize} className="text-primary drop-shadow-lg" />}
+                    {direction === "right" && <ArrowRight size={iconSize} className="text-primary drop-shadow-lg" />}
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <TestTimerDisplay
+                    sessionMs={sessionElapsedMs}
+                    questionMs={questionElapsedMs}
+                    questionLabel={activeQuestionLabel || `Level ${level}`}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 max-w-2xl mx-auto">
+                <p className="text-center text-lg font-medium text-slate-900 dark:text-slate-100">
+                  Which direction is it pointing?
                 </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => handleAnswer("up")}
-                    className="h-20 rounded-2xl border border-primary/20 bg-white/70 text-slate-900 hover:border-primary hover:bg-primary/10 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-100"
-                    disabled={completed}
-                  >
-                    <ArrowUp className="h-6 w-6" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => handleAnswer("down")}
-                    className="h-20 rounded-2xl border border-primary/20 bg-white/70 text-slate-900 hover:border-primary hover:bg-primary/10 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-100"
-                    disabled={completed}
-                  >
-                    <ArrowDown className="h-6 w-6" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => handleAnswer("left")}
-                    className="h-20 rounded-2xl border border-primary/20 bg-white/70 text-slate-900 hover:border-primary hover:bg-primary/10 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-100"
-                    disabled={completed}
-                  >
-                    <ArrowLeft className="h-6 w-6" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => handleAnswer("right")}
-                    className="h-20 rounded-2xl border border-primary/20 bg-white/70 text-slate-900 hover:border-primary hover:bg-primary/10 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-100"
-                    disabled={completed}
-                  >
-                    <ArrowRight className="h-6 w-6" />
+                <div className="grid grid-cols-2 gap-4">
+                  {directions.map((dir) => (
+                    <Button
+                      key={dir}
+                      variant="outline"
+                      onClick={() => handleAnswer(dir)}
+                      disabled={completed}
+                      className="h-24 rounded-2xl border-2 border-transparent bg-white shadow-sm hover:border-primary/50 hover:bg-primary/5 hover:shadow-md transition-all active:scale-95 dark:bg-slate-800 dark:hover:bg-slate-700"
+                    >
+                      {dir === "up" && <ArrowUp className="h-8 w-8" />}
+                      {dir === "down" && <ArrowDown className="h-8 w-8" />}
+                      {dir === "left" && <ArrowLeft className="h-8 w-8" />}
+                      {dir === "right" && <ArrowRight className="h-8 w-8" />}
+                    </Button>
+                  ))}
+                </div>
+                <div className="text-center">
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={() => navigate("/dashboard")}>
+                    End Test
                   </Button>
                 </div>
               </div>

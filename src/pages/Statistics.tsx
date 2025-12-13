@@ -25,6 +25,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, XAxis, YAxis } from "recharts";
 import { format, formatDistanceToNow } from "date-fns";
 import { formatDurationMs } from "@/hooks/useTestTimer";
+import logo from "@/assets/airis-logo-new.png";
 
 type TestResult = {
   id?: string;
@@ -373,102 +374,83 @@ export default function Statistics() {
           : "Holding steady session to session";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <div className="container mx-auto max-w-6xl px-4 py-10 lg:px-6">
-        <Button variant="ghost" onClick={() => navigate("/dashboard")} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-        </Button>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+        <header className="pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-slate-100 -ml-2 dark:hover:bg-slate-800">
+              <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+            </Button>
+            <div
+              className="flex cursor-pointer items-center gap-3 group"
+              onClick={() => navigate("/dashboard")}
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md group-hover:scale-105 transition-transform">
+                <img src={logo} alt="AIris" className="h-6 w-6 object-contain brightness-0 invert" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold leading-none text-slate-900 dark:text-white">AIris Stats</span>
+              </div>
+            </div>
+          </div>
+        </header>
+      </div>
 
+      <div className="container mx-auto max-w-6xl px-4 pt-32 pb-20 lg:px-6">
         <section className="grid gap-6 xl:grid-cols-[2fr,1fr]">
-          <Card className="relative overflow-hidden rounded-[32px] border border-white/20 bg-gradient-to-br from-primary via-blue-600 to-indigo-600 text-white shadow-2xl">
-            <span className="absolute -top-24 -left-6 h-72 w-72 rounded-full bg-white/40 blur-3xl" />
-            <span className="absolute -bottom-24 right-0 h-60 w-60 rounded-full bg-sky-400/40 blur-3xl" />
-            <CardContent className="relative z-10 space-y-8 p-8 lg:p-10">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-2">
-                  <p className="text-sm uppercase tracking-wide text-white/70">Insight Center</p>
-                  <h1 className="text-4xl font-bold lg:text-5xl">Your Statistics</h1>
-                  <p className="max-w-xl text-sm text-white/80">
-                    Monitor patterns, celebrate wins, and keep your eye health journey on track with fresh insights.
+          <div className="relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-2xl p-1">
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+            <div className="relative z-10 rounded-[2.3rem] bg-white/5 p-8 backdrop-blur-sm lg:p-10 h-full flex flex-col justify-between">
+
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between mb-8">
+                <div className="space-y-3">
+                  <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-white/70 font-bold bg-white/10 px-3 py-1 rounded-full w-fit">
+                    <Activity className="h-3 w-3" /> Insight Center
+                  </p>
+                  <h1 className="text-4xl font-extrabold lg:text-5xl tracking-tight">Your Vision Stats</h1>
+                  <p className="max-w-md text-indigo-100/90 leading-relaxed text-lg">
+                    Monitor patterns, celebrate wins, and keep your eye health on track.
                   </p>
                 </div>
-                <div className="rounded-3xl bg-white/15 px-6 py-5 text-center shadow-lg backdrop-blur">
-                  <span className="text-xs uppercase tracking-wide text-white/70">Best performance</span>
-                  <div className="mt-2 text-4xl font-bold">{bestScore ? `${bestScore}%` : "-"}</div>
-                  <p className="text-xs text-white/70">{bestScoreLabel}</p>
+                <div className="rounded-3xl bg-white/10 border border-white/10 px-6 py-5.5 text-center backdrop-blur-md shadow-lg">
+                  <span className="text-[10px] uppercase tracking-wider text-white/70 font-bold block mb-1">Best performance</span>
+                  <div className="text-4xl font-extrabold animate-fade-in">{bestScore ? `${bestScore}%` : "-"}</div>
+                  <p className="text-xs text-white/70 mt-1 font-medium">{bestScoreLabel}</p>
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-3xl border border-white/15 bg-white/15 p-4 shadow-sm backdrop-blur">
-                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-white/70">
-                    <Target className="h-4 w-4" />
-                    Total Tests
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-md hover:bg-white/20 transition-colors">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white/70 mb-2">
+                    <Target className="h-3 w-3" /> Total Tests
                   </div>
-                  <div className="mt-3 text-3xl font-semibold">{totalTests}</div>
-                  <p className="text-xs text-white/60">Lifetime check-ins</p>
+                  <div className="text-2xl font-bold">{totalTests}</div>
                 </div>
-                <div className="rounded-3xl border border-white/15 bg-white/15 p-4 shadow-sm backdrop-blur">
-                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-white/70">
-                    <Award className="h-4 w-4" />
-                    Average Score
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-md hover:bg-white/20 transition-colors">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white/70 mb-2">
+                    <Award className="h-3 w-3" /> Avg Score
                   </div>
-                  <div className="mt-3 text-3xl font-semibold">{averageScore}%</div>
-                  <p className="text-xs text-white/60">Across all sessions</p>
+                  <div className="text-2xl font-bold">{averageScore}%</div>
                 </div>
-                <div className="rounded-3xl border border-white/15 bg-white/15 p-4 shadow-sm backdrop-blur">
-                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-white/70">
-                    <Activity className="h-4 w-4" />
-                    Last Session
+                <div className="col-span-2 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-md hover:bg-white/20 transition-colors flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white/70 mb-1">
+                      <Activity className="h-3 w-3" /> Last Session
+                    </div>
+                    <div className="text-lg font-bold">{timeSinceLast}</div>
                   </div>
-                  <div className="mt-3 text-xl font-semibold">{timeSinceLast}</div>
-                  <p className="text-xs text-white/60">
-                    {lastResult ? formatTestLabel(lastResult.test_type) : "Run a test to get started"}
-                  </p>
-                </div>
-                <div className="rounded-3xl border border-white/15 bg-white/15 p-4 shadow-sm backdrop-blur">
-                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-white/70">
-                    {latestTrend !== null && latestTrend < 0 ? (
-                      <TrendingDown className="h-4 w-4" />
-                    ) : (
-                      <TrendingUp className="h-4 w-4" />
-                    )}
-                    Latest Change
+                  <div className="text-right">
+                    <div className="text-xs text-white/60 mb-1">Change</div>
+                    <div className="text-lg font-bold flex items-center gap-1 justify-end">
+                      {latestTrend !== null && latestTrend < 0 ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
+                      {latestChangeValue}
+                    </div>
                   </div>
-                  <div className="mt-3 text-3xl font-semibold">{latestChangeValue}</div>
-                  <p className="text-xs text-white/60">{latestChangeDescription}</p>
-                </div>
-                <div className="rounded-3xl border border-white/15 bg-white/15 p-4 shadow-sm backdrop-blur">
-                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-white/70">
-                    <Timer className="h-4 w-4" />
-                    Avg Session Time
-                  </div>
-                  <div className="mt-3 text-3xl font-semibold">
-                    {averageSessionMs ? formatDurationMs(averageSessionMs) : "--"}
-                  </div>
-                  <p className="text-xs text-white/60">
-                    {sessionDurations.length > 0
-                      ? `Across ${sessionDurations.length} timed session${sessionDurations.length === 1 ? "" : "s"}`
-                      : "Timers start the moment each test begins"}
-                  </p>
-                </div>
-                <div className="rounded-3xl border border-white/15 bg-white/15 p-4 shadow-sm backdrop-blur">
-                  <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-white/70">
-                    <Hourglass className="h-4 w-4" />
-                    Avg Question Time
-                  </div>
-                  <div className="mt-3 text-3xl font-semibold">
-                    {averageQuestionMs ? formatDurationMs(averageQuestionMs) : "--"}
-                  </div>
-                  <p className="text-xs text-white/60">
-                    {questionDurations.length > 0
-                      ? `Fastest ${formatDurationMs(fastestQuestionMs)} • Slowest ${formatDurationMs(slowestQuestionMs)}`
-                      : "Answer timings will appear as you complete sessions"}
-                  </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-[24px] border border-primary/15 bg-gradient-to-br from-white via-sky-50 to-primary/20 shadow-xl backdrop-blur dark:from-slate-900 dark:via-slate-900/80 dark:to-primary/10">
+            </div>
+          </div>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Sparkles className="h-5 w-5 text-primary" />
@@ -479,7 +461,7 @@ export default function Statistics() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-gradient-to-br from-amber-200/80 via-orange-200/80 to-rose-200/80 p-4 shadow-sm backdrop-blur dark:from-amber-500/30 dark:via-orange-500/30 dark:to-rose-500/30">
+              <div className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-gradient-to-br from-amber-50 to-amber-100/50 p-4 shadow-sm dark:from-amber-900/20 dark:to-amber-900/10">
                 <div className="rounded-full bg-primary/10 p-2 text-primary">
                   <Calendar className="h-4 w-4" />
                 </div>
@@ -490,7 +472,7 @@ export default function Statistics() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-gradient-to-br from-sky-200/80 via-blue-200/80 to-indigo-200/80 p-4 shadow-sm backdrop-blur dark:from-sky-500/30 dark:via-blue-500/30 dark:to-indigo-500/30">
+              <div className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-gradient-to-br from-blue-50 to-indigo-100/50 p-4 shadow-sm dark:from-blue-900/20 dark:to-blue-900/10">
                 <div className="rounded-full bg-primary/10 p-2 text-primary">
                   <Award className="h-4 w-4" />
                 </div>
@@ -503,7 +485,7 @@ export default function Statistics() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-gradient-to-br from-emerald-200/80 via-mint-200/80 to-teal-200/80 p-4 shadow-sm backdrop-blur dark:from-emerald-500/30 dark:via-teal-500/30 dark:to-green-500/30">
+              <div className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-gradient-to-br from-emerald-50 to-teal-100/50 p-4 shadow-sm dark:from-emerald-900/20 dark:to-emerald-900/10">
                 <div className="rounded-full bg-primary/10 p-2 text-primary">
                   <Sparkles className="h-4 w-4" />
                 </div>
@@ -523,7 +505,7 @@ export default function Statistics() {
         ) : (
           <>
             <section className="mt-10 grid gap-6 xl:grid-cols-[2fr,1fr]">
-              <Card className="border border-primary/15 bg-gradient-to-br from-white via-slate-50 to-primary/10 shadow-xl hover:shadow-2xl dark:from-slate-900 dark:via-slate-900/80 dark:to-primary/10">
+              <Card className="glass-card">
                 <CardHeader>
                   <CardTitle>Performance Trend</CardTitle>
                   <CardDescription>Your recent scores across all tests.</CardDescription>
@@ -544,7 +526,7 @@ export default function Statistics() {
                           },
                         },
                       }}
-                      className="aspect-auto h-80 rounded-[24px] bg-white/85 p-3 shadow-inner dark:bg-slate-900/60 md:h-96"
+                      className="aspect-auto h-80 rounded-[20px] bg-white/50 border border-white/20 p-3 shadow-sm backdrop-blur-sm dark:bg-slate-950/50 md:h-96"
                     >
                       <LineChart data={performanceTrendData}>
                         <CartesianGrid strokeDasharray="4 8" className="stroke-muted" />
@@ -595,7 +577,7 @@ export default function Statistics() {
                 </CardContent>
               </Card>
               <div className="grid gap-6">
-                <Card className="border border-primary/15 bg-gradient-to-br from-primary/10 via-sky-100 to-indigo-100 shadow-xl hover:shadow-2xl dark:from-slate-900 dark:via-primary/15 dark:to-indigo-950">
+                <Card className="glass-card">
                   <CardHeader>
                     <CardTitle>Monthly Activity</CardTitle>
                     <CardDescription>How often you&apos;ve checked in recently.</CardDescription>
@@ -643,7 +625,7 @@ export default function Statistics() {
                     )}
                   </CardContent>
                 </Card>
-                <Card className="border border-primary/15 bg-gradient-to-br from-white via-emerald-50 to-primary/10 shadow-xl hover:shadow-2xl dark:from-slate-900 dark:via-slate-900/80 dark:to-primary/15">
+                <Card className="glass-card">
                   <CardHeader>
                     <CardTitle>Test Mix</CardTitle>
                     <CardDescription>Where you&apos;re spending the most time.</CardDescription>
@@ -706,7 +688,7 @@ export default function Statistics() {
                     )}
                   </CardContent>
                 </Card>
-                <Card className="border border-primary/15 bg-gradient-to-br from-white via-sky-50 to-primary/10 shadow-xl hover:shadow-2xl dark:from-slate-900 dark:via-slate-900/80 dark:to-primary/10">
+                <Card className="glass-card">
                   <CardHeader>
                     <CardTitle>Session Tempo</CardTitle>
                     <CardDescription>Elapsed minutes for your most recent sessions.</CardDescription>
@@ -727,7 +709,7 @@ export default function Statistics() {
                             },
                           },
                         }}
-                        className="aspect-auto h-72 rounded-[24px] bg-white/85 p-3 shadow-inner dark:bg-slate-900/60"
+                        className="aspect-auto h-72 rounded-[20px] bg-white/50 border border-white/20 p-3 shadow-sm backdrop-blur-sm dark:bg-slate-950/50"
                       >
                         <LineChart data={sessionTrendData}>
                           <CartesianGrid strokeDasharray="4 8" className="stroke-muted" />
@@ -777,7 +759,7 @@ export default function Statistics() {
             </section>
 
             <section className="mt-10 grid gap-6 lg:grid-cols-2">
-              <Card className="overflow-hidden rounded-3xl border border-primary/15 bg-white/90 shadow-xl backdrop-blur dark:bg-slate-900/80">
+              <Card className="glass-card">
                 <CardHeader>
                   <CardTitle>Average Timing by Test</CardTitle>
                   <CardDescription>Your typical pacing for each screening.</CardDescription>
@@ -817,146 +799,207 @@ export default function Statistics() {
                   )}
                 </CardContent>
               </Card>
-              {TEST_TYPES.map((testType) => {
-                const data = getTestTypeData(testType.keys);
-                const Icon = testType.icon;
-                return (
-                  <Card key={testType.id} className="overflow-hidden rounded-3xl border border-primary/15 shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-transform">
-                    <div
-                      className={`flex items-center justify-between bg-gradient-to-br ${testType.gradient} px-5 py-4 text-white`}
-                    >
-                      <div>
-                        <p className="flex items-center gap-2 text-lg font-semibold">
-                          <Icon className="h-5 w-5" />
-                          {testType.name}
-                        </p>
-                        <p className="text-xs text-white/80">
-                          {data.count} session{data.count === 1 ? "" : "s"} completed
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold">{data.latest}%</div>
-                        <div className="flex items-center justify-end gap-1 text-xs text-white/80">
-                          {data.trend > 0 ? (
-                            <>
-                              <TrendingUp className="h-4 w-4" />
-                              <span>+{Math.abs(data.trend).toFixed(1)}%</span>
-                            </>
-                          ) : data.trend < 0 ? (
-                            <>
-                              <TrendingDown className="h-4 w-4" />
-                              <span>-{Math.abs(data.trend).toFixed(1)}%</span>
-                            </>
-                          ) : (
-                            <>
-                              <Activity className="h-4 w-4" />
-                              <span>steady</span>
-                            </>
-                          )}
+
+              {/* Detailed Breakdown: Colorful & Data-Rich */}
+              <div className="col-span-1 lg:col-span-2 xl:col-span-2 space-y-8">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                    <Grid3x3 className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Detailed Breakdown</h2>
+                    <p className="text-slate-500 dark:text-slate-400">Deep dive into each test category.</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  {TEST_TYPES.map((typeConfig) => {
+                    const { tests, avg, latest, trend, best, count } = getTestTypeData(typeConfig.keys);
+
+                    const timingInfo = timingByTest.find(t => t.label === typeConfig.name) || { averageSessionMs: 0, sessionCount: 0 };
+
+                    const chartData = tests.slice(-15).map((t) => ({
+                      date: t.created_at ? format(new Date(t.created_at), "M/d") : "-",
+                      score: t.score ?? 0,
+                    }));
+
+                    // Dynamic color styles based on the test type config
+                    // typeConfig.gradient is e.g. "from-rose-500 to-orange-500"
+                    // We can extract the raw color for other uses or just use the gradient classes.
+
+                    return (
+                      <div key={typeConfig.id} className="group relative overflow-hidden rounded-[2.5rem] bg-white p-1 shadow-xl shadow-slate-200/50 transition-all hover:scale-[1.01] hover:shadow-2xl hover:shadow-slate-300/50 dark:bg-slate-900 dark:shadow-black/40">
+                        {/* Colorful Background Mesh */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${typeConfig.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
+
+                        <div className="relative flex h-full flex-col justify-between rounded-[2.3rem] bg-white/50 p-6 backdrop-blur-xl dark:bg-slate-950/50">
+
+                          {/* Header */}
+                          <div className="flex items-start justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${typeConfig.gradient} text-white shadow-md`}>
+                                <typeConfig.icon className="h-6 w-6" />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{typeConfig.name}</h3>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">{count} Sessions</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-medium text-slate-500 dark:text-slate-400">Best Score</div>
+                              <div className={`text-2xl font-black bg-gradient-to-br ${typeConfig.gradient} bg-clip-text text-transparent`}>
+                                {best}%
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Mini Metrics Grid */}
+                          <div className="grid grid-cols-3 gap-3 mb-6">
+                            <div className="rounded-2xl bg-slate-100/50 p-3 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+                              <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">Latest</div>
+                              <div className="text-lg font-bold text-slate-700 dark:text-slate-200">{latest}%</div>
+                            </div>
+                            <div className="rounded-2xl bg-slate-100/50 p-3 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+                              <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">Average</div>
+                              <div className="text-lg font-bold text-slate-700 dark:text-slate-200">{avg}%</div>
+                            </div>
+                            <div className="rounded-2xl bg-slate-100/50 p-3 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+                              <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">Avg Time</div>
+                              <div className="text-lg font-bold text-slate-700 dark:text-slate-200">
+                                {timingInfo.averageSessionMs ? formatDurationMs(timingInfo.averageSessionMs) : "-"}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Chart Area */}
+                          <div className="h-32 w-full rounded-2xl bg-slate-50/50 p-4 border border-slate-100 dark:bg-slate-900/50 dark:border-slate-800">
+                            {chartData.length > 1 ? (
+                              <ChartContainer config={{ value: { label: "Score" } }} className="h-full w-full">
+                                <LineChart data={chartData}>
+                                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" opacity={0.1} />
+                                  <ChartTooltip content={<ChartTooltipContent />} />
+                                  <Line
+                                    type="monotone"
+                                    dataKey="score"
+                                    strokeWidth={3}
+                                    stroke={`url(#gradient-${typeConfig.id})`}
+                                    dot={{ r: 4, strokeWidth: 2, fill: "white" }}
+                                    activeDot={{ r: 6 }}
+                                  />
+                                  <defs>
+                                    <linearGradient id={`gradient-${typeConfig.id}`} x1="0" y1="0" x2="1" y2="0">
+                                      {/* We can't easily parse the Tailwind classes here for SVG, so we fallback to a rough approximation or current color */}
+                                      <stop offset="0%" stopColor="currentColor" className="text-primary" />
+                                      <stop offset="100%" stopColor="currentColor" className="text-purple-500" />
+                                    </linearGradient>
+                                  </defs>
+                                </LineChart>
+                              </ChartContainer>
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-xs text-slate-400 italic">
+                                Not enough data for chart
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Footer Trend */}
+                          <div className="mt-4 flex items-center gap-2 text-xs font-medium relative top-1">
+                            <span className="text-slate-400">Trend: </span>
+                            <span className={`px-2 py-0.5 rounded-full ${trend > 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : trend < 0 ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' : 'bg-slate-100 text-slate-600'}`}>
+                              {trend > 0 ? '+' : ''}{trend}% vs last
+                            </span>
+                          </div>
+
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+
+              {/* Complete History Log */}
+              <div className="col-span-1 lg:col-span-2 xl:col-span-2 mt-12">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-2xl bg-slate-900 flex items-center justify-center text-white shadow-lg dark:bg-white dark:text-slate-900">
+                    <Calendar className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Full History Log</h2>
+                    <p className="text-slate-500 dark:text-slate-400">Every test you've ever taken.</p>
+                  </div>
+                </div>
+
+                <Card className="glass-card overflow-hidden border-0 bg-white/60 dark:bg-slate-900/60 shadow-none">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-200/60 dark:bg-slate-900/80 dark:border-slate-800 dark:text-slate-400">
+                        <tr>
+                          <th className="px-6 py-4 font-bold">Date</th>
+                          <th className="px-6 py-4 font-bold">Test Type</th>
+                          <th className="px-6 py-4 font-bold">Performance</th>
+                          <th className="px-6 py-4 font-bold">XP Earned</th>
+                          <th className="px-6 py-4 font-bold text-right">Details</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {sortedHistory.slice().reverse().map((test) => {
+                          const config = TEST_TYPES.find(t => t.keys.includes(test.test_type || ''));
+                          const gradient = config?.gradient || "from-slate-500 to-slate-600";
+                          const Icon = config?.icon || Activity;
+
+                          return (
+                            <tr key={test.id} className="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/30">
+                              <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-200">
+                                {test.created_at ? format(new Date(test.created_at), "MMM d, yyyy • h:mm a") : "-"}
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <div className={`p-1.5 rounded-lg bg-gradient-to-br ${gradient} text-white shadow-sm`}>
+                                    <Icon className="h-3 w-3" />
+                                  </div>
+                                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                    {config?.name || test.test_type}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-16 h-2 rounded-full bg-slate-100 overflow-hidden dark:bg-slate-800">
+                                    <div
+                                      className={`h-full bg-gradient-to-r ${gradient}`}
+                                      style={{ width: `${test.score}%` }}
+                                    />
+                                  </div>
+                                  <span className="font-bold">{test.score}%</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                  <Sparkles className="h-3 w-3" />
+                                  +{test.xp_earned || 0} XP
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700" onClick={() => navigate(`/report/${test.id}`)}>
+                                  <ArrowLeft className="h-4 w-4 rotate-180" />
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {sortedHistory.length === 0 && (
+                    <div className="p-12 text-center text-slate-400">
+                      No test history found. Start your journey!
                     </div>
-                    <CardContent className="space-y-4 bg-gradient-to-br from-white via-slate-50 to-primary/10 py-5 dark:from-slate-900 dark:via-slate-900/70 dark:to-primary/15">
-                      {data.count === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-muted p-6 text-center text-sm text-muted-foreground">
-                          No results yet - run this test to unlock insights.
-                        </div>
-                      ) : (
-                        <>
-                          <div className="grid gap-3 text-sm">
-                            <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Average</span>
-                              <span className="font-semibold text-primary">{data.avg}%</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Best Score</span>
-                              <span className="font-semibold text-emerald-600">{data.best}%</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Latest Score</span>
-                              <span className="font-semibold text-primary">{data.latest}%</span>
-                            </div>
-                          </div>
-                          <div>
-                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                              Recent Scores
-                            </p>
-                            <div className="flex h-16 items-end gap-1.5">
-                              {data.tests.slice(-12).map((test, index) => (
-                                <div
-                                  key={`${test.created_at}-${index}`}
-                                  className="flex-1 rounded-t-md bg-gradient-to-t from-primary/20 via-primary/40 to-primary/60"
-                                  style={{ height: `${Math.min(test.score ?? 0, 100)}%` }}
-                                  title={
-                                    test.created_at
-                                      ? `${test.score ?? 0}% • ${new Date(test.created_at).toLocaleDateString()}`
-                                      : `${test.score ?? 0}%`
-                                  }
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                  )}
+                </Card>
+              </div>
+
             </section>
-
-            <Card className="mt-10 rounded-[28px] border border-primary/15 bg-gradient-to-br from-white via-slate-50 to-primary/10 shadow-xl hover:shadow-2xl dark:from-slate-900 dark:via-slate-900/80 dark:to-primary/10">
-              <CardHeader>
-                <CardTitle>Recent Test History</CardTitle>
-                <CardDescription>A snapshot of your latest sessions.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {sortedHistory.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-muted p-8 text-center text-sm text-muted-foreground">
-                    No test history yet. Complete some tests to see your progress.
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {sortedHistory.slice(-15).reverse().map((test, idx) => {
-                      const score = test.score ?? 0;
-                      const matchingType = TEST_TYPES.find((entry) => entry.keys.includes(test.test_type ?? ""));
-                      const Icon = matchingType?.icon ?? Sparkles;
-                      const gradient = matchingType?.gradient ?? "from-slate-500 to-slate-700";
-                      const date = test.created_at ? new Date(test.created_at) : null;
-                      const formattedDate =
-                        date && !Number.isNaN(date.getTime())
-                          ? `${format(date, "MMM d, yyyy")} • ${format(date, "h:mm a")}`
-                          : "Recent session";
-
-                      const scoreColor =
-                        score >= 70 ? "text-emerald-600" : score >= 40 ? "text-amber-600" : "text-rose-600";
-
-                      return (
-                        <div
-                          key={`${test.id ?? test.created_at ?? idx}`}
-                          className="flex items-center justify-between rounded-xl border border-primary/20 bg-white/70 px-4 py-3 shadow-sm backdrop-blur dark:bg-slate-900/70"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${gradient} text-white shadow`}
-                            >
-                              <Icon className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-foreground">{formatTestLabel(test.test_type)}</p>
-                              <p className="text-xs text-muted-foreground">{formattedDate}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className={`text-sm font-semibold ${scoreColor}`}>{score}%</p>
-                            <p className="text-xs text-muted-foreground">+{test.xp_earned ?? 0} XP</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </>
         )}
       </div>

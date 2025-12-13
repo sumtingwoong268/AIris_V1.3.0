@@ -202,242 +202,237 @@ export default function Achievements() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-slate-900/70 supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-900/40">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-white/20">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="flex cursor-pointer items-center gap-3" onClick={() => navigate("/dashboard")}>
-              <img src={logo} alt="AIris" className="h-10" />
+            <div className="flex cursor-pointer items-center gap-3 transition-opacity hover:opacity-80" onClick={() => navigate("/dashboard")}>
+              <img src={logo} alt="AIris" className="h-10 drop-shadow-md" />
               <div className="flex flex-col">
-                <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">AIris</span>
-                <span className="text-[10px] text-muted-foreground -mt-1">Long-term achievements</span>
+                <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">AIris</span>
+                <span className="text-[10px] font-medium text-muted-foreground -mt-1 uppercase tracking-wider">Achievements</span>
               </div>
             </div>
           </div>
-          <Button onClick={openNewEntry} className="rounded-full">
+          <Button onClick={openNewEntry} className="rounded-full bg-gradient-primary hover:opacity-90 shadow-lg shadow-blue-500/20">
             <Plus className="mr-2 h-4 w-4" /> New Entry
           </Button>
         </div>
       </header>
 
       <main className="container mx-auto space-y-8 px-4 py-10">
-        <div className="grid gap-4 lg:grid-cols-[1.2fr,0.8fr]">
-          <Card className="border-primary/20 bg-white/80 shadow-lg backdrop-blur dark:bg-slate-900/80">
-            <CardHeader className="flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3rem] text-primary">Achievements</p>
-                  <CardTitle className="text-3xl">Log goals, progress, and reflections</CardTitle>
-                  <CardDescription>
+        <div className="grid gap-6 lg:grid-cols-[1.5fr,1fr]">
+          <Card className="border-none bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-xl">
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+            <CardHeader className="relative z-10 flex flex-col gap-6 p-8">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-[0.3rem] text-white/80">Milestones</p>
+                  <CardTitle className="text-3xl font-bold md:text-4xl">Goals & Progress</CardTitle>
+                  <CardDescription className="text-indigo-100 text-base max-w-lg">
                     Capture milestones with notes, photos, or quick videos. Your entries stay private and help you keep a clean timeline.
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={handleExport}>
-                    <Download className="mr-2 h-4 w-4" /> Export JSON
+                  <Button variant="outline" size="sm" onClick={handleExport} className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm">
+                    <Download className="mr-2 h-3.5 w-3.5" /> Export
                   </Button>
-                  <Button variant="ghost" onClick={handleResetSamples}>
-                    Reset samples
+                  <Button variant="ghost" size="sm" onClick={handleResetSamples} className="text-white/70 hover:text-white hover:bg-white/10">
+                    Reset
                   </Button>
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-blue-100 p-4 dark:from-primary/15 dark:to-blue-950/40">
-                  <p className="text-xs uppercase tracking-wide text-primary">Entries</p>
-                  <p className="text-3xl font-semibold">{entries.length}</p>
-                  <p className="text-xs text-muted-foreground">Total logged items</p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl bg-white/10 border border-white/10 p-4 backdrop-blur-md">
+                  <p className="text-[10px] uppercase tracking-wider text-white/70">Total Entries</p>
+                  <p className="text-3xl font-bold">{entries.length}</p>
                 </div>
-                <div className="rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 p-4 dark:from-emerald-900/50 dark:to-emerald-800/40">
-                  <p className="text-xs uppercase tracking-wide text-emerald-600">With media</p>
-                  <p className="text-3xl font-semibold">{entries.filter((e) => e.media.length > 0).length}</p>
-                  <p className="text-xs text-muted-foreground">Photos or videos attached</p>
+                <div className="rounded-2xl bg-white/10 border border-white/10 p-4 backdrop-blur-md">
+                  <p className="text-[10px] uppercase tracking-wider text-white/70">With Media</p>
+                  <p className="text-3xl font-bold">{entries.filter((e) => e.media.length > 0).length}</p>
                 </div>
-                <div className="rounded-2xl bg-gradient-to-br from-indigo-100 to-fuchsia-50 p-4 dark:from-indigo-900/40 dark:to-fuchsia-900/30">
-                  <p className="text-xs uppercase tracking-wide text-indigo-600">Current view</p>
-                  <p className="text-3xl font-semibold">{filteredTabCount}</p>
-                  <p className="text-xs text-muted-foreground">Matching selected tab</p>
+                <div className="rounded-2xl bg-white/10 border border-white/10 p-4 backdrop-blur-md">
+                  <p className="text-[10px] uppercase tracking-wider text-white/70">Current View</p>
+                  <p className="text-3xl font-bold">{filteredTabCount}</p>
                 </div>
               </div>
             </CardHeader>
           </Card>
 
-          <Card className="border-primary/20 bg-white/80 shadow-lg backdrop-blur dark:bg-slate-900/80">
-            <CardHeader>
+          <Card className="glass-card flex flex-col justify-center">
+            <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-lg">
-                <BarChart3 className="h-5 w-5 text-primary" /> Entries per month
+                <BarChart3 className="h-5 w-5 text-primary" /> Monthly Activity
               </CardTitle>
-              <CardDescription>Quick glance at how frequently you capture achievements.</CardDescription>
+              <CardDescription>Frequency of your entries over time.</CardDescription>
             </CardHeader>
             <CardContent>
               {analyticsData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={analyticsData} margin={{ left: 0, right: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
-                    <XAxis dataKey="label" stroke="currentColor" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis allowDecimals={false} stroke="currentColor" fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip contentStyle={{ background: "rgba(15,23,42,0.85)", color: "white", borderRadius: 12 }} />
-                    <Area type="monotone" dataKey="count" stroke="#6366f1" fill="#c7d2fe" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <div className="h-[200px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={analyticsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.3} />
+                      <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
+                      <YAxis allowDecimals={false} stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
+                      <Tooltip
+                        contentStyle={{ background: "rgba(255, 255, 255, 0.)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "12px", backdropFilter: "blur(10px)" }}
+                        labelStyle={{ color: "var(--foreground)" }}
+                      />
+                      <Area type="monotone" dataKey="count" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorCount)" strokeWidth={3} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               ) : (
-                <div className="flex h-[220px] items-center justify-center text-sm text-muted-foreground">
-                  Start logging entries to see your monthly cadence.
+                <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-muted">
+                  Start logging to see your trends!
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        <Card className="border-primary/15 bg-white/80 shadow-lg backdrop-blur dark:bg-slate-900/80">
-          <CardHeader className="space-y-4">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <CardTitle className="text-2xl">Timeline</CardTitle>
-              <Tabs
-                value={activeTab}
-                onValueChange={(val) => {
-                  const next = val as AchievementCategory | "all";
-                  setActiveTab(next);
-                  saveStoredTab(next);
-                }}
-                className="w-full md:w-auto"
-              >
-                <TabsList className="grid w-full grid-cols-4 md:w-[480px]">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="goals">Goals</TabsTrigger>
-                  <TabsTrigger value="progress">Progress</TabsTrigger>
-                  <TabsTrigger value="reflections">Reflections</TabsTrigger>
-                </TabsList>
-              </Tabs>
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <h2 className="text-2xl font-bold tracking-tight">Timeline</h2>
+              <p className="text-muted-foreground">Your journey, recorded step by step.</p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <div className="flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm dark:bg-slate-900">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search titles or descriptions"
-                  value={filters.search}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
-                  className="border-0 shadow-none focus-visible:ring-0"
-                />
-              </div>
-              <div className="flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border bg-white px-3 py-2 shadow-sm dark:bg-slate-900">
-                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="date"
-                  value={filters.from}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, from: e.target.value }))}
-                  className="border-0 shadow-none focus-visible:ring-0"
-                />
-                <span className="text-xs text-muted-foreground">to</span>
-                <Input
-                  type="date"
-                  value={filters.to}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, to: e.target.value }))}
-                  className="border-0 shadow-none focus-visible:ring-0"
-                />
-              </div>
-              <div className="flex w-full flex-wrap items-center gap-2 rounded-xl border bg-white px-3 py-3 shadow-sm dark:bg-slate-900 sm:justify-between">
+            <Tabs
+              value={activeTab}
+              onValueChange={(val) => {
+                const next = val as AchievementCategory | "all";
+                setActiveTab(next);
+                saveStoredTab(next);
+              }}
+              className="w-full md:w-auto"
+            >
+              <TabsList className="bg-muted/50 p-1">
+                <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800">All</TabsTrigger>
+                <TabsTrigger value="goals" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800">Goals</TabsTrigger>
+                <TabsTrigger value="progress" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800">Progress</TabsTrigger>
+                <TabsTrigger value="reflections" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800">Reflections</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          <Card className="glass-card">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search entries..."
+                    value={filters.search}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                    className="pl-9 bg-background/50 border-border/50"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Input
+                    type="date"
+                    value={filters.from}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, from: e.target.value }))}
+                    className="w-auto bg-background/50 border-border/50"
+                  />
+                  <span className="self-center text-xs text-muted-foreground">to</span>
+                  <Input
+                    type="date"
+                    value={filters.to}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, to: e.target.value }))}
+                    className="w-auto bg-background/50 border-border/50"
+                  />
+                </div>
                 <Select
                   value={filters.media}
                   onValueChange={(val) => setFilters((prev) => ({ ...prev, media: val as "any" | "with" | "without" }))}
                 >
-                  <SelectTrigger className="min-w-[140px] flex-1 sm:flex-none">
+                  <SelectTrigger className="w-[140px] bg-background/50 border-border/50">
                     <SelectValue placeholder="Media" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="any">Any media</SelectItem>
-                    <SelectItem value="with">Has media</SelectItem>
-                    <SelectItem value="without">No media</SelectItem>
+                    <SelectItem value="any">Any Media</SelectItem>
+                    <SelectItem value="with">With Media</SelectItem>
+                    <SelectItem value="without">Text Only</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select
-                  value={filters.category}
-                  onValueChange={(val) => setFilters((prev) => ({ ...prev, category: val as AchievementCategory | "all" }))}
-                >
-                  <SelectTrigger className="min-w-[140px] flex-1 sm:flex-none">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="goals">Goals</SelectItem>
-                    <SelectItem value="progress">Progress</SelectItem>
-                    <SelectItem value="reflections">Reflections</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="ghost" className="flex-1 gap-2 sm:flex-none" onClick={() => setFilters({ search: "", category: "all", from: "", to: "", media: "any" })}>
-                  <Filter className="h-4 w-4" />
-                  Clear filters
-                </Button>
-                <Button className="flex-1 sm:flex-none" onClick={openNewEntry}>
-                  <Plus className="mr-2 h-4 w-4" /> New Entry
-                </Button>
+                {(filters.search || filters.from || filters.to || filters.media !== "any" || filters.category !== "all") && (
+                  <Button variant="ghost" size="icon" onClick={() => setFilters({ search: "", category: "all", from: "", to: "", media: "any" })} title="Clear filters">
+                    <Filter className="h-4 w-4" />
+                    <span className="sr-only">Clear</span>
+                  </Button>
+                )}
               </div>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            {filteredEntries.length === 0 ? (
-              <div className="flex flex-col items-center justify-center space-y-3 rounded-2xl border border-dashed p-8 text-center text-muted-foreground">
-                <p>No entries match the current filters.</p>
-                <Button onClick={openNewEntry}>Create your first entry</Button>
-              </div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {filteredEntries.map((entry) => (
-                  <Card key={entry.id} className="group flex h-full flex-col border-border/60 bg-white/90 shadow-md transition hover:-translate-y-1 hover:shadow-xl dark:bg-slate-900/80">
-                    <CardHeader className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="capitalize">
-                          {CATEGORY_LABELS[entry.category]}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <CalendarIcon className="h-4 w-4" /> {format(new Date(entry.createdAt), "PPP")}
-                        </span>
-                      </div>
-                      <CardTitle className="text-xl">{entry.title}</CardTitle>
-                      <CardDescription className="line-clamp-3 text-sm leading-relaxed">
-                        {entry.description}
-                      </CardDescription>
-                    </CardHeader>
-                    {entry.media.length > 0 && (
-                      <div className="mx-4 overflow-hidden rounded-xl border">
-                        {entry.media[0].type === "image" ? (
-                          <img src={entry.media[0].url} alt={entry.media[0].name || entry.title} className="h-40 w-full object-cover" />
-                        ) : (
-                          <video src={entry.media[0].url} controls className="h-40 w-full object-cover" />
-                        )}
-                      </div>
-                    )}
-                    <CardContent className="mt-auto space-y-2">
-                      <div className="flex flex-wrap gap-2">
-                        {entry.media.map((media) => (
-                          <Badge key={media.id} variant="secondary" className="flex items-center gap-1">
-                            <span className="text-xs uppercase">{mediaIcon(media.type)}</span>
-                            {media.name || "Attachment"}
+            </CardHeader>
+            <CardContent>
+              {filteredEntries.length === 0 ? (
+                <div className="flex flex-col items-center justify-center space-y-3 rounded-2xl border border-dashed p-8 text-center text-muted-foreground">
+                  <p>No entries match the current filters.</p>
+                  <Button onClick={openNewEntry}>Create your first entry</Button>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {filteredEntries.map((entry) => (
+                    <Card key={entry.id} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:bg-white/10 dark:bg-slate-800/30 dark:hover:bg-slate-800/50">
+                      <CardHeader className="space-y-3 pb-3">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary" className="capitalize bg-primary/10 text-primary hover:bg-primary/20">
+                            {CATEGORY_LABELS[entry.category]}
                           </Badge>
-                        ))}
-                        {entry.media.length === 0 && <Badge variant="secondary">Text only</Badge>}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" className="flex-1" onClick={() => setViewEntry(entry)}>
-                          <Eye className="mr-2 h-4 w-4" /> View Full Entry
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(entry)}>
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                          <span className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+                            <CalendarIcon className="h-3 w-3" /> {format(new Date(entry.createdAt), "MMM d, yyyy")}
+                          </span>
+                        </div>
+                        <CardTitle className="text-lg font-semibold leading-tight">{entry.title}</CardTitle>
+                        <CardDescription className="line-clamp-3 text-sm leading-relaxed text-muted-foreground/80">
+                          {entry.description}
+                        </CardDescription>
+                      </CardHeader>
+                      {entry.media.length > 0 && (
+                        <div className="mx-6 mb-2 overflow-hidden rounded-xl border border-white/10 shadow-sm relative aspect-video group-hover:scale-[1.02] transition-transform">
+                          {entry.media[0].type === "image" ? (
+                            <img src={entry.media[0].url} alt={entry.media[0].name || entry.title} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="relative h-full w-full bg-black/10 flex items-center justify-center">
+                              <video src={entry.media[0].url} className="h-full w-full object-cover" />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                <Plus className="h-8 w-8 text-white opacity-70" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <CardContent className="mt-auto pt-0 pb-4 px-6">
+                        <div className="my-3 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
+                        <div className="flex items-center justify-between gap-2">
+                          <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground" onClick={() => setViewEntry(entry)}>
+                            View Details
+                          </Button>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleEdit(entry)}>
+                              <Edit3 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(entry.id)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </main>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

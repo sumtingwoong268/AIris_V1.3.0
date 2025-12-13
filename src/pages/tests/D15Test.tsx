@@ -309,367 +309,356 @@ export default function D15Test({ initialPanelType = "D15", lockPanelType = fals
 
   return (
     <div className={`min-h-screen ${neutralBg}`}>
-      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-slate-900/70 supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-900/40">
         <div className="container mx-auto flex items-center gap-3 px-4 py-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-white/20">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <img src={logo} alt="AIris" className="h-10" />
+          <div className="flex items-center gap-2" onClick={() => navigate("/dashboard")}>
+            <img src={logo} alt="AIris" className="h-8 drop-shadow-md cursor-pointer" />
+            <span className="font-bold tracking-tight">Farnsworth D-15</span>
+          </div>
           <div className="ml-auto flex items-center gap-2">
             {lockPanelType ? (
-              <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+              <span className="rounded-full bg-muted/50 px-3 py-1 text-xs font-semibold text-muted-foreground backdrop-blur-sm border border-white/10">
                 {panelType === "LD15" ? "Desaturated D-15" : "Standard D-15"}
               </span>
             ) : (
-              <>
+              <div className="flex bg-muted/30 p-1 rounded-full border border-white/10 backdrop-blur-sm">
                 <Button
-                  variant={panelType === "D15" ? "default" : "outline"}
+                  variant={panelType === "D15" ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => setPanelType("D15")}
-                  className="rounded-full"
+                  className={`rounded-full px-3 h-7 text-xs ${panelType === "D15" ? "bg-white shadow-sm dark:bg-slate-800" : ""}`}
                 >
-                  Standard D-15
+                  Standard
                 </Button>
                 <Button
-                  variant={panelType === "LD15" ? "default" : "outline"}
+                  variant={panelType === "LD15" ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => setPanelType("LD15")}
-                  className="rounded-full"
+                  className={`rounded-full px-3 h-7 text-xs ${panelType === "LD15" ? "bg-white shadow-sm dark:bg-slate-800" : ""}`}
                 >
-                  Desaturated (Lanthony)
+                  Desaturated
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>
       </header>
 
       <main className="container mx-auto max-w-5xl space-y-8 px-4 py-10">
-        <Card className="border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
-          <CardContent className="space-y-6 p-8">
-            <div className="flex items-center gap-3">
-              <Palette className="h-10 w-10 text-white" />
+        <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 shadow-2xl text-white">
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+          <div className="relative z-10 grid gap-8 md:grid-cols-[1.5fr,1fr] items-center">
+            <div className="space-y-4">
               <div>
-                <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Farnsworth D-15</p>
-                <h1 className="text-3xl font-semibold">
-                  {titleOverride ?? "Arrange 15 hue caps to screen colour vision"}
+                <p className="text-xs font-bold uppercase tracking-wider text-white/70">Farnsworth D-15</p>
+                <h1 className="text-3xl font-bold md:text-4xl">
+                  {titleOverride ?? "Arrange hues to screen color vision"}
                 </h1>
               </div>
+              <p className="text-indigo-100 max-w-lg leading-relaxed">
+                Arrange 15 hue caps to form a smooth transition. This screens for red-green and blue-yellow deficiencies.
+              </p>
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl bg-white/15 p-4 text-sm shadow-lg backdrop-blur">
-                <p className="text-xs uppercase tracking-wide text-white/70">Purpose</p>
-                <p className="mt-1 text-white/90">Screens red-green and blue-yellow pathways; complements Ishihara.</p>
+            <div className="grid gap-3 text-sm">
+              <div className="rounded-xl bg-white/10 border border-white/10 p-3 backdrop-blur-md flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-lg"><Palette className="h-4 w-4" /></div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide opacity-70">Method</p>
+                  <p className="font-medium">15 caps on CIELAB circle</p>
+                </div>
               </div>
-              <div className="rounded-2xl bg-white/15 p-4 text-sm shadow-lg backdrop-blur">
-                <p className="text-xs uppercase tracking-wide text-white/70">Basis</p>
-                <p className="mt-1 text-white/90">15 hue caps arranged on the CIELAB circle with fixed anchors.</p>
-              </div>
-              <div className="rounded-2xl bg-white/15 p-4 text-sm shadow-lg backdrop-blur">
-                <p className="text-xs uppercase tracking-wide text-white/70">Disclaimers</p>
-                <p className="mt-1 text-white/90">
-                  Screening tool only. Display and lighting affect results. Clinician interpretation required.
-                </p>
+              <div className="rounded-xl bg-white/10 border border-white/10 p-3 backdrop-blur-md flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-lg"><CheckCircle2 className="h-4 w-4" /></div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide opacity-70">Reward</p>
+                  <p className="font-medium">Up to 30 XP</p>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {stage === "calibration" && (
-          <Card className="border border-border/60 bg-card/80 shadow-lg">
-            <CardContent className="space-y-6 p-8">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="mt-1 h-5 w-5 text-primary" />
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">Calibration</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Complete these steps before any colour screening.
-                  </p>
+          <Card className="glass-card border-none shadow-none bg-transparent">
+            <CardContent className="space-y-8 p-0">
+              <div className="rounded-3xl bg-white/50 border border-white/20 backdrop-blur-sm p-8 dark:bg-slate-900/50">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">Calibration</h2>
+                    <p className="text-muted-foreground text-sm">Complete these steps for accuracy.</p>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  {/* ... checkbox labels rewritten slightly for consistency if desired, keeping content same */}
+                  <label className="flex items-center gap-3 p-3 rounded-xl border border-white/40 bg-white/40 hover:bg-white/60 transition-colors cursor-pointer dark:bg-slate-800/40 dark:border-white/10">
+                    <Input
+                      type="checkbox"
+                      checked={blueLightDisabled}
+                      onChange={(e) => setBlueLightDisabled(e.target.checked)}
+                      className="h-5 w-5 rounded-md border-primary text-primary focus:ring-primary"
+                    />
+                    <span>Disable Night Shift / Blue-light filters.</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 rounded-xl border border-white/40 bg-white/40 hover:bg-white/60 transition-colors cursor-pointer dark:bg-slate-800/40 dark:border-white/10">
+                    <Input
+                      type="checkbox"
+                      checked={brightnessAdjusted}
+                      onChange={(e) => setBrightnessAdjusted(e.target.checked)}
+                      className="h-5 w-5 rounded-md border-primary text-primary focus:ring-primary"
+                    />
+                    <span>Brightness adjusted comfortably.</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 rounded-xl border border-white/40 bg-white/40 hover:bg-white/60 transition-colors cursor-pointer dark:bg-slate-800/40 dark:border-white/10">
+                    <Input
+                      type="checkbox"
+                      checked={distanceChecked}
+                      onChange={(e) => setDistanceChecked(e.target.checked)}
+                      className="h-5 w-5 rounded-md border-primary text-primary focus:ring-primary"
+                    />
+                    <span>Neutral lighting (no colored casts).</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 rounded-xl border border-white/40 bg-white/40 hover:bg-white/60 transition-colors cursor-pointer dark:bg-slate-800/40 dark:border-white/10">
+                    <Input
+                      type="checkbox"
+                      checked={lightingAcknowledged}
+                      onChange={(e) => setLightingAcknowledged(e.target.checked)}
+                      className="h-5 w-5 rounded-md border-primary text-primary focus:ring-primary"
+                    />
+                    <span>Device at arm&apos;s length, straight on.</span>
+                  </label>
+                </div>
+
+                <div className="mt-6 space-y-3 rounded-2xl border border-dashed border-primary/20 bg-primary/5 p-5">
+                  <p className="text-sm font-semibold">Brightness Check</p>
+                  <p className="text-xs text-muted-foreground">Ensure you can distinguish all 12 steps below.</p>
+                  <div className="flex gap-1 h-10 w-full rounded-lg overflow-hidden border border-border/50">
+                    {Array.from({ length: 12 }).map((_, idx) => {
+                      const v = Math.round((idx / 11) * 255);
+                      const hex = v.toString(16).padStart(2, "0");
+                      return (
+                        <div
+                          key={idx}
+                          className="flex-1"
+                          style={{ background: `#${hex}${hex}${hex}` }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <Button
+                    onClick={() => setStage("practice")}
+                    disabled={!(blueLightDisabled && brightnessAdjusted && distanceChecked && lightingAcknowledged)}
+                    className="w-full h-12 rounded-full bg-gradient-to-r from-primary to-blue-600 shadow-lg shadow-blue-500/20 text-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                  >
+                    Continue to Practice
+                  </Button>
                 </div>
               </div>
-              <div className="space-y-4 text-sm">
-                <label className="flex items-center gap-3">
-                  <Input
-                    type="checkbox"
-                    checked={blueLightDisabled}
-                    onChange={(e) => setBlueLightDisabled(e.target.checked)}
-                    className="h-4 w-4"
-                  />
-                  <span>Disable Night Shift / True Tone / blue-light filters.</span>
-                </label>
-                <label className="flex items-center gap-3">
-                  <Input
-                    type="checkbox"
-                    checked={brightnessAdjusted}
-                    onChange={(e) => setBrightnessAdjusted(e.target.checked)}
-                    className="h-4 w-4"
-                  />
-                  <span>Set comfortable brightness using the greyscale strip.</span>
-                </label>
-                <label className="flex items-center gap-3">
-                  <Input
-                    type="checkbox"
-                    checked={distanceChecked}
-                    onChange={(e) => setDistanceChecked(e.target.checked)}
-                    className="h-4 w-4"
-                  />
-                  <span>Use neutral indoor lighting; avoid coloured casts.</span>
-                </label>
-                <label className="flex items-center gap-3">
-                  <Input
-                    type="checkbox"
-                    checked={lightingAcknowledged}
-                    onChange={(e) => setLightingAcknowledged(e.target.checked)}
-                    className="h-4 w-4"
-                  />
-                  <span>Hold device at arm&apos;s length; keep screen straight-on.</span>
-                </label>
-              </div>
-              <div className="space-y-2 rounded-xl border border-border/60 bg-muted/30 p-4">
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Brightness check</p>
-                <p className="text-xs text-muted-foreground">
-                  You should see distinct steps from black to white. Adjust display brightness until all steps are visible.
-                </p>
-                <div className="flex gap-1 rounded-lg border border-border/70 bg-white p-2 dark:bg-slate-900">
-                  {Array.from({ length: 12 }).map((_, idx) => {
-                    const v = Math.round((idx / 11) * 255);
-                    const hex = v.toString(16).padStart(2, "0");
-                    return (
-                      <div
-                        key={idx}
-                        className="h-8 flex-1 rounded-sm"
-                        style={{ background: `#${hex}${hex}${hex}` }}
-                        aria-label={`Grey ${v}`}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-              <Button
-                onClick={() => setStage("practice")}
-                disabled={!(blueLightDisabled && brightnessAdjusted && distanceChecked && lightingAcknowledged)}
-                className="w-full rounded-full"
-              >
-                Continue to practice
-              </Button>
             </CardContent>
           </Card>
         )}
 
         {stage === "practice" && (
-          <Card className="border border-border/60 bg-card/80 shadow-lg">
-            <CardContent className="space-y-6 p-8">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="mt-1 h-5 w-5 text-primary" />
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">Practice (3 caps)</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Drag the caps into smooth order: cool → neutral → warm. Caps snap into place.
-                  </p>
+          <Card className="glass-card border-none shadow-none bg-transparent">
+            <CardContent className="space-y-6 p-0">
+              <div className="rounded-3xl bg-white/50 border border-white/20 backdrop-blur-sm p-8 text-center dark:bg-slate-900/50">
+                <h2 className="text-2xl font-bold mb-2">Practice Round</h2>
+                <p className="text-muted-foreground mb-8 text-base">Drag the caps to form a smooth transition: Cool → Neutral → Warm.</p>
+
+                <div className="flex justify-center gap-4 mb-8">
+                  {practiceOrder.map((cap) => (
+                    <div
+                      key={cap}
+                      draggable
+                      onDragStart={() => setPracticeDrag(cap)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handlePracticeDrop(cap)}
+                      className="flex h-20 w-32 items-center justify-center rounded-2xl border-2 border-white/50 bg-white shadow-lg cursor-grab active:cursor-grabbing hover:-translate-y-1 transition-all dark:bg-slate-800 dark:border-white/10"
+                    >
+                      <span className={`font-semibold ${cap === "warm" ? "text-orange-500" : cap === "cool" ? "text-blue-500" : "text-slate-500"}`}>
+                        {cap === "warm" ? "Warm" : cap === "neutral" ? "Neutral" : "Cool"}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {practiceOrder.map((cap) => (
-                  <div
-                    key={cap}
-                    draggable
-                    onDragStart={() => setPracticeDrag(cap)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => handlePracticeDrop(cap)}
-                    className="flex h-14 items-center justify-center rounded-xl border border-border/70 bg-white text-sm font-medium shadow-sm dark:bg-slate-900"
+
+                <div className="flex justify-center gap-4">
+                  <Button variant="ghost" className="rounded-full" onClick={() => setPracticeOrder(["cool", "neutral", "warm"])}>
+                    Reset
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setStartMs(Date.now());
+                      setStage("test");
+                    }}
+                    disabled={!practiceComplete}
+                    className="rounded-full px-8 bg-gradient-to-r from-primary to-blue-600 shadow-md hover:shadow-lg"
                   >
-                    {cap === "warm" ? "Warm hue" : cap === "neutral" ? "Neutral" : "Cool hue"}
-                  </div>
-                ))}
+                    Begin Test
+                  </Button>
+                </div>
+                {!practiceComplete && (
+                  <p className="mt-4 text-sm text-red-500/80 font-medium animate-pulse">
+                    Arrange correctly to proceed.
+                  </p>
+                )}
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button variant="ghost" size="sm" onClick={() => setPracticeOrder(["cool", "neutral", "warm"])}>
-                  Reset
-                </Button>
-                <Button
-                  onClick={() => {
-                    setStartMs(Date.now());
-                    setStage("test");
-                  }}
-                  disabled={!practiceComplete}
-                  className="rounded-full"
-                >
-                  Begin test
-                </Button>
-              </div>
-              {!practiceComplete && (
-                <p className="text-xs text-muted-foreground">
-                  Arrange the practice caps correctly to unlock the test.
-                </p>
-              )}
             </CardContent>
           </Card>
         )}
 
         {stage === "test" && (
-          <Card className="border border-border/60 bg-card/80 shadow-lg">
-            <CardContent className="space-y-6 p-8">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
-                  Arrange the hue caps
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Drag the movable caps into the smoothest colour circle between the fixed anchors. Identical shape and luminance prevent cues.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                <span>Runtime: {startMs ? Math.round((Date.now() - startMs) / 1000) : 0}s</span>
-                <span aria-hidden>•</span>
-                <span>Interaction logs: {interactions.length}</span>
-                <span aria-hidden>•</span>
-                <span>Shuffles: {shuffleCount}</span>
-                <span aria-hidden>•</span>
-                <span>Resets: {resetCount}</span>
-              </div>
-
-              <div className="overflow-x-auto rounded-xl border border-border/60 bg-muted/20 p-3">
-                <div className="flex min-w-max items-center gap-2">
-                  {arrangement.map((cap) => {
-                    const [r, g, b] = labToSrgb(cap.lab);
-                    const color = rgbToHex([r, g, b]);
-                    return (
-                      <div
-                        key={cap.capId}
-                        draggable={!cap.isFixed}
-                        onDragStart={() => handleDragStart(cap.capId, cap.isFixed)}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => handleDrop(cap.capId)}
-                        className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border/80 bg-white shadow-sm transition hover:-translate-y-0.5 dark:bg-slate-900 sm:h-12 sm:w-12 md:h-14 md:w-14"
-                        aria-label={cap.isFixed ? "Fixed anchor cap" : "Movable cap"}
-                      >
-                        <div
-                          className={
-                            cap.isFixed
-                              ? "h-12 w-12 rounded-full ring-2 ring-primary/70 ring-offset-1 ring-offset-white dark:ring-offset-slate-900 sm:h-10 sm:w-10"
-                              : "h-12 w-12 rounded-full sm:h-10 sm:w-10"
-                          }
-                          style={{ background: color, border: cap.isFixed ? undefined : "1px solid hsl(var(--border))" }}
-                        />
-                        {cap.isFixed && (
-                          <span className="absolute -bottom-2 rounded-full bg-primary px-2 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
-                            Fixed
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
+          <Card className="glass-card border-none shadow-none bg-transparent">
+            <CardContent className="space-y-8 p-0">
+              <div className="rounded-3xl bg-white/50 border border-white/20 backdrop-blur-sm p-6 dark:bg-slate-900/50">
+                <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">Arrange the Colors</h2>
+                    <p className="text-muted-foreground text-sm">Drag movable caps to form a smooth hue circle between fixed anchors.</p>
+                  </div>
+                  <div className="flex gap-4 text-xs font-mono bg-white/40 px-3 py-1.5 rounded-full border border-white/20 dark:bg-slate-800/40">
+                    <span>Time: {startMs ? Math.round((Date.now() - startMs) / 1000) : 0}s</span>
+                    <span>Moves: {interactions.length}</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <Button onClick={handleAnalyze} disabled={submitting} className="rounded-full">
-                  Submit & analyse
-                </Button>
-                <Button variant="outline" onClick={handleReset} className="rounded-full">
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Reset order
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
+                <div className="overflow-x-auto pb-4 custom-scrollbar">
+                  <div className="flex min-w-max items-center gap-2 p-4 rounded-2xl bg-white/40 border border-white/20 dark:bg-slate-900/30">
+                    {arrangement.map((cap) => {
+                      const [r, g, b] = labToSrgb(cap.lab);
+                      const color = rgbToHex([r, g, b]);
+                      return (
+                        <div
+                          key={cap.capId}
+                          draggable={!cap.isFixed}
+                          onDragStart={() => handleDragStart(cap.capId, cap.isFixed)}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={() => handleDrop(cap.capId)}
+                          className={`relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full shadow-sm transition-all hover:scale-105 ${!cap.isFixed ? 'cursor-grab active:cursor-grabbing hover:-translate-y-1' : ''}`}
+                          aria-label={cap.isFixed ? "Fixed anchor cap" : "Movable cap"}
+                        >
+                          <div
+                            className={`rounded-full shadow-inner ${cap.isFixed ? "h-12 w-12 ring-4 ring-white/50 dark:ring-white/20" : "h-14 w-14 border-4 border-white dark:border-slate-800"}`}
+                            style={{ background: color }}
+                          />
+                          {cap.isFixed && (
+                            <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-wider font-bold">
+                              Fixed
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                  <Button variant="ghost" onClick={handleReset} className="rounded-full hover:bg-white/40">
+                    <RotateCcw className="mr-2 h-4 w-4" /> Reset
+                  </Button>
+                  <Button variant="ghost" onClick={() => {
                     setArrangement(createInitialArrangement(caps));
                     setShuffleCount((c) => c + 1);
                     setStartMs((prev) => prev ?? Date.now());
-                  }}
-                  className="rounded-full"
-                >
-                  <Shuffle className="mr-2 h-4 w-4" />
-                  Shuffle movable caps
-                </Button>
-              </div>
-
-              <div className="rounded-xl border border-border/60 bg-muted/40 p-4 text-xs text-muted-foreground">
-                <p className="font-semibold text-slate-900 dark:text-slate-100">Integrity reminders</p>
-                <ul className="mt-2 list-disc space-y-1 pl-4">
-                  <li>Maximum runtime goal: under 8 minutes to reduce fatigue.</li>
-                  <li>Pause allowed; avoid changing lighting or display settings mid-test.</li>
-                  <li>Results are for screening; a licensed clinician must interpret outcomes.</li>
-                </ul>
+                  }} className="rounded-full hover:bg-white/40">
+                    <Shuffle className="mr-2 h-4 w-4" /> Shuffle
+                  </Button>
+                  <Button onClick={handleAnalyze} disabled={submitting} className="rounded-full px-8 bg-gradient-to-r from-primary to-blue-600 shadow-md hover:shadow-lg">
+                    Submit Analysis
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         )}
 
         {stage === "summary" && metrics && (
-          <Card className="border border-border/60 bg-card/80 shadow-lg">
-            <CardContent className="space-y-6 p-8">
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="h-6 w-6 text-green-500" />
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">Screening summary</h2>
-                  <p className="text-sm text-muted-foreground">AI-assisted interpretation for clinician review.</p>
+          <Card className="glass-card border-none shadow-none bg-transparent">
+            <CardContent className="space-y-8 p-0">
+              <div className="rounded-3xl bg-white/50 border border-white/20 backdrop-blur-sm p-8 dark:bg-slate-900/50">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-600">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">Screening Summary</h2>
+                    <p className="text-muted-foreground">AI-assisted interpretation.</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Score</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
-                    {metrics.score.toFixed(0)} / 100
-                  </p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Score</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
+                      {metrics.score.toFixed(0)} / 100
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Suspected pathway</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">{metrics.suspected}</p>
+                  </div>
+                  <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Severity</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">{metrics.severity}</p>
+                  </div>
+                  <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Confusion axis</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
+                      {metrics.axisAngle.toFixed(1)}°
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Total ΔE</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
+                      {metrics.totalDeltaE.toFixed(1)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Crossings (a*b*)</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">{metrics.crossings}</p>
+                  </div>
+                  <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Pair ΔE avg</p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
+                      {metrics.pairDeltaEs.length ? (metrics.totalDeltaE / metrics.pairDeltaEs.length).toFixed(1) : "—"}
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Suspected pathway</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">{metrics.suspected}</p>
-                </div>
-                <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Severity</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">{metrics.severity}</p>
-                </div>
-                <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Confusion axis</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
-                    {metrics.axisAngle.toFixed(1)}°
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Total ΔE</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
-                    {metrics.totalDeltaE.toFixed(1)}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Crossings (a*b*)</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">{metrics.crossings}</p>
-                </div>
-                <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Pair ΔE avg</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
-                    {metrics.pairDeltaEs.length ? (metrics.totalDeltaE / metrics.pairDeltaEs.length).toFixed(1) : "—"}
-                  </p>
-                </div>
-              </div>
 
-              <div className="rounded-xl border border-border/70 bg-muted/40 p-4 text-xs text-muted-foreground">
-                <p className="font-semibold text-slate-900 dark:text-slate-100">Disclaimers</p>
-                <ul className="mt-2 list-disc space-y-1 pl-4">
-                  <li>Screening tool — not a medical diagnosis.</li>
-                  <li>Results depend on display calibration and ambient lighting.</li>
-                  <li>A licensed clinician must interpret results and advise next steps.</li>
-                </ul>
-              </div>
+                <div className="rounded-xl border border-border/70 bg-muted/40 p-4 text-xs text-muted-foreground">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100">Disclaimers</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-4">
+                    <li>Screening tool — not a medical diagnosis.</li>
+                    <li>Results depend on display calibration and ambient lighting.</li>
+                    <li>A licensed clinician must interpret results and advise next steps.</li>
+                  </ul>
+                </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  onClick={() => {
-                    setStage("test");
-                    setStartMs(Date.now());
-                    setMetrics(null);
-                    setInteractions([]);
-                  }}
-                  className="rounded-full"
-                >
-                  Back to caps
-                </Button>
-                <Button variant="outline" onClick={() => navigate("/dashboard")} className="rounded-full">
-                  Return to dashboard
-                </Button>
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                  <Button
+                    onClick={() => {
+                      setStage("test");
+                      setStartMs(Date.now());
+                      setMetrics(null);
+                      setInteractions([]);
+                    }}
+                    className="rounded-full"
+                  >
+                    Back to caps
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate("/dashboard")} className="rounded-full">
+                    Return to dashboard
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -24,7 +24,7 @@ export const ThemeToggle = () => {
   }, [open]);
 
   return (
-    <div ref={containerRef} className="fixed right-3 top-3 z-50 flex flex-col items-end gap-2">
+    <div ref={containerRef} className="fixed right-3 top-3 z-[100] flex flex-col items-end gap-2">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}

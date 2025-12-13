@@ -40,20 +40,20 @@ export default function BlogArticle() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-slate-900/70 supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-900/40">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hover:bg-white/20">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex flex-col">
-              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-primary/80">AIris Blog</span>
-              <span className="text-lg font-bold text-slate-900 dark:text-slate-50">{post.title}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">AIris Blog</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-slate-50 line-clamp-1">{post.title}</span>
             </div>
           </div>
           <Button
             variant="ghost"
-            className="hidden items-center gap-2 text-primary hover:bg-primary/10 dark:hover:bg-primary/20 sm:inline-flex"
+            className="hidden items-center gap-2 text-primary hover:bg-white/20 sm:inline-flex rounded-full"
             onClick={handleShare}
           >
             <Share2 className="h-4 w-4" />
@@ -63,35 +63,34 @@ export default function BlogArticle() {
       </header>
 
       <main className="container mx-auto max-w-4xl space-y-10 px-4 py-10">
-        <section className={`relative overflow-hidden rounded-[32px] border border-primary/20 bg-gradient-to-br ${post.heroGradient} p-10 text-white shadow-2xl`}>
-          <span className="pointer-events-none absolute -top-12 left-8 h-32 w-32 rounded-full bg-white/30 blur-3xl" />
-          <span className="pointer-events-none absolute -bottom-16 right-10 h-40 w-40 rounded-full bg-white/20 blur-3xl" />
+        <div className={`relative overflow-hidden rounded-[32px] border border-primary/20 bg-gradient-to-br ${post.heroGradient} p-10 text-white shadow-2xl`}>
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="relative z-10 space-y-4">
-            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-white/70">
+            <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.35em] text-white/70">
               <CalendarDays className="h-4 w-4" /> {post.publishDate}
             </p>
-            <h1 className="text-3xl font-bold sm:text-4xl">{post.title}</h1>
-            <p className="max-w-2xl text-base text-white/80">{post.description}</p>
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-medium text-white">
+            <h1 className="text-3xl font-bold sm:text-5xl drop-shadow-sm">{post.title}</h1>
+            <p className="max-w-2xl text-lg text-white/90 font-light leading-relaxed">{post.description}</p>
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-4 py-2 text-sm font-medium text-white border border-white/10">
               <Clock className="h-4 w-4" />
               {post.readTime}
             </div>
           </div>
-        </section>
+        </div>
 
-        <article className="space-y-12">
+        <article className="space-y-8">
           {post.sections.map((section) => (
-            <section key={section.heading} className="space-y-4 rounded-3xl border border-border/40 bg-white/80 p-8 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">{section.heading}</h2>
+            <section key={section.heading} className="glass-card p-8">
+              <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">{section.heading}</h2>
               {section.paragraphs.map((paragraph) => (
-                <p key={paragraph} className="text-base leading-relaxed text-slate-700 dark:text-slate-200">
+                <p key={paragraph} className="text-base leading-relaxed text-slate-700 dark:text-slate-200 mb-4">
                   {paragraph}
                 </p>
               ))}
               {section.tips && section.tips.length > 0 && (
-                <div className="rounded-2xl bg-primary/10 p-5 text-sm text-primary dark:bg-primary/20">
-                  <p className="font-semibold uppercase tracking-[0.3em] text-xs text-primary/80">Try this</p>
-                  <ul className="mt-3 list-disc space-y-2 pl-5">
+                <div className="mt-6 rounded-2xl bg-primary/5 border border-primary/10 p-6 text-sm text-primary dark:bg-primary/20">
+                  <p className="font-bold uppercase tracking-widest text-xs text-primary/80 mb-3">Try this</p>
+                  <ul className="list-disc space-y-2 pl-5 marker:text-primary/50">
                     {section.tips.map((tip) => (
                       <li key={tip}>{tip}</li>
                     ))}

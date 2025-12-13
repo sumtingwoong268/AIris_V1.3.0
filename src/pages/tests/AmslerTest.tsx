@@ -120,125 +120,145 @@ export default function AmslerTest() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-slate-900/70 supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-900/40">
         <div className="container mx-auto flex items-center gap-3 px-4 py-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-white/20">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <img src={logo} alt="AIris" className="h-10" />
+          <div className="flex items-center gap-2" onClick={() => navigate("/dashboard")}>
+            <img src={logo} alt="AIris" className="h-8 drop-shadow-md cursor-pointer" />
+            <span className="font-bold tracking-tight">Amsler Grid</span>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto max-w-4xl space-y-8 px-4 py-10">
-        <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
-          <span className="pointer-events-none absolute -left-12 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-white/25 blur-3xl" />
-          <span className="pointer-events-none absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-sky-400/30 blur-3xl" />
-          <CardContent className="relative z-10 space-y-6 p-8">
-            <div className="space-y-3">
-              <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Amsler grid</p>
-              <h1 className="text-3xl font-semibold">Check for subtle distortions in your central vision</h1>
-              <p className="text-sm text-white/80">
-                Cover one eye at a time and mark any areas that appear wavy, missing, or blurred. This helps monitor
-                potential macular changes.
+        <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 shadow-2xl text-white">
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+          <div className="relative z-10 grid gap-8 md:grid-cols-[1.5fr,1fr] items-center">
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-white/70">Amsler Grid</p>
+                <h1 className="text-3xl font-bold md:text-4xl">Monitor your central vision</h1>
+              </div>
+              <p className="text-indigo-100 max-w-lg leading-relaxed">
+                Cover one eye at a time and mark any areas that appear wavy, missing, or blurred. This helps identify potential macular changes.
               </p>
             </div>
-            <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
-              <p className="text-xs uppercase tracking-wide text-white/70">Current XP</p>
-              <div className="mt-3">
-                <XPBar xp={xp} />
+            <div className="rounded-2xl bg-white/10 border border-white/10 p-6 backdrop-blur-md">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-white/80">Potential XP Reward</span>
+                <span className="text-lg font-bold text-yellow-300">20 XP</span>
               </div>
+              <XPBar xp={xp} />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {!started ? (
-          <Card>
+          <Card className="glass-card">
             <CardContent className="space-y-6 p-8 text-center">
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Before you begin</h2>
-              <p className="text-sm text-muted-foreground">
-                Hold the device at a comfortable reading distance and ensure proper lighting. Wear corrective lenses if
-                prescribed.
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Before you begin</h2>
+              <p className="text-base text-muted-foreground max-w-lg mx-auto">
+                Hold the device at a comfortable reading distance (approx 30cm) and ensure proper lighting. Wear corrective lenses if prescribed.
               </p>
-              <div className="space-y-2 rounded-2xl border border-white/60 bg-white/70 p-6 text-left text-sm text-muted-foreground shadow-sm dark:border-white/10 dark:bg-slate-900/60">
-                <p className="font-semibold text-slate-900 dark:text-slate-100">Instructions</p>
-                <ul className="list-disc space-y-1 pl-6">
-                  <li>Cover one eye and focus on the center dot.</li>
-                  <li>Tap anywhere lines look warped, blank, or distorted.</li>
-                  <li>Repeat the process for your other eye.</li>
-                  <li>Completing both eyes earns 20 XP.</li>
-                </ul>
+
+              <div className="grid gap-4 md:grid-cols-3 text-left">
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
+                  <h3 className="font-semibold mb-1">Cover</h3>
+                  <p className="text-xs text-muted-foreground">Test one eye at a time. Keep the other covered.</p>
+                </div>
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
+                  <h3 className="font-semibold mb-1">Focus</h3>
+                  <p className="text-xs text-muted-foreground">Stare at the center dot. Do not move your eye.</p>
+                </div>
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
+                  <h3 className="font-semibold mb-1">Tap</h3>
+                  <p className="text-xs text-muted-foreground">Mark any areas that look wavy or distorted.</p>
+                </div>
               </div>
-              <Button
-                size="lg"
-                onClick={handleStart}
-                className="w-full bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
-              >
-                Start Test
-              </Button>
+
+              <div className="pt-4">
+                <Button
+                  size="lg"
+                  onClick={handleStart}
+                  className="w-full max-w-xs rounded-full bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-105 transition-all duration-300"
+                >
+                  Start Grid Test
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardContent className="space-y-8 p-8">
-              <div className="text-center">
-                <p className="mb-4 text-sm text-muted-foreground">
-                  Currently testing {eye === "left" ? "left eye" : "right eye"}
-                </p>
+          <Card className="glass-card border-none shadow-none bg-transparent">
+            <CardContent className="space-y-8 p-0">
+              <div className="flex flex-col items-center justify-center py-6 rounded-3xl bg-white/50 border border-white/20 backdrop-blur-sm dark:bg-slate-900/50">
+                <div className="mb-6 flex items-center gap-4 text-sm font-medium text-muted-foreground bg-white/40 px-6 py-2 rounded-full border border-white/20 dark:bg-slate-800/40">
+                  <span>Testing: <span className="text-foreground font-bold capitalize">{eye} Eye</span></span>
+                </div>
+
                 <div
-                  className="relative mx-auto h-80 w-80 rounded-2xl border border-primary/30 bg-white shadow-inner dark:bg-slate-900"
+                  className="relative mx-auto h-80 w-80 rounded-2xl border border-primary/30 bg-white shadow-2xl dark:bg-slate-900 cursor-crosshair transition-transform active:scale-[0.99]"
                   onClick={handleGridClick}
                   style={{
                     backgroundColor: darkMode ? "#e0f2ff" : "#ffffff",
-                    backgroundImage: `linear-gradient(0deg, ${
-                      darkMode ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.12)"
-                    } 1px, transparent 1px), linear-gradient(90deg, ${
-                      darkMode ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.12)"
-                    } 1px, transparent 1px)`,
+                    backgroundImage: `linear-gradient(0deg, ${darkMode ? "rgba(29, 78, 216, 0.2)" : "rgba(0,0,0,0.12)"
+                      } 1px, transparent 1px), linear-gradient(90deg, ${darkMode ? "rgba(29, 78, 216, 0.2)" : "rgba(0,0,0,0.12)"
+                      } 1px, transparent 1px)`,
                     backgroundSize: "20px 20px",
                   }}
                 >
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div
-                      className="h-2 w-2 rounded-full bg-primary"
+                      className="h-3 w-3 rounded-full bg-primary shadow-lg ring-4 ring-primary/20"
                       style={{ backgroundColor: darkMode ? "#1d4ed8" : undefined }}
                     />
                   </div>
                   {currentClicks.map((point, index) => (
                     <div
                       key={index}
-                      className="absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-rose-500"
+                      className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-rose-500 shadow-md ring-2 ring-white dark:ring-slate-900 animate-in zoom-in-50 duration-300"
                       style={{ left: `${point.x}%`, top: `${point.y}%` }}
                     />
                   ))}
                 </div>
+                <p className="mt-4 text-xs text-muted-foreground max-w-xs text-center">
+                  Tap where lines look distorted. Focus on the center dot.
+                </p>
               </div>
 
-              <TestTimerDisplay
-                sessionMs={sessionElapsedMs}
-                questionMs={questionElapsedMs}
-                questionLabel={activeQuestionLabel || (eye ? `${eye} eye` : undefined)}
-              />
+              <div className="flex flex-col gap-4 max-w-md mx-auto">
+                <TestTimerDisplay
+                  sessionMs={sessionElapsedMs}
+                  questionMs={questionElapsedMs}
+                  questionLabel={activeQuestionLabel || (eye ? `${eye} eye` : undefined)}
+                />
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (eye === "left") {
-                      setLeftClicks([]);
-                    } else {
-                      setRightClicks([]);
-                    }
-                  }}
-                >
-                  Clear Marks
-                </Button>
-                <Button
-                  className="bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
-                  onClick={handleNext}
-                  disabled={completed}
-                >
-                  {eye === "left" ? "Switch to right eye" : "Complete Test"}
-                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="h-12 rounded-xl bg-white/40 border-primary/10 hover:bg-white/60 dark:bg-slate-800/40"
+                    onClick={() => {
+                      if (eye === "left") {
+                        setLeftClicks([]);
+                      } else {
+                        setRightClicks([]);
+                      }
+                    }}
+                  >
+                    Clear Marks
+                  </Button>
+                  <Button
+                    className="h-12 rounded-xl bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                    onClick={handleNext}
+                    disabled={completed}
+                  >
+                    {eye === "left" ? "Next (Right Eye)" : "Complete Test"}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

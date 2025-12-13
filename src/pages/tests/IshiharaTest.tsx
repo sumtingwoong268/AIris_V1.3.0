@@ -518,12 +518,12 @@ export default function IshiharaTest() {
       subtype !== "normal"
         ? subtype
         : (() => {
-            if ((matchCounter[TYPE_DEUTAN] ?? 0) >= 3) return TYPE_DEUTAN;
-            if ((matchCounter[TYPE_PROTAN] ?? 0) >= 3) return TYPE_PROTAN;
-            if ((matchCounter[TYPE_RED_GREEN] ?? 0) >= 2) return TYPE_RED_GREEN;
-            if (score >= 90) return "normal";
-            return "inconclusive";
-          })();
+          if ((matchCounter[TYPE_DEUTAN] ?? 0) >= 3) return TYPE_DEUTAN;
+          if ((matchCounter[TYPE_PROTAN] ?? 0) >= 3) return TYPE_PROTAN;
+          if ((matchCounter[TYPE_RED_GREEN] ?? 0) >= 2) return TYPE_RED_GREEN;
+          if (score >= 90) return "normal";
+          return "inconclusive";
+        })();
 
     const analysisSummary = {
       control: {
@@ -653,66 +653,82 @@ export default function IshiharaTest() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-slate-900/70 supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-900/40">
         <div className="container mx-auto flex items-center gap-3 px-4 py-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-white/20">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <img src={logo} alt="AIris" className="h-10" />
+          <div className="flex items-center gap-2" onClick={() => navigate("/dashboard")}>
+            <img src={logo} alt="AIris" className="h-8 drop-shadow-md cursor-pointer" />
+            <span className="font-bold tracking-tight">Ishihara Color Test</span>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto max-w-4xl space-y-8 px-4 py-10">
-        <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
-          <span className="pointer-events-none absolute -left-12 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-white/25 blur-3xl" />
-          <span className="pointer-events-none absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-sky-400/30 blur-3xl" />
-          <CardContent className="relative z-10 space-y-6 p-8">
-            <div className="space-y-3">
-              <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Ishihara color test</p>
-              <h1 className="text-3xl font-semibold">Gauge red-green perception with adaptive Ishihara plates</h1>
-              <p className="text-sm text-white/80">
-                Enter the numbers you see—or mark “nothing” when no digits are visible. AIris adapts the sequence to
-                explore color differences and refine your results.
+        <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 shadow-2xl text-white">
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+          <div className="relative z-10 grid gap-8 md:grid-cols-[1.5fr,1fr] items-center">
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-white/70">Ishihara color test</p>
+                <h1 className="text-3xl font-bold md:text-4xl">Gauge your color perception</h1>
+              </div>
+              <p className="text-indigo-100 max-w-lg leading-relaxed">
+                Enter the numbers you see. AIris adapts the sequence to explore subtle color differences and refine your results.
               </p>
             </div>
-            <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
-              <p className="text-xs uppercase tracking-wide text-white/70">Current XP</p>
-              <div className="mt-3">
-                <XPBar xp={xp} />
+            <div className="rounded-2xl bg-white/10 border border-white/10 p-6 backdrop-blur-md">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-white/80">Potential XP Reward</span>
+                <span className="text-lg font-bold text-yellow-300">up to 45 XP</span>
               </div>
+              <XPBar xp={xp} />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {!started ? (
-          <Card>
+          <Card className="glass-card">
             <CardContent className="space-y-6 p-8 text-center">
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Before you begin</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Before you begin</h2>
+              <p className="text-base text-muted-foreground max-w-lg mx-auto">
                 Make sure your display shows crisp colors with comfortable brightness. If you normally wear glasses or
                 contacts for everyday tasks, keep them on.
               </p>
-              <div className="space-y-2 rounded-2xl border border-white/60 bg-white/70 p-6 text-left text-sm text-muted-foreground shadow-sm dark:border-white/10 dark:bg-slate-900/60">
-                <p className="font-semibold text-slate-900 dark:text-slate-100">Instructions</p>
-                <ul className="list-disc space-y-1 pl-6">
-                  <li>Enter the number or pattern you see on each plate.</li>
-                  <li>Type “nothing” if no number is visible.</li>
-                  <li>Plates may adapt to your answers to explore color perception.</li>
-                  <li>Complete the sequence to earn up to 45 XP.</li>
-                </ul>
+
+              <div className="grid gap-4 md:grid-cols-3 text-left">
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
+                  <h3 className="font-semibold mb-1">Observe</h3>
+                  <p className="text-xs text-muted-foreground">Enter the number or pattern you see.</p>
+                </div>
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
+                  <h3 className="font-semibold mb-1">Adapt</h3>
+                  <p className="text-xs text-muted-foreground">Plates change based on your answers.</p>
+                </div>
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
+                  <h3 className="font-semibold mb-1">Complete</h3>
+                  <p className="text-xs text-muted-foreground">Finish the sequence to earn 45 XP.</p>
+                </div>
               </div>
-              <Button
-                size="lg"
-                onClick={handleStart}
-                className="w-full bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
-              >
-                Start Test
-              </Button>
+
+              <div className="pt-4">
+                <Button
+                  size="lg"
+                  onClick={handleStart}
+                  className="w-full max-w-xs rounded-full bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-105 transition-all duration-300"
+                >
+                  Start Color Test
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardContent className="space-y-8 p-8">
+          <Card className="glass-card border-none shadow-none bg-transparent">
+            <CardContent className="space-y-8 p-0">
               <div className="text-center space-y-2">
                 {phase === "control" ? (
                   <>
@@ -743,7 +759,7 @@ export default function IshiharaTest() {
                     onLoad={() => setImageError(false)}
                   />
                   {imageError && (
-                    <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-muted/80 text-sm text-muted-foreground">
+                    <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-muted/80 text-sm text-muted-foreground backdrop-blur-sm">
                       Image failed to load. Try refreshing.
                     </div>
                   )}
@@ -771,7 +787,7 @@ export default function IshiharaTest() {
                     onChange={(e) => setUserInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAnswer()}
                     placeholder="Type the number you see (or 'nothing')"
-                    className="rounded-2xl border border-primary/20 bg-white/80 text-center text-lg dark:border-white/10 dark:bg-slate-900/70"
+                    className="h-14 rounded-2xl border border-primary/20 bg-white/50 backdrop-blur-sm text-center text-xl font-medium tracking-widest px-4 focus:ring-2 focus:ring-primary/20 transition-all dark:border-white/10 dark:bg-slate-900/50"
                     autoFocus
                   />
                   <div className="flex flex-col gap-3 sm:flex-row">
@@ -779,20 +795,20 @@ export default function IshiharaTest() {
                       variant="outline"
                       onClick={() => handleAnswer("nothing")}
                       disabled={submitting}
-                      className="flex-1 rounded-2xl"
+                      className="h-12 flex-1 rounded-xl bg-white/40 border-primary/10 hover:bg-white/60 dark:bg-slate-800/40"
                     >
                       Mark as Nothing
                     </Button>
                     <Button
-                      onClick={handleAnswer}
+                      onClick={() => handleAnswer()}
                       disabled={!userInput.trim() || submitting}
-                      className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
+                      className="h-12 flex-1 rounded-xl bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                     >
                       {phase === "control"
                         ? "Verify Control"
                         : currentPlateIndex === testPlates.length - 1
                           ? "Finish"
-                          : "Next"}
+                          : "Next Plate"}
                     </Button>
                   </div>
                   <p className="text-xs text-center text-muted-foreground">Press Enter to submit</p>

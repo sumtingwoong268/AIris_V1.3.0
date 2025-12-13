@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpenText, Clock, Plus } from "lucide-react";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/airis-logo-new.png";
 import { BLOG_POSTS } from "@/utils/blogPosts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,49 +10,66 @@ export default function Blogs() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto flex items-center gap-3 px-4 py-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div
-            className="flex cursor-pointer items-center gap-3"
-            onClick={() => navigate("/dashboard")}
-          >
-            <img src={logo} alt="AIris" className="hidden h-10 sm:block" />
-            <div className="flex flex-col">
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                AIris Insights
-              </span>
-              <span className="text-[10px] text-muted-foreground -mt-1">Eye care guides & wellness tips</span>
+      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+        <header className="pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hover:bg-slate-100 -ml-2 dark:hover:bg-slate-800">
+              <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+            </Button>
+            <div
+              className="flex cursor-pointer items-center gap-3 group"
+              onClick={() => navigate("/dashboard")}
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md group-hover:scale-105 transition-transform">
+                <img src={logo} alt="AIris" className="h-6 w-6 object-contain brightness-0 invert" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold leading-none text-slate-900 dark:text-white">AIris Insights</span>
+                <span className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Eye care guides</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button onClick={() => navigate("/dashboard")} variant="ghost" size="sm" className="rounded-full px-4 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+              Dashboard
+            </Button>
+          </div>
+        </header>
+      </div>
+
+      <main className="container mx-auto max-w-5xl space-y-10 px-4 pt-32 pb-20">
+        <div className="relative overflow-hidden rounded-[32px] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 shadow-2xl text-white">
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+          <div className="relative z-10 grid gap-8 md:grid-cols-[1.5fr,1fr] items-center">
+            <div className="space-y-4">
+              <div>
+                <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.35em] text-white/70 mb-2">
+                  <BookOpenText className="h-4 w-4" /> Expert Blog
+                </p>
+                <h1 className="text-3xl font-bold sm:text-4xl text-white">Stay inspired with actionable tips for brighter vision</h1>
+              </div>
+              <p className="max-w-lg text-indigo-100 leading-relaxed font-light">
+                Dive into curated articles crafted by our vision specialists. Each guide translates clinical advice into everyday routines.
+              </p>
+              <Button
+                onClick={() => navigate("/dashboard")}
+                variant="outline"
+                className="mt-4 rounded-full border-white/40 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 transition-all font-semibold"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Explore personalized insights
+              </Button>
+            </div>
+
+            <div className="hidden md:block">
+              {/* Visual element or illustration could go here */}
+              <div className="relative h-40 w-full rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
+                <span className="text-white/50 text-sm">Featured content</span>
+              </div>
             </div>
           </div>
         </div>
-      </header>
-
-      <main className="container mx-auto max-w-5xl space-y-10 px-4 py-10">
-        <section className="relative overflow-hidden rounded-[32px] border border-primary/15 bg-gradient-to-br from-primary/10 via-sky-100 to-indigo-100 p-8 shadow-xl dark:from-slate-900 dark:via-primary/15 dark:to-indigo-950">
-          <span className="pointer-events-none absolute -top-12 left-8 h-32 w-32 rounded-full bg-white/50 blur-3xl dark:bg-primary/30" />
-          <span className="pointer-events-none absolute -bottom-16 right-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl dark:bg-indigo-500/30" />
-          <div className="relative z-10 space-y-4 text-slate-900 dark:text-slate-100">
-            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-primary">
-              <BookOpenText className="h-4 w-4" />
-              Expert eye care blog
-            </p>
-            <h1 className="text-3xl font-bold sm:text-4xl">Stay inspired with actionable tips for brighter, healthier vision</h1>
-            <p className="max-w-2xl text-sm text-slate-700 dark:text-slate-300">
-              Dive into curated articles crafted by our vision specialists. Each guide translates clinical advice into everyday routines you can follow with confidence.
-            </p>
-            <Button
-              onClick={() => navigate("/dashboard")}
-              variant="outline"
-              className="mt-4 inline-flex items-center gap-2 rounded-full border-primary/60 bg-white/60 px-6 text-primary shadow-sm hover:bg-white/80 dark:border-primary/40 dark:bg-slate-900/70 dark:text-primary-foreground dark:hover:bg-slate-900"
-            >
-              <Plus className="h-4 w-4" />
-              Explore your personalized insights
-            </Button>
-          </div>
-        </section>
 
         <section className="space-y-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -77,7 +94,7 @@ export default function Blogs() {
             {BLOG_POSTS.map((post) => (
               <Card
                 key={post.slug}
-                className="group relative overflow-hidden border border-transparent bg-white/80 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-2xl dark:bg-slate-900/70"
+                className="glass-card group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
               >
                 <span className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${post.heroGradient} opacity-0 transition-opacity duration-500 group-hover:opacity-10`} />
                 <CardHeader className="relative space-y-3">

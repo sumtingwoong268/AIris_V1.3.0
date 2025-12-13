@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Moon, Sun, Upload } from "lucide-react";
+import { ArrowLeft, Moon, Sun, Upload, Trophy, Star, Zap, Shield } from "lucide-react";
 import { useDarkModePreference } from "@/hooks/useDarkModePreference";
 import logo from "@/assets/logo.png";
 import { sanitizeUsername, usernameIsAvailable, USERNAME_MAX_LENGTH } from "@/utils/username";
@@ -76,8 +76,8 @@ export default function Profile() {
   const usernameHelpText = usernameTiming.canChange
     ? "Usernames start with @ and can include letters, numbers, '.', '_' or '-'."
     : usernameTiming.nextChangeText
-    ? `You can change your username again on ${usernameTiming.nextChangeText}.`
-    : "You can only change your username every 14 days.";
+      ? `You can change your username again on ${usernameTiming.nextChangeText}.`
+      : "You can only change your username every 14 days.";
   const normalizedUsernameDraft = sanitizeUsername(usernameInput);
   const usernameCanSubmit =
     !!normalizedUsernameDraft && normalizedUsernameDraft !== username && usernameTiming.canChange;
@@ -358,22 +358,29 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-slate-900/70 supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-900/40">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/dashboard")}
+              className="rounded-full hover:bg-white/20"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div
-              className="flex cursor-pointer items-center gap-3"
+              className="flex cursor-pointer items-center gap-3 transition-opacity hover:opacity-80"
               onClick={() => navigate("/dashboard")}
             >
-              <img src={logo} alt="AIris" className="h-10" />
+              <img src={logo} alt="AIris" className="h-10 drop-shadow-md" />
               <div className="flex flex-col">
-                <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
                   AIris
                 </span>
-                <span className="text-[10px] text-muted-foreground -mt-1">the future of eyecare</span>
+                <span className="text-[10px] font-medium text-muted-foreground -mt-1 uppercase tracking-wider">
+                  Profile & Settings
+                </span>
               </div>
             </div>
           </div>
@@ -381,53 +388,83 @@ export default function Profile() {
       </header>
 
       <main className="container mx-auto max-w-5xl space-y-10 px-4 py-10">
-        <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
-          <span className="pointer-events-none absolute -left-16 top-1/4 h-56 w-56 rounded-full bg-white/25 blur-3xl" />
-          <span className="pointer-events-none absolute -right-12 bottom-0 h-48 w-48 rounded-full bg-sky-400/30 blur-3xl" />
-          <CardContent className="relative z-10 flex flex-col gap-6 p-8 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-3">
-              <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Personal profile</p>
-              <h1 className="text-4xl font-bold">
-                {displayName ? `Hey ${displayName},` : "Complete your profile,"} keep your details current
-              </h1>
-              <p className="text-sm font-medium text-white/80">{username}</p>
-              <p className="max-w-xl text-sm text-white/80">
-                Review your vision history, update lifestyle habits, and manage preferences so AIris can tailor insights
-                for you.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
-                <p className="text-xs uppercase tracking-wide text-white/70">Total XP</p>
-                <p className="mt-2 text-3xl font-semibold">{xp}</p>
+        <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl p-1">
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+          <div className="absolute top-0 right-0 -mt-20 -mr-20 h-80 w-80 rounded-full bg-white/20 blur-[80px]" />
+          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 h-64 w-64 rounded-full bg-fuchsia-500/30 blur-[60px]" />
+
+          <div className="relative z-10 flex flex-col gap-8 rounded-[22px] bg-white/5 p-8 backdrop-blur-sm lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Avatar"
+                    className="h-24 w-24 rounded-full object-cover border-4 border-white/20 shadow-xl"
+                  />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-white/20 to-white/5 border-4 border-white/20 shadow-xl text-3xl font-bold text-white">
+                    {(displayName?.[0] ?? username?.[1] ?? "?").toUpperCase()}
+                  </div>
+                )}
+                <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white p-2 rounded-full shadow-lg border-2 border-primary/50">
+                  <Trophy className="h-4 w-4" />
+                </div>
               </div>
-              <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
-                <p className="text-xs uppercase tracking-wide text-white/70">Level</p>
-                <p className="mt-2 text-3xl font-semibold">{level}</p>
-              </div>
-              <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
-                <p className="text-xs uppercase tracking-wide text-white/70">Dark Mode</p>
-                <p className="mt-2 text-lg font-semibold">{darkMode ? "Enabled" : "Disabled"}</p>
-              </div>
-              <div className="rounded-2xl bg-white/15 p-4 shadow-lg backdrop-blur">
-                <p className="text-xs uppercase tracking-wide text-white/70">Last Eye Exam</p>
-                <p className="mt-2 text-lg font-semibold">
-                  {lastEyeExam ? lastEyeExam.replace(/_/g, " ") : "Update your exam date"}
+
+              <div className="space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <h1 className="text-3xl font-bold tracking-tight">
+                    {displayName || "Explorer"}
+                  </h1>
+                  <span className="w-fit rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur-md">
+                    {username}
+                  </span>
+                </div>
+                <p className="max-w-lg text-sm text-white/80 font-light leading-relaxed">
+                  Review your vision history, update lifestyle habits, and manage preferences so AIris can tailor insights for you.
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:flex lg:gap-4">
+              <div className="flex flex-col items-center justify-center rounded-2xl bg-white/10 border border-white/10 p-4 shadow-lg backdrop-blur hover:bg-white/20 transition-colors">
+                <Zap className="h-5 w-5 text-amber-300 mb-2" />
+                <p className="text-[10px] uppercase tracking-wider text-white/70">Total XP</p>
+                <p className="text-2xl font-bold">{xp}</p>
+              </div>
+              <div className="flex flex-col items-center justify-center rounded-2xl bg-white/10 border border-white/10 p-4 shadow-lg backdrop-blur hover:bg-white/20 transition-colors">
+                <Star className="h-5 w-5 text-fuchsia-300 mb-2" />
+                <p className="text-[10px] uppercase tracking-wider text-white/70">Level</p>
+                <p className="text-2xl font-bold">{level}</p>
+              </div>
+              <div className="flex flex-col items-center justify-center rounded-2xl bg-white/10 border border-white/10 p-4 shadow-lg backdrop-blur hover:bg-white/20 transition-colors">
+                {darkMode ? <Moon className="h-5 w-5 text-indigo-300 mb-2" /> : <Sun className="h-5 w-5 text-orange-300 mb-2" />}
+                <p className="text-[10px] uppercase tracking-wider text-white/70">Theme</p>
+                <p className="text-sm font-bold mt-1">{darkMode ? "Dark" : "Light"}</p>
+              </div>
+              <div className="flex flex-col items-center justify-center rounded-2xl bg-white/10 border border-white/10 p-4 shadow-lg backdrop-blur hover:bg-white/20 transition-colors">
+                <Shield className="h-5 w-5 text-emerald-300 mb-2" />
+                <p className="text-[10px] uppercase tracking-wider text-white/70">Last Exam</p>
+                <p className="text-xs font-bold mt-1 text-center leading-tight">
+                  {lastEyeExam ? lastEyeExam.replace(/_/g, " ") : "N/A"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Card className="glass-card">
           <CardHeader>
-            <CardTitle className="text-2xl text-slate-900 dark:text-slate-50">Profile Settings</CardTitle>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              Profile Settings
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-8">
             <div className="space-y-8">
               {/* Username */}
-              <div className="space-y-2">
-                <Label htmlFor="profile-username">Username</Label>
+              <div className="space-y-2 rounded-2xl bg-background/40 p-6 border border-border/50">
+                <Label htmlFor="profile-username" className="text-base font-semibold">Username</Label>
                 <div className="flex flex-col gap-2 md:flex-row">
                   <Input
                     id="profile-username"
@@ -438,12 +475,13 @@ export default function Profile() {
                     }}
                     maxLength={USERNAME_MAX_LENGTH}
                     autoComplete="off"
-                    className="md:flex-1"
+                    className="md:flex-1 bg-background/50"
                   />
                   <Button
                     type="button"
                     onClick={handleUsernameUpdate}
                     disabled={usernameLoading || !usernameCanSubmit}
+                    variant={usernameCanSubmit ? "default" : "secondary"}
                   >
                     {usernameLoading ? "Saving..." : "Update username"}
                   </Button>
@@ -456,31 +494,34 @@ export default function Profile() {
               </div>
 
               {/* Avatar Upload */}
-              <div className="space-y-2">
-                <Label>Profile Photo</Label>
-                <div className="flex items-center gap-4">
+              <div className="space-y-4 rounded-2xl bg-background/40 p-6 border border-border/50">
+                <Label className="text-base font-semibold">Profile Photo</Label>
+                <div className="flex items-center gap-6">
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
                       alt="Avatar"
-                      className="h-20 w-20 rounded-full object-cover border-2 border-primary"
+                      className="h-20 w-20 rounded-full object-cover border-2 border-primary ring-4 ring-primary/10"
                     />
                   ) : (
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-blue-500 text-2xl font-bold text-white">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-blue-500 text-2xl font-bold text-white shadow-lg">
                       {(displayName?.[0] ?? username?.[1] ?? "?").toUpperCase()}
                     </div>
                   )}
-                  <div className="flex-1">
-                    <input type="file" id="avatar-upload" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
-                    <Button variant="outline" onClick={() => document.getElementById("avatar-upload")?.click()} disabled={uploading}>
-                      <Upload className="mr-2 h-4 w-4" />
-                      {uploading ? "Uploading..." : "Upload Photo"}
-                    </Button>
-                    {avatarUrl && (
-                      <Button variant="ghost" size="sm" className="ml-2" onClick={() => setAvatarUrl("")}>
-                        Remove
+                  <div className="flex-1 space-y-2">
+                    <p className="text-sm text-muted-foreground mb-2">Upload a new avatar to personalize your experience. Max 5MB.</p>
+                    <div className="flex gap-2">
+                      <input type="file" id="avatar-upload" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                      <Button variant="outline" onClick={() => document.getElementById("avatar-upload")?.click()} disabled={uploading}>
+                        <Upload className="mr-2 h-4 w-4" />
+                        {uploading ? "Uploading..." : "Upload Photo"}
                       </Button>
-                    )}
+                      {avatarUrl && (
+                        <Button variant="ghost" onClick={() => setAvatarUrl("")}>
+                          Remove
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -721,8 +762,11 @@ export default function Profile() {
             {/* Dark Mode Toggle */}
             <div className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
               <div className="flex items-center gap-3 text-slate-900 dark:text-slate-100">
-                {darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-                <span className="font-medium">Dark Mode</span>
+                {darkMode ? <Moon className="h-5 w-5 text-indigo-400" /> : <Sun className="h-5 w-5 text-amber-500" />}
+                <div className="flex flex-col">
+                  <span className="font-medium">Dark Mode</span>
+                  <span className="text-xs text-muted-foreground">Toggle between light and dark themes</span>
+                </div>
               </div>
               <Button variant="outline" size="sm" onClick={toggleDarkMode} disabled={darkLoading}>
                 {darkLoading ? "Loading..." : darkMode ? "Disable" : "Enable"}
@@ -734,9 +778,10 @@ export default function Profile() {
               <Button
                 onClick={handleSave}
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-primary to-blue-500 text-white hover:from-blue-500 hover:to-primary"
+                className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity text-white shadow-lg shadow-primary/25"
+                size="lg"
               >
-                {loading ? "Saving..." : "Save Changes"}
+                {loading ? "Saving Changes..." : "Save Changes"}
               </Button>
               <Button variant="destructive" onClick={handleSignOut}>
                 Sign Out

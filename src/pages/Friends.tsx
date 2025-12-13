@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Copy, Flame, Trophy, UserPlus, Check, X, Users } from "lucide-react";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/airis-logo-new.png";
 import { sanitizeUsername } from "@/utils/username";
 import { useFriendRequests } from "@/context/FriendRequestsContext";
 import {
@@ -140,7 +141,6 @@ export default function Friends() {
       return;
     }
 
-    // Preserve original order based on friendships query
     const profileMap = new Map((profilesData ?? []).map((profile) => [profile.id, profile]));
     const ordered = friendIds
       .map((id) => profileMap.get(id))
@@ -165,9 +165,9 @@ export default function Friends() {
     const { data, error } = await supabase
       .from("profiles")
       .select("id, display_name, username, avatar_url, current_streak, xp")
-      .order("current_streak", { ascending: false, nullsLast: true })
-      .order("xp", { ascending: false, nullsLast: true })
-      .order("display_name", { ascending: true, nullsFirst: true })
+      .order("current_streak", { ascending: false })
+      .order("xp", { ascending: false })
+      .order("display_name", { ascending: true })
       .order("username", { ascending: true });
 
     if (error) {
@@ -224,7 +224,6 @@ export default function Friends() {
         throw new Error("User profile data was not returned");
       }
 
-      // Check if already friends
       const { data: existing } = await supabase
         .from("friendships")
         .select("id")
@@ -236,7 +235,6 @@ export default function Friends() {
         throw new Error("Already friends with this user");
       }
 
-      // Check if request already exists
       const { data: existingRequest } = await supabase
         .from("friend_requests")
         .select("id, status")
@@ -280,20 +278,18 @@ export default function Friends() {
     if (!user) return;
 
     try {
-      // Create mutual friendships
       await supabase.from("friendships").insert([
         { user_id: user.id, friend_id: senderId },
         { user_id: senderId, friend_id: user.id },
       ]);
 
-      // Update request status
       await supabase
         .from("friend_requests")
         .update({ status: "accepted" })
         .eq("id", requestId);
 
       toast({ title: "Friend request accepted!" });
-      
+
       fetchFriends();
       void refreshPending();
     } catch (error: any) {
@@ -326,125 +322,123 @@ export default function Friends() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto flex items-center gap-3 px-4 py-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div 
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={() => navigate("/dashboard")}
-          >
-            <img src={logo} alt="AIris" className="h-10" />
-            <div className="flex flex-col">
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                AIris
-              </span>
-              <span className="text-[10px] text-muted-foreground -mt-1">
-                the future of eyecare
-              </span>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+      {/* Floating Header Pattern to match other pages */}
+      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+        <header className="pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-slate-100 -ml-2 dark:hover:bg-slate-800">
+              <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+            </Button>
+            <div
+              className="flex cursor-pointer items-center gap-3 group"
+              onClick={() => navigate("/dashboard")}
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md group-hover:scale-105 transition-transform">
+                <img src={logo} alt="AIris" className="h-6 w-6 object-contain brightness-0 invert" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold leading-none text-slate-900 dark:text-white">AIris Community</span>
+              </div>
             </div>
           </div>
+        </header>
+      </div>
+
+      <main className="container mx-auto max-w-5xl space-y-8 px-4 pt-32 pb-20">
+        <div className="rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-10 shadow-2xl text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+          <div className="relative z-10">
+            <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl mb-3">Friends & Leaderboard</h1>
+            <p className="text-indigo-100 max-w-2xl text-lg font-medium leading-relaxed">
+              Celebrate your streaks, connect with friends, and send requests to keep one another accountable.
+            </p>
+          </div>
         </div>
-      </header>
 
-      <main className="container mx-auto max-w-5xl space-y-8 px-4 py-10">
-                    <div className="rounded-[28px] border border-primary/15 bg-gradient-to-br from-white via-slate-50 to-primary/10 p-6 shadow-xl dark:from-slate-900 dark:via-slate-900/70 dark:to-primary/10">
-                      <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Friends & Leaderboard</h1>
-                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                        Celebrate your streaks, connect with friends, and send requests to keep one another accountable.
-                      </p>
+        {selfProfile && (
+          <div className="flex flex-col gap-5 rounded-[2rem] border border-white/60 bg-white/70 p-6 shadow-xl shadow-indigo-500/5 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/40 sm:flex-row sm:items-center sm:justify-between transition-all hover:bg-white/90">
+            <div className="flex items-center gap-4">
+              {selfProfile.avatar_url ? (
+                <img
+                  src={selfProfile.avatar_url}
+                  alt={selfProfile.display_name || selfProfile.username}
+                  className="h-16 w-16 rounded-2xl object-cover shadow-md"
+                />
+              ) : (
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-2xl text-white shadow-md">
+                  {(selfProfile.display_name?.[0] ?? selfProfile.username[1] ?? "?").toUpperCase()}
+                </div>
+              )}
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] font-bold text-slate-400 mb-1">Your Profile</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{selfProfile.username}</p>
+                  <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300">You</Badge>
+                </div>
+
+                {selfStreakStatus && (
+                  <div className="mt-2 flex items-center gap-3 text-sm font-medium">
+                    <div className="flex items-center gap-1.5 text-orange-500 bg-orange-50 px-2.5 py-1 rounded-lg dark:bg-orange-950/30">
+                      <Flame className="h-4 w-4 fill-orange-500" />
+                      <span>{selfStreakStatus.effectiveStreak} week streak</span>
                     </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto rounded-xl border-slate-200 hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800 dark:hover:bg-slate-900"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(selfProfile.username);
+                  toast({ title: "Username copied", description: "Share it with a friend to connect." });
+                } catch (error) {
+                  // ...
+                }
+              }}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Copy username
+            </Button>
+          </div>
+        )}
 
-                    {selfProfile && (
-                      <div className="flex flex-col gap-3 rounded-3xl border border-white/60 bg-white/80 p-5 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-900/70 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-3">
-                          {selfProfile.avatar_url ? (
-                            <img
-                              src={selfProfile.avatar_url}
-                              alt={selfProfile.display_name || selfProfile.username}
-                              className="h-12 w-12 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary font-semibold text-white">
-                              {(selfProfile.display_name?.[0] ?? selfProfile.username[1] ?? "?").toUpperCase()}
-                            </div>
-                          )}
-                          <div>
-                            <p className="text-sm uppercase tracking-[0.25rem] text-muted-foreground">Your username</p>
-                            <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">{selfProfile.username}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Friends can add you by entering this handle.
-                            </p>
-                            {selfStreakStatus && (
-                              <div className="mt-2 space-y-1 text-xs text-muted-foreground dark:text-slate-300/80">
-                                <p>
-                                  Weekly streak:{" "}
-                                  <span className="font-semibold text-slate-900 dark:text-slate-100">
-                                    {selfStreakStatus.effectiveStreak} week
-                                    {selfStreakStatus.effectiveStreak === 1 ? "" : "s"}
-                                  </span>
-                                </p>
-                                <p>
-                                  Resets in{" "}
-                                  <span className="font-mono text-primary dark:text-blue-400">
-                                    {selfCountdown || "00h 00m 00s"}
-                                  </span>
-                                </p>
-                                {!selfStreakStatus.isActiveThisWeek && (
-                                  <p className="text-[11px] text-amber-600 dark:text-amber-400">
-                                    No test logged yet this week—complete one to stay on track.
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full sm:w-auto"
-                          onClick={async () => {
-                            try {
-                              await navigator.clipboard.writeText(selfProfile.username);
-                              toast({ title: "Username copied", description: "Share it with a friend to connect." });
-                            } catch (error) {
-                              console.error("copy username error:", error);
-                              toast({ title: "Copy failed", description: "Couldn't copy username to clipboard.", variant: "destructive" });
-                            }
-                          }}
-                        >
-                          <Copy className="mr-2 h-4 w-4" />
-                          Copy username
-                        </Button>
-                      </div>
-                    )}
-
-        <Tabs defaultValue="leaderboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white/60 p-1 shadow-inner backdrop-blur dark:bg-slate-900/60">
-            <TabsTrigger className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-500 data-[state=active]:text-white" value="leaderboard">
+        <Tabs defaultValue="leaderboard" className="space-y-8">
+          <TabsList className="bg-slate-100/80 p-1.5 w-full flex justify-start overflow-x-auto rounded-2xl dark:bg-slate-800/50">
+            <TabsTrigger
+              value="leaderboard"
+              className="rounded-xl px-6 py-2.5 font-medium data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-indigo-400"
+            >
               Leaderboard
             </TabsTrigger>
-            <TabsTrigger className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-500 data-[state=active]:text-white" value="friends">
+            <TabsTrigger
+              value="friends"
+              className="rounded-xl px-6 py-2.5 font-medium data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-indigo-400"
+            >
               My Friends ({friends.length})
             </TabsTrigger>
-            <TabsTrigger className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-500 data-[state=active]:text-white" value="requests">
-              Requests {pendingRequests.length > 0 && `(${pendingRequests.length})`}
+            <TabsTrigger
+              value="requests"
+              className="rounded-xl px-6 py-2.5 font-medium data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-indigo-400"
+            >
+              Requests {pendingRequests.length > 0 && <span className="ml-1.5 bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full text-[10px]">{pendingRequests.length}</span>}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="leaderboard" className="space-y-4">
-            <Tabs defaultValue="weekly" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-white/60 p-1 shadow-inner backdrop-blur dark:bg-slate-900/60">
+            <Tabs defaultValue="weekly" className="space-y-6">
+              <TabsList className="inline-flex h-auto p-1 bg-slate-100 rounded-xl dark:bg-slate-800/50">
                 <TabsTrigger
-                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-500 data-[state=active]:text-white"
+                  className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all shadow-none"
                   value="weekly"
                 >
                   Weekly Streak Leaders
                 </TabsTrigger>
                 <TabsTrigger
-                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-500 data-[state=active]:text-white"
+                  className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all shadow-none"
                   value="all-users"
                 >
                   All Users
@@ -452,46 +446,52 @@ export default function Friends() {
               </TabsList>
 
               <TabsContent value="weekly" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-level" />
+                <Card className="glass-card border-none shadow-none bg-transparent">
+                  <CardHeader className="px-0">
+                    <CardTitle className="flex items-center gap-2 text-xl">
+                      <Trophy className="h-6 w-6 text-yellow-400" />
                       Weekly Streak Leaders
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-4 px-0">
                     {leaderboard.map((profile, index) => (
                       <div
                         key={profile.id}
-                        className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 transition-transform hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-slate-900/60"
+                        className={`group flex items-center justify-between rounded-2xl border p-4 transition-all hover:-translate-y-1 hover:shadow-lg ${index === 0 ? "bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border-yellow-500/20" :
+                          index === 1 ? "bg-gradient-to-r from-slate-400/10 to-slate-500/10 border-slate-400/20" :
+                            index === 2 ? "bg-gradient-to-r from-orange-400/10 to-orange-500/10 border-orange-400/20" :
+                              "bg-white/40 border-white/40 hover:bg-white/60 dark:bg-slate-800/40 dark:border-white/5"
+                          }`}
                       >
                         <div className="flex items-center gap-4">
-                          <div
-                            className={`flex h-8 w-8 items-center justify-center rounded-full font-bold ${
-                              index === 0
-                                ? "bg-level text-white"
-                                : index === 1
-                                ? "bg-muted-foreground/20"
-                                : index === 2
-                                ? "bg-streak/20"
-                                : "bg-muted"
-                            }`}
-                          >
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-xl font-bold text-lg shadow-sm ${index === 0 ? "bg-gradient-to-br from-yellow-400 to-amber-500 text-white" :
+                            index === 1 ? "bg-gradient-to-br from-slate-300 to-slate-400 text-white" :
+                              index === 2 ? "bg-gradient-to-br from-orange-300 to-orange-400 text-white" :
+                                "bg-white text-muted-foreground dark:bg-slate-700 dark:text-slate-300"
+                            }`}>
                             {index + 1}
                           </div>
                           <div>
-                            <p className="font-semibold text-slate-900 dark:text-slate-100">
-                              {profile.display_name || profile.username}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{profile.username}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Level {Math.floor((profile.xp || 0) / 100) + 1}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold text-base text-foreground">
+                                {profile.display_name || profile.username}
+                              </p>
+                              {(index < 3) && <Trophy className={`h-3 w-3 ${index === 0 ? "text-yellow-500" :
+                                index === 1 ? "text-slate-400" :
+                                  "text-orange-400"
+                                }`} />}
+                            </div>
+                            <p className="text-xs text-muted-foreground font-medium">@{profile.username}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-streak">
-                          <Flame className="h-5 w-5" />
-                          <span className="text-lg font-bold">{profile.current_streak}</span>
+                        <div className="flex flex-col items-end">
+                          <div className="flex items-center gap-1.5 text-orange-500 bg-orange-500/10 px-2 py-1 rounded-lg">
+                            <Flame className="h-4 w-4 fill-orange-500" />
+                            <span className="text-sm font-bold">{profile.current_streak}</span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground mt-1 font-medium">
+                            Level {Math.floor((profile.xp || 0) / 100) + 1}
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -571,8 +571,8 @@ export default function Friends() {
                     onKeyDown={(e) => e.key === "Enter" && handleAddFriend()}
                     maxLength={20}
                   />
-                  <Button 
-                    onClick={handleAddFriend} 
+                  <Button
+                    onClick={handleAddFriend}
                     disabled={addingFriend || !usernameInput.trim()}
                   >
                     {addingFriend ? "Sending..." : "Send Request"}
@@ -585,46 +585,50 @@ export default function Friends() {
             </Card>
 
             {/* Friends List */}
-            <Card>
-              <CardHeader>
+            {/* Friends List */}
+            <Card className="glass-card border-none shadow-none bg-transparent">
+              <CardHeader className="px-0">
                 <CardTitle>My Friends ({friends.length})</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 px-0">
                 {friends.length === 0 ? (
-                  <p className="rounded-2xl border border-dashed border-muted py-8 text-center text-muted-foreground">
-                    You haven't added any friends yet. Send a friend request above!
-                  </p>
+                  <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-muted p-10 text-center text-muted-foreground bg-white/30 dark:bg-slate-900/30">
+                    <UserPlus className="h-10 w-10 opacity-20 mb-4" />
+                    <p>You haven't added any friends yet. Send a friend request above!</p>
+                  </div>
                 ) : (
                   friends.map((friend) => (
                     <div
                       key={friend.id}
-                      className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-slate-900/60"
+                      className="group flex items-center justify-between rounded-2xl border border-white/40 bg-white/60 p-4 shadow-sm transition-all hover:bg-white/80 hover:shadow-md dark:border-white/10 dark:bg-slate-800/40 dark:hover:bg-slate-800/60"
                     >
                       <div className="flex items-center gap-3">
                         {friend.avatar_url ? (
                           <img
                             src={friend.avatar_url}
                             alt={friend.display_name || friend.username}
-                            className="h-10 w-10 rounded-full object-cover"
+                            className="h-12 w-12 rounded-full object-cover ring-2 ring-white/50"
                           />
                         ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary font-bold text-white">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 font-bold text-white shadow-sm">
                             {(friend.display_name?.[0] || friend.username?.[1] || "?").toUpperCase()}
                           </div>
                         )}
                         <div>
-                          <p className="font-semibold text-slate-900 dark:text-slate-100">
+                          <p className="font-bold text-foreground">
                             {friend.display_name || friend.username}
                           </p>
-                          <p className="text-sm text-muted-foreground">{friend.username}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Level {Math.floor((friend.xp || 0) / 100) + 1} • Streak: {friend.current_streak} weeks
-                          </p>
+                          <p className="text-xs text-muted-foreground">@{friend.username}</p>
+                          <Badge variant="secondary" className="mt-1 h-5 text-[10px] px-1.5 bg-primary/10 text-primary hover:bg-primary/20">
+                            Level {Math.floor((friend.xp || 0) / 100) + 1}
+                          </Badge>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-streak">
-                        <Flame className="h-5 w-5" />
-                        <span className="font-bold">{friend.current_streak}</span>
+                      <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-1.5 text-orange-500 bg-orange-500/10 px-2 py-1 rounded-lg">
+                          <Flame className="h-4 w-4 fill-orange-500" />
+                          <span className="text-sm font-bold">{friend.current_streak}</span>
+                        </div>
                       </div>
                     </div>
                   ))

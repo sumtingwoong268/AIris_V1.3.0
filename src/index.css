@@ -8,93 +8,115 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 210 20% 15%;
+    --background: 210 40% 98%;
+    /* Slightly cooler white */
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 20% 15%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 20% 15%;
+    --popover-foreground: 222 47% 11%;
 
-    /* AIris Blue Theme */
-    --primary: 207 81% 52%; /* #1E88E5 */
-    --primary-foreground: 0 0% 100%;
-    --primary-light: 207 75% 64%; /* #42A5F5 */
-    --primary-lighter: 207 71% 86%; /* #BBDEFB */
+    /* AIris Blue Theme - Enhanced */
+    --primary: 217 91% 60%;
+    /* Vivid Blue #3B82F6 style */
+    --primary-foreground: 210 40% 98%;
+    --primary-light: 217 91% 75%;
+    --primary-lighter: 217 91% 90%;
+    --primary-dark: 217 91% 45%;
 
     --secondary: 210 40% 96.1%;
-    --secondary-foreground: 207 81% 52%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 40% 97%;
+    --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 207 75% 64%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 262 83% 58%;
+    /* Purple accent for "fun" */
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 207 81% 52%;
+    --ring: 217 91% 60%;
 
-    --radius: 0.75rem;
+    --radius: 1.5rem;
+    /* Rounder corners */
+
+    /* Glassmorphism */
+    --glass-bg: 0 0% 100%;
+    --glass-border: 255 255 255;
 
     /* XP and Gamification Colors */
-    --xp-bar-bg: 210 40% 96.1%;
-    --xp-bar-fill: 207 81% 52%;
-    --streak-flame: 25 95% 53%; /* Orange for streak */
-    --level-gold: 45 100% 51%; /* Gold for levels */
+    --xp-bar-bg: 210 40% 90%;
+    --xp-bar-fill: 217 91% 60%;
+    --streak-flame: 25 95% 53%;
+    /* Orange for streak */
+    --level-gold: 45 100% 51%;
+    /* Gold for levels */
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(207 75% 64%), hsl(207 81% 52%));
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 98%));
-    
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(221 83% 53%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100% / 0.8), hsl(210 40% 98% / 0.8));
+    --gradient-glass: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.1));
+    --gradient-accent: linear-gradient(135deg, hsl(262 83% 58%), hsl(290 80% 55%));
+    --gradient-dark: linear-gradient(180deg, hsl(222 47% 11%), hsl(222 47% 15%));
+
     /* Shadows */
-    --shadow-card: 0 2px 8px -2px hsl(207 81% 52% / 0.1);
-    --shadow-elevated: 0 8px 24px -4px hsl(207 81% 52% / 0.15);
+    --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-elevated: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    --shadow-neon: 0 0 10px hsl(217 91% 60% / 0.5), 0 0 20px hsl(217 91% 60% / 0.3);
 
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 210 30% 8%;
+    --background: 222 47% 11%;
     --foreground: 210 40% 98%;
 
-    --card: 210 25% 12%;
+    --card: 222 47% 13%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 210 25% 12%;
+    --popover: 222 47% 13%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 207 75% 64%;
-    --primary-foreground: 210 30% 8%;
-    --primary-light: 207 75% 74%;
-    --primary-lighter: 207 71% 86%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+    --primary-light: 217 91% 70%;
+    --primary-lighter: 217 91% 85%;
+    --primary-dark: 217 91% 40%;
 
-    --secondary: 210 25% 16%;
-    --secondary-foreground: 207 75% 64%;
+    --secondary: 217 32% 17%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 210 25% 16%;
+    --muted: 217 32% 17%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 207 75% 64%;
-    --accent-foreground: 210 30% 8%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 50.6%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 210 25% 20%;
-    --input: 210 25% 20%;
-    --ring: 207 75% 64%;
+    --border: 217 32% 17%;
+    --input: 217 32% 17%;
+    --ring: 217 91% 60%;
 
-    --xp-bar-bg: 210 25% 20%;
-    --xp-bar-fill: 207 75% 64%;
+    --glass-bg: 222 47% 11%;
+    --glass-border: 255 255 255;
 
-    --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
-    --shadow-elevated: 0 8px 24px -4px hsl(0 0% 0% / 0.4);
+    --xp-bar-bg: 222 47% 15%;
+    --xp-bar-fill: 217 91% 60%;
+
+    --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-elevated: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    --shadow-neon: 0 0 10px hsl(217 91% 60% / 0.5), 0 0 20px hsl(217 91% 60% / 0.3);
   }
 }
 
@@ -105,14 +127,25 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
     min-height: 100vh;
     overflow-x: hidden;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   #root {
     min-height: 100vh;
     width: 100%;
+    @apply flex flex-col;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply tracking-tight font-bold;
   }
 
   img,
@@ -135,5 +168,27 @@ All colors MUST be HSL.
     :root {
       font-size: 14px;
     }
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-glass/70 backdrop-blur-md border border-glass-border/20 shadow-glass;
+  }
+
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-card hover:shadow-elevated transition-all duration-300;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-primary;
+  }
+
+  .text-gradient-accent {
+    @apply bg-clip-text text-transparent bg-gradient-accent;
+  }
+
+  .animate-appear {
+    @apply animate-fade-in;
   }
 }

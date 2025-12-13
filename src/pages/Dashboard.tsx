@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { supabase } from "@/integrations/supabase/client";
+import logo from "@/assets/airis-logo-new.png";
+import { XPBanner } from "@/components/dashboard/XPBanner";
 import {
   Eye,
   Grid3x3,
@@ -21,9 +23,10 @@ import {
   Sparkles,
   PlayCircle,
   LineChart as LineChartIcon,
-  } from "lucide-react";
+  Trophy,
+} from "lucide-react";
 import { Palette } from "lucide-react";
-import logo from "@/assets/logo.png";
+
 import { useFriendRequests } from "@/context/FriendRequestsContext";
 import { formatCountdownParts, getCountdownParts, syncProfileStreak, type StreakStatus } from "@/utils/streak";
 
@@ -389,441 +392,232 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      {/* Header */}
-      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto flex flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between lg:px-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900 pb-20 transition-colors duration-500">
+
+      {/* Floating Header */}
+      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+        <header className="pointer-events-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
           <div
             className="flex items-center gap-3 cursor-pointer group"
             onClick={() => navigate("/dashboard")}
           >
-            <img src={logo} alt="AIris" className="h-12 transition-transform duration-300 group-hover:scale-105" />
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                AIris
-              </span>
-              <span className="text-xs -mt-1 text-muted-foreground">
-                the future of eyecare
-              </span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md group-hover:scale-105 transition-transform duration-300">
+              <img src={logo} alt="AIris" className="h-6 w-6 object-contain brightness-0 invert" />
             </div>
+            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white hidden sm:block">AIris</span>
           </div>
-          <nav className="flex w-full flex-wrap items-center justify-center gap-2 md:w-auto md:justify-end md:gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="relative px-3">
-              <Users className="mr-2 h-4 w-4" />
+
+          {/* Restored Navigation Links including Blogs */}
+          <nav className="hidden md:flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <Users className="mr-2 h-4 w-4 text-emerald-500" />
               Friends
-              {pendingFriendRequests > 0 && (
-                <span className="absolute -right-1 top-0">
-                  <span className="block h-2 w-2 rounded-full bg-red-500 shadow-[0_0_0_2px_rgba(255,255,255,0.9)] dark:shadow-[0_0_0_2px_rgba(15,23,42,1)]" />
-                </span>
-              )}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/achievements")} className="px-3">
-              <Sparkles className="mr-2 h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={() => navigate("/achievements")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
               Achievements
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/reports")} className="px-3">
-              <FileText className="mr-2 h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={() => navigate("/reports")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <FileText className="mr-2 h-4 w-4 text-blue-500" />
               Reports
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/statistics")} className="px-3">
-              <Award className="mr-2 h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={() => navigate("/statistics")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <Award className="mr-2 h-4 w-4 text-purple-500" />
               Statistics
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/blogs")} className="px-3">
-              <BookOpen className="mr-2 h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={() => navigate("/blogs")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <BookOpen className="mr-2 h-4 w-4 text-indigo-500" />
               Blogs
             </Button>
-            <Button asChild variant="ghost" size="sm" className="px-3">
-              <Link to="/profile">
-                <User className="mr-2 h-4 w-4" />
-                Profile
+          </nav>
+
+          <nav className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm" className="rounded-full px-2 lg:px-4 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+              <Link to="/profile" className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold dark:from-indigo-900 dark:to-violet-900 dark:border-indigo-800 dark:text-indigo-300">
+                  {profile?.username?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+                </div>
+                <span className="hidden lg:block text-sm font-medium text-slate-700 dark:text-slate-200">
+                  {profile?.username || "Profile"}
+                </span>
               </Link>
             </Button>
           </nav>
-        </div>
-      </header>
+        </header>
+      </div>
 
+      <main className="container mx-auto px-4 pt-32 max-w-6xl animate-fade-in">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6 auto-rows-auto">
 
-      <main className="container mx-auto space-y-10 px-4 py-10 lg:px-6">
-        {/* Tests Highlight */}
-        <section className="relative overflow-hidden rounded-[32px] border border-primary/15 bg-gradient-to-br from-primary/10 via-sky-100 to-indigo-100 p-6 shadow-xl dark:from-slate-900 dark:via-primary/15 dark:to-indigo-950 lg:p-10">
-          <span className="pointer-events-none absolute -top-12 left-8 h-32 w-32 rounded-full bg-white/50 blur-3xl dark:bg-primary/30" />
-          <span className="pointer-events-none absolute -bottom-16 right-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl dark:bg-indigo-500/30" />
-          <div className="relative z-10 space-y-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.25rem] text-primary/80 dark:text-primary/70">
-                  Explore & grow
-                </p>
-                <h2 className="mt-1 text-3xl font-bold text-slate-900 dark:text-slate-50 sm:text-4xl">
-                  Jump back into your vision journey
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm text-slate-700 dark:text-slate-200">
-                  Start with a quick assessment and keep your streak alive. Each test is crafted to monitor a different
-                  part of your eyesight.
-                </p>
+          {/* 0. Daily Tip (Moved to Top) */}
+          <div className="col-span-1 md:col-span-4 lg:col-span-6 rounded-[2rem] bg-gradient-to-r from-emerald-50/80 via-teal-50/80 to-emerald-50/80 border border-emerald-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-6 dark:from-emerald-950/20 dark:to-teal-900/10 dark:border-emerald-900/20 backdrop-blur-sm mb-2">
+            <div className="flex items-start sm:items-center gap-5">
+              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-500/20">
+                <Sparkles className="h-6 w-6" />
               </div>
-              <Button
-                size="lg"
-                className="h-11 rounded-full bg-gradient-to-r from-primary to-blue-600 px-6 text-primary-foreground shadow-lg hover:from-blue-600 hover:to-primary"
-                onClick={() => navigate(tests[0].path)}
-              >
-                Start With Ishihara
-              </Button>
+              <div>
+                <h4 className="text-xs font-bold text-emerald-600/80 uppercase tracking-widest mb-1.5 dark:text-emerald-400">Daily Wisdom</h4>
+                <p className="text-base text-slate-700 font-medium italic dark:text-slate-300 max-w-2xl leading-relaxed">"{dailyTip}"</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 1. XP Banner Widget (Replaces simple Welcome) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-4">
+            <XPBanner xp={xp} level={level} username={profile?.username} />
+          </div>
+
+          {/* 2. Streak Widget (More Colorful) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-2 rounded-[2.5rem] bg-gradient-to-b from-orange-50 to-white border border-orange-100/50 p-8 flex flex-col justify-between relative overflow-hidden group shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 dark:from-slate-800 dark:to-slate-900 dark:border-slate-700">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-[40px]" />
+
+            <div className="relative z-10 flex justify-between items-start">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-orange-600/80 dark:text-orange-400">Current Streak</span>
+                <div className="text-5xl font-extrabold text-slate-900 mt-2 dark:text-white flex items-baseline gap-1">
+                  {streakValue}
+                  <span className="text-lg font-medium text-slate-400">days</span>
+                </div>
+              </div>
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-3xl shadow-lg shadow-orange-500/30 text-white animate-pulse-glow">
+                🔥
+              </div>
             </div>
 
-            {streakStatus && (
-              <div className="flex flex-col gap-3 rounded-3xl border border-white/60 bg-white/85 p-5 text-slate-900 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-100">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300/80">
-                      Weekly streak
-                    </p>
-                    <p className="text-lg font-semibold">
-                      {streakValue} week{streakValue === 1 ? "" : "s"}
-                    </p>
+            <div className="relative z-10 mt-6 md:mt-0">
+              <div className="flex justify-between items-center text-sm font-medium mb-2 text-slate-600 dark:text-slate-300">
+                <span>Keep it up!</span>
+                <span className="text-orange-600 font-mono bg-orange-100 px-2 py-0.5 rounded-md text-xs dark:bg-orange-900/40 dark:text-orange-300">{countdown || "Loading..."} left</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Available Tests Grid (Vibrant Gradients) */}
+          <div className="col-span-1 md:col-span-4 lg:col-span-6 space-y-5 mt-2">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span className="w-1.5 h-6 bg-indigo-500 rounded-full inline-block" />
+                Available Tests
+              </h3>
+              <Button variant="link" className="text-indigo-600 dark:text-indigo-400" onClick={() => navigate("/tests")}>View All</Button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
+              {tests.map((test, i) => (
+                <div
+                  key={test.path}
+                  onClick={() => navigate(test.path)}
+                  className="bg-white rounded-[2rem] p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group dark:bg-slate-800 dark:border-slate-700 relative overflow-hidden"
+                >
+                  <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${test.gradient} opacity-5 group-hover:opacity-10 rounded-bl-[4rem] transition-opacity`} />
+
+                  <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${test.gradient} flex items-center justify-center text-white shadow-lg mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                    <test.icon className="h-7 w-7" />
                   </div>
-                  <div className="text-right sm:text-left">
-                    <p className="text-xs uppercase tracking-wide text-slate-600 dark:text-slate-300/80">
-                      Resets Sunday 11:59 PM GMT
-                    </p>
-                    <p className="text-sm font-mono text-primary dark:text-blue-400">
-                      {countdown || "00h 00m 00s"}
-                    </p>
+                  <h4 className="font-bold text-slate-900 dark:text-white leading-tight mb-1">{test.title}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{test.description}</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="inline-flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full dark:bg-slate-700 dark:text-slate-300">
+                      <Trophy className="h-3 w-3 mr-1 text-yellow-500" />
+                      +{test.xp}
+                    </span>
+                    <div className="h-6 w-6 rounded-full border border-slate-200 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-colors text-slate-300 dark:border-slate-600">
+                      <PlayCircle className="h-3 w-3" />
+                    </div>
                   </div>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300/80">
-                  {streakStatus.isActiveThisWeek
-                    ? "Great job! You've already logged a test this week—keep the momentum going."
-                    : "Complete any vision test before the deadline to keep your streak alive."}
-                </p>
-              </div>
-            )}
-
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              {tests.map((test) => (
-                <Card
-                  key={test.path}
-                  className="group relative overflow-hidden border-none bg-white/80 transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl dark:bg-slate-900/70"
-                  onClick={() => navigate(test.path)}
-                >
-                  <span
-                    className={`absolute inset-x-6 top-6 h-24 rounded-3xl bg-gradient-to-br ${test.gradient} opacity-80 blur-2xl transition-opacity group-hover:opacity-100`}
-                  />
-                  <CardHeader className="relative flex flex-col gap-6 pt-6">
-                    <div
-                      className={`inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${test.gradient} text-white shadow-lg transition-transform duration-300 group-hover:scale-110`}
-                    >
-                      <test.icon className="h-8 w-8" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl text-slate-900 dark:text-slate-50">{test.title}</CardTitle>
-                      <CardDescription className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                        {test.description}
-                      </CardDescription>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="relative flex items-center justify-between pb-6 pt-0">
-                    <span className="text-sm font-semibold text-primary">{test.xp}</span>
-                    <Button
-                      size="sm"
-                      className="rounded-full bg-slate-900 px-4 text-white shadow-sm transition-colors group-hover:bg-primary dark:bg-primary"
-                    >
-                      Launch Test
-                    </Button>
-                  </CardContent>
-                </Card>
               ))}
             </div>
           </div>
-        </section>
 
-        {/* XP Progress */}
-        <section className="relative overflow-hidden rounded-[28px] border border-primary/15 bg-gradient-to-br from-white via-slate-50 to-primary/10 p-6 shadow-xl dark:from-slate-900 dark:via-slate-900/70 dark:to-primary/10 lg:p-10">
-          <span className="pointer-events-none absolute -left-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-primary/20 blur-3xl dark:bg-primary/30" />
-          <span className="pointer-events-none absolute -right-12 top-1/2 h-44 w-44 -translate-y-1/2 rounded-full bg-blue-200/60 blur-3xl dark:bg-blue-500/30" />
-          <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1 text-slate-700 dark:text-slate-200">
-              <p className="text-sm font-semibold uppercase tracking-[0.3rem] text-primary dark:text-primary/80">
-                XP progress
-              </p>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                Level up by completing your next assessment
+          {/* 4. Recent Activity (Cleaner List) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-4 rounded-[2.5rem] bg-white border border-slate-200 p-8 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-slate-300 rounded-full inline-block" />
+                Recent Activity
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                Every session keeps your streak alive and unlocks new milestones.
-              </p>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/statistics")} className="text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors">View All</Button>
             </div>
-            <div className="w-full sm:max-w-xl lg:max-w-2xl">
-              <XPBar xp={xp} />
-            </div>
-          </div>
-        </section>
-
-        {/* Welcome + Quick Focus */}
-        <section className="grid gap-6 xl:grid-cols-[1.8fr,1fr]">
-          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
-            <span className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
-            <CardContent className="relative z-10 grid gap-8 p-8 lg:grid-cols-[1.4fr,1fr] lg:p-10">
-              <div className="flex flex-col justify-between gap-6">
-                <div className="space-y-2">
-                  <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Personalized vision insights</p>
-                  <h1 className="text-4xl font-bold leading-tight lg:text-5xl">
-                    Welcome back, {profile?.display_name || profile?.username || "Explorer"}!
-                  </h1>
-                  {profile?.username && (
-                    <p className="text-sm font-medium text-white/75">{profile.username}</p>
-                  )}
-                  <p className="max-w-xl text-base text-white/80">
-                    Keep the momentum going—stay on top of your vision health with guided tests, insights, and goals tailored just for you.
-                  </p>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-white/15 p-4 text-center shadow-lg backdrop-blur">
-                    <span className="text-xs uppercase tracking-wide text-white/70">Current level</span>
-                    <div className="mt-2 text-3xl font-semibold">{level}</div>
-                    <p className="text-xs text-white/70">Total XP {xp}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/15 p-4 text-center shadow-lg backdrop-blur">
-                    <span className="text-xs uppercase tracking-wide text-white/70">Latest score</span>
-                    <div className="mt-2 text-3xl font-semibold">{latestPerformanceScore}%</div>
-                    <p className="text-xs text-white/70">Most recent session</p>
-                  </div>
-                </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {highlightStats.map((item, index) => (
-                  <div
-                    key={item.label}
-                    className={`rounded-3xl bg-gradient-to-br ${HIGHLIGHT_GRADIENTS[index % HIGHLIGHT_GRADIENTS.length]} p-4 text-white shadow-lg transition-transform hover:-translate-y-1`}
-                  >
-                    <p className="text-xs uppercase tracking-wide text-white/85">{item.label}</p>
-                    <div className="mt-3 text-xl font-semibold">{item.value}</div>
-                    <p className="text-xs text-white/80">{item.subLabel}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          <div className="grid gap-6">
-            <Card className="border border-primary/15 bg-gradient-to-br from-amber-100 via-rose-100 to-primary/10 shadow-xl hover:shadow-2xl dark:from-slate-900 dark:via-slate-900/70 dark:to-primary/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Daily Eye Tip
-                </CardTitle>
-                <CardDescription>Refresh your habits to ease fatigue and protect long-term vision.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="rounded-2xl bg-white/80 p-4 text-sm leading-relaxed text-primary shadow-inner dark:bg-slate-900/60">
-                  {dailyTip}
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="h-full border border-primary/15 bg-gradient-to-br from-white via-mint-100 to-emerald-100 shadow-xl hover:shadow-2xl dark:from-slate-900 dark:via-slate-900/70 dark:to-emerald-900/30">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
-                <CardDescription>Jump into what matters most right now.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3">
-                {quickActions.map(({ label, icon: Icon, action }) => (
-                  <Button
-                    key={label}
-                    variant="outline"
-                    className="h-12 justify-between rounded-xl border-white/60 bg-white/80 text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-gradient-to-r hover:from-primary hover:to-blue-500 hover:text-white dark:border-white/20 dark:bg-slate-900/70 dark:text-slate-100"
-                    onClick={action}
-                  >
-                    <span className="flex items-center gap-3">
-                      <Icon className="h-4 w-4 text-primary dark:text-emerald-300" />
-                      {label}
-                    </span>
-                    <span className="text-xs text-muted-foreground">Go</span>
-                  </Button>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        {/* Performance & Focus */}
-        <section className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-          <Card className="border border-primary/15 bg-gradient-to-br from-white via-slate-50 to-sky-100 shadow-xl hover:shadow-2xl dark:from-slate-900 dark:via-slate-900/70 dark:to-sky-900/30">
-            <CardHeader>
-              <CardTitle>Performance Trend</CardTitle>
-              <CardDescription>Your last few test scores at a glance.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-2">
-              {performanceData.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-muted p-8 text-center text-sm text-muted-foreground">
-                  Complete a test to start building your performance timeline.
-                </div>
-              ) : (
-                <ChartContainer
-                  config={{
-                    score: {
-                      label: "Score",
-                      theme: {
-                        light: "hsl(210 90% 50%)",
-                        dark: "hsl(198 100% 78%)",
-                      },
-                    },
-                  }}
-                  className="aspect-auto h-80 rounded-[24px] bg-white/85 p-3 shadow-inner dark:bg-slate-900/60 md:h-96"
-                >
-                  <AreaChart data={performanceData}>
-                    <CartesianGrid strokeDasharray="4 8" className="stroke-muted" />
-                    <XAxis
-                      dataKey="date"
-                      stroke="currentColor"
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={12}
-                      className="text-xs text-muted-foreground"
-                    />
-                    <YAxis
-                      stroke="currentColor"
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      domain={[0, 100]}
-                      className="text-xs text-muted-foreground"
-                    />
-                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                    <Area
-                      dataKey="score"
-                      type="monotone"
-                      stroke="var(--color-score)"
-                      fill="var(--color-score)"
-                      fillOpacity={0.3}
-                      strokeWidth={3}
-                    />
-                  </AreaChart>
-                </ChartContainer>
-              )}
-            </CardContent>
-          </Card>
-          <Card className="border border-primary/15 bg-gradient-to-br from-white via-lavender-100 to-fuchsia-100 shadow-xl hover:shadow-2xl dark:from-slate-900 dark:via-slate-900/70 dark:to-fuchsia-900/30">
-            <CardHeader>
-              <CardTitle>Focus Areas</CardTitle>
-              <CardDescription>Where you shine and where to practice next.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {testTypeStats.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-muted p-6 text-center text-sm text-muted-foreground">
-                  You&apos;ll see personalized guidance once you complete a few tests.
-                </div>
-              ) : (
-                testTypeStats.slice(0, 4).map((stat) => {
-                  const gradient = TEST_GRADIENTS[stat.key] ?? "from-primary to-blue-500";
-                  return (
-                    <div
-                      key={stat.key}
-                      className="space-y-3 rounded-2xl border border-white/50 bg-white/80 p-4 shadow-md backdrop-blur dark:border-white/10 dark:bg-slate-900/70"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{stat.label}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {stat.attempts} {stat.attempts === 1 ? "session" : "sessions"} tracked • Best {stat.best}%
-                          </p>
-                        </div>
-                        <span
-                          className={`rounded-full bg-gradient-to-r ${gradient} px-3 py-1 text-xs font-semibold text-white shadow`}
-                        >
-                          Avg {stat.average}%
-                        </span>
-                      </div>
-                    <div className="h-2 w-full rounded-full bg-muted/50 dark:bg-slate-800">
-                      <div
-                          className={`h-full rounded-full bg-gradient-to-r ${gradient}`}
-                        style={{ width: `${Math.min(stat.average, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Recent Activity */}
-        <section className="grid gap-6 lg:grid-cols-2">
-          <Card className="border border-primary/10 bg-gradient-to-br from-white via-slate-50 to-slate-100 shadow-lg hover:shadow-xl dark:from-slate-900 dark:via-slate-900/80 dark:to-slate-900">
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your latest check-ins and earned XP.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            <div className="space-y-4">
               {recentTests.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-muted p-8 text-center text-sm text-muted-foreground">
-                  When you complete tests they will appear here with detailed results.
+                <div className="flex flex-col items-center justify-center py-10 text-slate-400 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 dark:bg-slate-900/50 dark:border-slate-700">
+                  <div className="h-12 w-12 bg-slate-100 rounded-full flex items-center justify-center mb-3 text-slate-300">
+                    <LineChartIcon className="h-6 w-6" />
+                  </div>
+                  <p className="text-sm font-medium">No tests taken yet</p>
+                  <p className="text-xs text-slate-400 mt-1">Start your journey above!</p>
                 </div>
               ) : (
-                recentTests.map((test, index) => {
+                recentTests.slice(0, 3).map((test, index) => {
                   const Icon = TEST_ICONS[test.test_type ?? ""] ?? Sparkles;
-                  const iconGradient = TEST_GRADIENTS[test.test_type ?? ""] ?? "from-slate-500 to-slate-700";
-                  const date = test.created_at ? new Date(test.created_at) : null;
-                  const formattedDate =
-                    date && !Number.isNaN(date.getTime()) ? format(date, "MMM d, yyyy • h:mm a") : "Recent session";
-                  const scoreValue = test.score ?? 0;
-                  const scoreClass =
-                    scoreValue >= 70 ? "text-green-600" : scoreValue >= 40 ? "text-yellow-600" : "text-red-600";
                   return (
-                    <div
-                      key={`${test.created_at}-${index}`}
-                      className="flex items-center justify-between rounded-2xl border border-border/30 bg-white/70 px-4 py-3 shadow-sm backdrop-blur dark:bg-slate-900/70"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br ${iconGradient} text-white shadow`}
-                        >
+                    <div key={index} className="flex items-center justify-between p-3 pl-4 rounded-2xl bg-white border border-slate-100 hover:border-indigo-100 hover:shadow-md hover:shadow-indigo-500/5 transition-all group cursor-default dark:bg-slate-900 dark:border-slate-800 dark:hover:border-indigo-900">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 group-hover:text-indigo-600 group-hover:bg-indigo-50 transition-colors dark:bg-slate-800 dark:border-slate-700">
                           <Icon className="h-5 w-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold">{formatTestLabel(test.test_type)}</p>
-                          <p className="text-xs text-muted-foreground">{formattedDate}</p>
+                          <p className="font-bold text-slate-900 text-sm dark:text-white">{formatTestLabel(test.test_type)}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-[10px] text-slate-500 font-medium">
+                              {test.created_at ? format(new Date(test.created_at), 'MMM d, h:mm a') : ''}
+                            </p>
+                            {test.xp_earned ? (
+                              <span className="text-[9px] px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded-full font-bold">+{test.xp_earned} XP</span>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className={`text-sm font-semibold ${scoreClass}`}>
-                          {scoreValue}%
-                        </p>
-                        <p className="text-xs text-muted-foreground">+{test.xp_earned ?? 0} XP</p>
+                      <div className="text-right pr-2">
+                        <span className={`block font-black text-lg ${(test.score ?? 0) >= 80 ? 'text-emerald-500' :
+                          (test.score ?? 0) >= 50 ? 'text-amber-500' : 'text-rose-500'
+                          }`}>
+                          {test.score}%
+                        </span>
+                        <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Score</span>
                       </div>
                     </div>
-                  );
+                  )
                 })
               )}
-            </CardContent>
-          </Card>
-          <Card className="border border-primary/10 bg-gradient-to-br from-slate-100 via-white to-primary/10 shadow-lg hover:shadow-xl dark:from-slate-900 dark:via-slate-900/80 dark:to-primary/10">
-            <CardHeader>
-              <CardTitle>Next on Your Radar</CardTitle>
-              <CardDescription>Suggested steps based on your latest progress.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-amber-200/80 via-orange-200/80 to-rose-200/80 p-4 text-slate-800 shadow-sm backdrop-blur dark:from-amber-500/30 dark:via-orange-500/30 dark:to-rose-500/30 dark:text-slate-100">
-                <p className="text-sm font-semibold text-foreground">Stay on your streak</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Aim for at least one check-in every week to keep your momentum.
-                </p>
+            </div>
+          </div>
+
+          {/* 5. Trends & Insights (Visually Enhanced) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-2 rounded-[2.5rem] bg-slate-900 text-white p-6 lg:p-8 relative overflow-hidden flex flex-col justify-between dark:bg-black dark:border dark:border-slate-800 shadow-xl group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-indigo-500/30 transition-colors" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-fuchsia-500/20 rounded-full blur-[40px] translate-y-1/2 -translate-x-1/4" />
+
+            <div className="relative z-10 mb-4 flex justify-between items-start">
+              <div>
+                <h3 className="text-lg font-bold mb-1">Trends</h3>
+                <p className="text-xs text-slate-400">Last 5 scores</p>
               </div>
-              <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-sky-200/80 via-blue-200/80 to-indigo-200/80 p-4 text-slate-800 shadow-sm backdrop-blur dark:from-sky-500/30 dark:via-blue-500/30 dark:to-indigo-500/30 dark:text-slate-100">
-                <p className="text-sm font-semibold text-foreground">Compare test types</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Alternate between color, acuity, and reading tests for balanced insights.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-emerald-200/80 via-mint-200/80 to-teal-200/80 p-4 text-slate-800 shadow-sm backdrop-blur dark:from-emerald-500/30 dark:via-teal-500/30 dark:to-green-500/30 dark:text-slate-100">
-                <p className="text-sm font-semibold text-foreground">Review your reports</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Download a detailed report before your next optometrist appointment.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+            </div>
+
+            <div className="h-40 relative z-10 w-full flex items-end justify-between gap-2 mt-auto">
+              {performanceData.length > 0 ? (
+                performanceData.slice(-5).map((point, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2 w-full group/bar h-full justify-end">
+                    <div className="relative w-full rounded-t-lg bg-indigo-500/20 overflow-hidden"
+                      style={{ height: `${point.score * 0.8}%`, minHeight: '10%' }}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-indigo-600 to-indigo-400 group-hover/bar:from-indigo-500 group-hover/bar:to-indigo-300 transition-all opacity-80" />
+                    </div>
+                    <span className="text-[10px] text-slate-400 group-hover/bar:text-white transition-colors font-mono">{point.score}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-xs text-slate-600 border border-dashed border-slate-800 rounded-xl">
+                  <span>No data available</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+
+
+        </div>
       </main>
     </div>
   );
