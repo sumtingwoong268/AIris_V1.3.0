@@ -71,6 +71,9 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
   const [translating, setTranslating] = useState(false);
   const lastSignatureRef = useRef<string | null>(null);
   const previousLanguageRef = useRef<string | null>(null);
+  const observerRef = useRef<MutationObserver | null>(null);
+  const debounceRef = useRef<number | null>(null);
+  const cancelRef = useRef(false);
 
   useEffect(() => {
     if (!ready) return;
@@ -78,10 +81,11 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
     const signature = `${language}-${refreshKey ?? ""}`;
     if (lastSignatureRef.current === signature) return;
     lastSignatureRef.current = signature;
+    cancelRef.current = false;
 
     let cancelled = false;
 
-    const run = async () => {
+    const translateOnce = async () => {
       if (language === "en") {
         // Only reload if we previously translated away from English
         if (previousLanguageRef.current && previousLanguageRef.current !== "en" && typeof window !== "undefined") {
@@ -145,10 +149,47 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
       }
     };
 
-    void run();
+    const scheduleTranslate = () => {
+      if (language === "en") return;
+      if (debounceRef.current) {
+        window.clearTimeout(debounceRef.current);
+      }
+      debounceRef.current = window.setTimeout(() => {
+        debounceRef.current = null;
+        void translateOnce();
+      }, 120);
+    };
+
+    void translateOnce();
+
+    if (typeof MutationObserver !== "undefined" && typeof document !== "undefined") {
+      observerRef.current = new MutationObserver((mutations) => {
+        if (cancelRef.current) return;
+        for (const mutation of mutations) {
+          if (mutation.type === "childList" || mutation.type === "characterData") {
+            scheduleTranslate();
+            break;
+          }
+        }
+      });
+      observerRef.current.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+    }
 
     return () => {
       cancelled = true;
+      cancelRef.current = true;
+      if (debounceRef.current) {
+        window.clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
     };
   }, [language, ready, refreshKey, toast]);
 
