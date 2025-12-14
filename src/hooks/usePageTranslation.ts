@@ -66,32 +66,38 @@ const applyTranslations = (nodes: Text[], translations: Record<string, string>) 
 
 const isSupportedLanguage = (code: string) => SUPPORTED_LANGUAGES.some((lang) => lang.code === code);
 
-export function usePageTranslation(language: string, ready: boolean) {
+export function usePageTranslation(language: string, ready: boolean, refreshKey?: string) {
   const { toast } = useToast();
   const [translating, setTranslating] = useState(false);
   const lastAppliedRef = useRef<string | null>(null);
+  const previousLanguageRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!ready) return;
     if (!language || !isSupportedLanguage(language)) return;
-    if (language === lastAppliedRef.current) return;
+    const signature = `${language}-${refreshKey ?? ""}`;
+    if (lastAppliedRef.current === signature) return;
 
     let cancelled = false;
 
     const run = async () => {
       if (language === "en") {
-        if (lastAppliedRef.current && typeof window !== "undefined") {
-          lastAppliedRef.current = "en";
+        // Only reload if we previously translated away from English
+        if (previousLanguageRef.current && previousLanguageRef.current !== "en" && typeof window !== "undefined") {
+          previousLanguageRef.current = "en";
+          lastAppliedRef.current = signature;
           window.location.reload();
-        } else {
-          lastAppliedRef.current = "en";
+          return;
         }
+        previousLanguageRef.current = "en";
+        lastAppliedRef.current = signature;
         return;
       }
 
       const { nodes, uniqueTexts } = collectTextNodes();
       if (uniqueTexts.length === 0) {
-        lastAppliedRef.current = language;
+        lastAppliedRef.current = signature;
+        previousLanguageRef.current = language;
         return;
       }
 
@@ -112,7 +118,8 @@ export function usePageTranslation(language: string, ready: boolean) {
         if (cancelled) return;
 
         applyTranslations(nodes, data.translations || {});
-        lastAppliedRef.current = language;
+        lastAppliedRef.current = signature;
+        previousLanguageRef.current = language;
       } catch (error: any) {
         console.error("Page translation error:", error);
         toast({
@@ -132,7 +139,7 @@ export function usePageTranslation(language: string, ready: boolean) {
     return () => {
       cancelled = true;
     };
-  }, [language, ready, toast]);
+  }, [language, ready, refreshKey, toast]);
 
   return { translating };
 }

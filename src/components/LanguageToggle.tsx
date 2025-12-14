@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Languages, Check, Globe2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguagePreference, SUPPORTED_LANGUAGES } from "@/hooks/useLanguagePreference";
@@ -6,7 +7,9 @@ import { usePageTranslation } from "@/hooks/usePageTranslation";
 
 export const LanguageToggle = () => {
   const { language, setLanguage, loading } = useLanguagePreference();
-  const { translating } = usePageTranslation(language, !loading);
+  const location = useLocation();
+  const locationKey = `${location.pathname}${location.search}`;
+  const { translating } = usePageTranslation(language, !loading, locationKey);
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
