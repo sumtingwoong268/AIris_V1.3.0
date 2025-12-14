@@ -69,14 +69,15 @@ const isSupportedLanguage = (code: string) => SUPPORTED_LANGUAGES.some((lang) =>
 export function usePageTranslation(language: string, ready: boolean, refreshKey?: string) {
   const { toast } = useToast();
   const [translating, setTranslating] = useState(false);
-  const lastAppliedRef = useRef<string | null>(null);
+  const lastSignatureRef = useRef<string | null>(null);
   const previousLanguageRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!ready) return;
     if (!language || !isSupportedLanguage(language)) return;
     const signature = `${language}-${refreshKey ?? ""}`;
-    if (lastAppliedRef.current === signature) return;
+    if (lastSignatureRef.current === signature) return;
+    lastSignatureRef.current = signature;
 
     let cancelled = false;
 
@@ -85,52 +86,62 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
         // Only reload if we previously translated away from English
         if (previousLanguageRef.current && previousLanguageRef.current !== "en" && typeof window !== "undefined") {
           previousLanguageRef.current = "en";
-          lastAppliedRef.current = signature;
+          lastSignatureRef.current = signature;
           window.location.reload();
           return;
         }
         previousLanguageRef.current = "en";
-        lastAppliedRef.current = signature;
+        lastSignatureRef.current = signature;
         return;
       }
 
-      const { nodes, uniqueTexts } = collectTextNodes();
-      if (uniqueTexts.length === 0) {
-        lastAppliedRef.current = signature;
-        previousLanguageRef.current = language;
-        return;
-      }
+      const attempts = [50, 250]; // small delays to allow route content to render
 
       setTranslating(true);
-      try {
-        const response = await fetch("/api/translate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ texts: uniqueTexts, to: language, from: "en" }),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText || "Translation failed");
+      for (const delayMs of attempts) {
+        if (cancelled) break;
+        if (delayMs > 0) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          if (cancelled) break;
         }
 
-        const data = (await response.json()) as TranslationResponse;
-        if (cancelled) return;
+        const { nodes, uniqueTexts } = collectTextNodes();
+        if (uniqueTexts.length === 0) {
+          continue;
+        }
 
-        applyTranslations(nodes, data.translations || {});
-        lastAppliedRef.current = signature;
+        try {
+          const response = await fetch("/api/translate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ texts: uniqueTexts, to: language, from: "en" }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || "Translation failed");
+          }
+
+          const data = (await response.json()) as TranslationResponse;
+          if (cancelled) break;
+
+          applyTranslations(nodes, data.translations || {});
+        } catch (error: any) {
+          console.error("Page translation error:", error);
+          toast({
+            title: "Translation failed",
+            description: error?.message || "Could not translate the page.",
+            variant: "destructive",
+          });
+          break;
+        }
+      }
+
+      if (!cancelled) {
         previousLanguageRef.current = language;
-      } catch (error: any) {
-        console.error("Page translation error:", error);
-        toast({
-          title: "Translation failed",
-          description: error?.message || "Could not translate the page.",
-          variant: "destructive",
-        });
-      } finally {
-        if (!cancelled) {
-          setTranslating(false);
-        }
+      }
+      if (!cancelled) {
+        setTranslating(false);
       }
     };
 
