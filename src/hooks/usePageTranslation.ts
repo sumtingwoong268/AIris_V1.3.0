@@ -76,11 +76,9 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
   const [translating, setTranslating] = useState(false);
   const lastSignatureRef = useRef<string | null>(null);
   const previousLanguageRef = useRef<string | null>(null);
-  const observerRef = useRef<MutationObserver | null>(null);
-  const debounceRef = useRef<number | null>(null);
-  const cancelRef = useRef(false);
   const lastRequestRef = useRef<number>(0);
   const backoffUntilRef = useRef<number>(0);
+  const inFlightRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (!ready) return;
@@ -88,21 +86,24 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
     const signature = `${language}-${refreshKey ?? ""}`;
     if (lastSignatureRef.current === signature) return;
     lastSignatureRef.current = signature;
-    cancelRef.current = false;
-
     let cancelled = false;
 
     const translateOnce = async () => {
+      if (inFlightRef.current) return;
+      inFlightRef.current = true;
+
       if (language === "en") {
         // Only reload if we previously translated away from English
         if (previousLanguageRef.current && previousLanguageRef.current !== "en" && typeof window !== "undefined") {
           previousLanguageRef.current = "en";
           lastSignatureRef.current = signature;
           window.location.reload();
+          inFlightRef.current = false;
           return;
         }
         previousLanguageRef.current = "en";
         lastSignatureRef.current = signature;
+        inFlightRef.current = false;
         return;
       }
 
@@ -154,7 +155,7 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
           if (!response.ok) {
             const errorText = await response.text();
             if (response.status === 429) {
-              backoffUntilRef.current = Date.now() + 5000;
+              backoffUntilRef.current = Date.now() + 15000;
             }
             throw new Error(errorText || "Translation failed");
           }
@@ -183,49 +184,14 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
       if (!cancelled) {
         setTranslating(false);
       }
-    };
-
-    const scheduleTranslate = () => {
-      if (language === "en") return;
-      if (debounceRef.current) {
-        window.clearTimeout(debounceRef.current);
-      }
-      debounceRef.current = window.setTimeout(() => {
-        debounceRef.current = null;
-        void translateOnce();
-      }, 120);
+      inFlightRef.current = false;
     };
 
     void translateOnce();
 
-    if (typeof MutationObserver !== "undefined" && typeof document !== "undefined") {
-      observerRef.current = new MutationObserver((mutations) => {
-        if (cancelRef.current) return;
-        for (const mutation of mutations) {
-          if (mutation.type === "childList" || mutation.type === "characterData") {
-            scheduleTranslate();
-            break;
-          }
-        }
-      });
-      observerRef.current.observe(document.body, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-      });
-    }
-
     return () => {
       cancelled = true;
-      cancelRef.current = true;
-      if (debounceRef.current) {
-        window.clearTimeout(debounceRef.current);
-        debounceRef.current = null;
-      }
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-        observerRef.current = null;
-      }
+      inFlightRef.current = false;
     };
   }, [language, ready, refreshKey, toast]);
 

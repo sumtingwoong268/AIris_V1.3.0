@@ -23,7 +23,6 @@ import NotFound from "./pages/NotFound";
 import { FriendRequestProvider } from "./context/FriendRequestsContext";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { LanguageToggle } from "./components/LanguageToggle";
-import { BrandBadge } from "./components/BrandBadge";
 import { supabaseConfigError } from "./integrations/supabase/client";
 
 const queryClient = new QueryClient();
@@ -54,7 +53,6 @@ const App = () => {
         <div className="min-h-screen w-full bg-background text-foreground">
           <BrowserRouter>
             <FriendRequestProvider>
-              <BrandBadge />
               <ThemeToggle />
               <LanguageToggle />
               <Routes>
