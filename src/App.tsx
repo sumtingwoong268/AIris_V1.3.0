@@ -22,6 +22,7 @@ import D15DesaturatedTest from "./pages/tests/D15DesaturatedTest";
 import NotFound from "./pages/NotFound";
 import { FriendRequestProvider } from "./context/FriendRequestsContext";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { LanguageToggle } from "./components/LanguageToggle";
 import { supabaseConfigError } from "./integrations/supabase/client";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => {
           <BrowserRouter>
             <FriendRequestProvider>
               <ThemeToggle />
+              <LanguageToggle />
               <Routes>
                 <Route path="/" element={<Auth />} />
                 <Route path="/auth" element={<Auth />} />

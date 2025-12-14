@@ -20,6 +20,7 @@ export type Database = {
           user_id: string;
           dark_mode: boolean;
           notifications_enabled: boolean;
+          language: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -28,6 +29,7 @@ export type Database = {
           user_id: string;
           dark_mode?: boolean;
           notifications_enabled?: boolean;
+          language?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -36,6 +38,7 @@ export type Database = {
           user_id?: string;
           dark_mode?: boolean;
           notifications_enabled?: boolean;
+          language?: string | null;
           created_at?: string;
           updated_at?: string;
         };

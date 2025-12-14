@@ -264,6 +264,7 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
   dark_mode BOOLEAN DEFAULT false,
   notifications_enabled BOOLEAN DEFAULT true,
+  language TEXT DEFAULT 'en',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
