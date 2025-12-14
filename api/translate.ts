@@ -57,6 +57,33 @@ const sanitizeTexts = (input: unknown): string[] => {
   return texts;
 };
 
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 10_000;
+const rateMap = new Map<string, number[]>();
+
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const cache = new Map<string, { value: string; expiresAt: number }>();
+
+const getClientKey = (headers: RequestLike["headers"]) => {
+  const forwarded = getHeader(headers, "x-forwarded-for");
+  if (forwarded) {
+    const first = forwarded.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  return getHeader(headers, "x-real-ip") ?? "anonymous";
+};
+
+const isRateLimited = (key: string) => {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const existing = rateMap.get(key)?.filter((ts) => ts > windowStart) ?? [];
+  existing.push(now);
+  rateMap.set(key, existing);
+  return existing.length > RATE_LIMIT_MAX;
+};
+
+const cacheKey = (text: string, to: string) => `${to}::${text}`;
+
 export default async function handler(req: RequestLike, res: ResponseLike) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method Not Allowed" });
@@ -92,12 +119,38 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
     return;
   }
 
+  const clientKey = getClientKey(req.headers);
+  if (isRateLimited(clientKey)) {
+    res.status(429).json({ error: "Too many translation requests. Please wait a few seconds and try again." });
+    return;
+  }
+
   const endpoint = TRANSLATOR_ENDPOINT.replace(/\/$/, "");
   const searchParams = new URLSearchParams({ "api-version": "3.0", to });
   if (from && ALLOWED_LANGUAGES.has(from)) {
     searchParams.append("from", from);
   }
   const url = `${endpoint}/translate?${searchParams.toString()}`;
+
+  // Serve cached translations and collect missing texts
+  const translations: Record<string, string> = {};
+  const missing: string[] = [];
+  const now = Date.now();
+
+  for (const text of texts) {
+    const key = cacheKey(text, to);
+    const cached = cache.get(key);
+    if (cached && cached.expiresAt > now) {
+      translations[text] = cached.value;
+    } else {
+      missing.push(text);
+    }
+  }
+
+  if (missing.length === 0) {
+    res.status(200).json({ translations, target: to, cache: true });
+    return;
+  }
 
   try {
     const response = await fetch(url, {
@@ -120,10 +173,12 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
       translations?: Array<{ text: string }>;
     }>;
 
-    const translations: Record<string, string> = {};
     data.forEach((item, index) => {
       const translated = item?.translations?.[0]?.text;
-      translations[texts[index]] = translated ?? texts[index];
+      const source = missing[index];
+      const value = translated ?? source;
+      translations[source] = value;
+      cache.set(cacheKey(source, to), { value, expiresAt: Date.now() + CACHE_TTL_MS });
     });
 
     res.status(200).json({ translations, target: to });
