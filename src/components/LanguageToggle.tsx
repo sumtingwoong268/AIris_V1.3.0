@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Languages, Check, Globe2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguagePreference, SUPPORTED_LANGUAGES } from "@/hooks/useLanguagePreference";
@@ -15,10 +15,22 @@ export const LanguageToggle = () => {
     [language],
   );
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!open) return;
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () => document.removeEventListener("pointerdown", handleClickOutside);
+  }, [open]);
+
   return (
     <div
       ref={containerRef}
-      className="fixed right-3 top-16 z-[95] flex flex-col items-end gap-2"
+      className="fixed right-3 top-16 z-[120] flex flex-col items-end gap-2"
     >
       <button
         type="button"
