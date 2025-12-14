@@ -8,6 +8,7 @@ type TranslationResponse = {
 };
 
 const originalTextMap = new WeakMap<Text, string>();
+const translationCache = new Map<string, Map<string, string>>();
 
 const isMeaningfulText = (value: string) => {
   const trimmed = value.trim();
@@ -27,8 +28,12 @@ const collectTextNodes = (limit = 250) => {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
+      const parentElement = node.parentElement;
+      if (parentElement?.closest("[data-no-translate='true']")) {
+        return NodeFilter.FILTER_REJECT;
+      }
       // Skip script/style tags by checking parent element
-      const parentName = node.parentElement?.tagName?.toLowerCase();
+      const parentName = parentElement?.tagName?.toLowerCase();
       if (parentName && ["script", "style", "noscript"].includes(parentName)) {
         return NodeFilter.FILTER_REJECT;
       }
@@ -74,6 +79,8 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
   const observerRef = useRef<MutationObserver | null>(null);
   const debounceRef = useRef<number | null>(null);
   const cancelRef = useRef(false);
+  const lastRequestRef = useRef<number>(0);
+  const backoffUntilRef = useRef<number>(0);
 
   useEffect(() => {
     if (!ready) return;
@@ -114,21 +121,50 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
           continue;
         }
 
+        // Apply cached translations and find missing texts
+        const cache = translationCache.get(language) ?? new Map<string, string>();
+        translationCache.set(language, cache);
+        applyTranslations(nodes, Object.fromEntries(cache));
+
+        const missing = uniqueTexts.filter((text) => !cache.has(text)).slice(0, 200);
+        if (missing.length === 0) {
+          continue;
+        }
+
+        const now = Date.now();
+        if (backoffUntilRef.current && now < backoffUntilRef.current) {
+          continue;
+        }
+
+        const sinceLast = now - lastRequestRef.current;
+        if (sinceLast < 1000) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 - sinceLast));
+          if (cancelled) break;
+        }
+
         try {
           const response = await fetch("/api/translate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ texts: uniqueTexts, to: language, from: "en" }),
+            body: JSON.stringify({ texts: missing, to: language, from: "en" }),
           });
+
+          lastRequestRef.current = Date.now();
 
           if (!response.ok) {
             const errorText = await response.text();
+            if (response.status === 429) {
+              backoffUntilRef.current = Date.now() + 5000;
+            }
             throw new Error(errorText || "Translation failed");
           }
 
           const data = (await response.json()) as TranslationResponse;
           if (cancelled) break;
 
+          Object.entries(data.translations || {}).forEach(([source, translated]) => {
+            cache.set(source, translated);
+          });
           applyTranslations(nodes, data.translations || {});
         } catch (error: any) {
           console.error("Page translation error:", error);

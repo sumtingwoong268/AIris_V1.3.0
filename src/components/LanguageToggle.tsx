@@ -34,6 +34,7 @@ export const LanguageToggle = () => {
     <div
       ref={containerRef}
       className="fixed right-3 top-16 z-[120] flex flex-col items-end gap-2"
+      data-no-translate="true"
     >
       <button
         type="button"
