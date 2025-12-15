@@ -389,22 +389,22 @@ export default function Friends() {
         )}
 
         <Tabs defaultValue="leaderboard" className="space-y-8">
-          <TabsList className="bg-slate-100/80 p-1.5 w-full flex justify-start overflow-x-auto rounded-2xl dark:bg-slate-800/50">
+          <TabsList className="bg-slate-100/80 p-1.5 w-full grid grid-cols-3 gap-1 rounded-2xl dark:bg-slate-800/50 h-auto">
             <TabsTrigger
               value="leaderboard"
-              className="rounded-xl px-6 py-2.5 font-medium data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-indigo-400"
+              className="rounded-xl px-2 py-2.5 font-medium data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-indigo-400 whitespace-nowrap overflow-hidden text-ellipsis"
             >
               Leaderboard
             </TabsTrigger>
             <TabsTrigger
               value="friends"
-              className="rounded-xl px-6 py-2.5 font-medium data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-indigo-400"
+              className="rounded-xl px-2 py-2.5 font-medium data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-indigo-400 whitespace-nowrap overflow-hidden text-ellipsis"
             >
               My Friends ({friends.length})
             </TabsTrigger>
             <TabsTrigger
               value="requests"
-              className="rounded-xl px-6 py-2.5 font-medium data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-indigo-400"
+              className="rounded-xl px-2 py-2.5 font-medium data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-indigo-400 whitespace-nowrap overflow-hidden text-ellipsis"
             >
               Requests {pendingRequests.length > 0 && <span className="ml-1.5 bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full text-[10px]">{pendingRequests.length}</span>}
             </TabsTrigger>
@@ -571,10 +571,10 @@ export default function Friends() {
             {/* Friends List */}
             {/* Friends List */}
             <Card className="glass-card border-none shadow-none bg-transparent">
-              <CardHeader className="px-0">
+              <CardHeader>
                 <CardTitle>My Friends ({friends.length})</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 px-0">
+              <CardContent className="space-y-3">
                 {friends.length === 0 ? (
                   <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-muted p-10 text-center text-muted-foreground bg-white/30 dark:bg-slate-900/30">
                     <UserPlus className="h-10 w-10 opacity-20 mb-4" />

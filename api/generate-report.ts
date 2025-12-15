@@ -46,8 +46,8 @@ type InsightSummary = {
 type GuidanceEnhancements = {
   planningNotes: string[];
   exerciseBullets: string[];
-  followUpParagraphs: string[];
-  improvementBullets: string[];
+  extraFollowUpParagraphs: string[];
+  extraImprovementBullets: string[];
   priorityTargets: TestInsight[];
 };
 
@@ -252,7 +252,8 @@ const summarizeTests = (tests: any) => {
 };
 
 const renderSectionHtml = (section: SectionContent): string => {
-  const titleText = section.title.replace(/^\d+\.\s*/, "").trim();
+  // We do NOT render the title here because the parent component (StructuredReportView)
+  // renders the section.title as an H2.
   const paragraphsHtml = (section.paragraphs ?? [])
     .map(
       (text) =>
@@ -266,9 +267,7 @@ const renderSectionHtml = (section: SectionContent): string => {
     ? `<ul style="padding-left:1.2rem; margin:0 0 1rem; color:#1f2937;">${bulletSource.join("")}</ul>`
     : "";
 
-  return `<section><h3 style="margin:0 0 0.75rem; font-size:1.05rem; color:#111827;">${escapeHtml(
-    titleText,
-  )}</h3>${paragraphsHtml}${bulletsHtml}</section>`;
+  return `<section>${paragraphsHtml}${bulletsHtml}</section>`;
 };
 
 const formatDate = (value: unknown): string | null => {
@@ -291,14 +290,14 @@ const computeInsightSummary = (insights: TestInsight[]): InsightSummary => {
 
   const topPerformer = completed.length
     ? completed.reduce((best, current) =>
-        (best.latest ?? -Infinity) >= (current.latest ?? -Infinity) ? best : current,
-      )
+      (best.latest ?? -Infinity) >= (current.latest ?? -Infinity) ? best : current,
+    )
     : undefined;
 
   const lowestPerformer = completed.length
     ? completed.reduce((worst, current) =>
-        (worst.latest ?? Infinity) <= (current.latest ?? Infinity) ? worst : current,
-      )
+      (worst.latest ?? Infinity) <= (current.latest ?? Infinity) ? worst : current,
+    )
     : undefined;
 
   const improving = completed
@@ -324,7 +323,7 @@ const computeInsightSummary = (insights: TestInsight[]): InsightSummary => {
     improving,
     declining,
     lowScoring,
-  limitedHistory,
+    limitedHistory,
   };
 };
 
@@ -333,7 +332,11 @@ const ensureSectionCoverage = (sections: any[]): boolean => {
 
   const titleHasContent = new Map<string, boolean>();
   sections.forEach((section) => {
-    const rawTitle = typeof section?.title === "string" ? section.title.trim().toLowerCase() : "";
+    // Strip numbering (e.g. "1. Summary" -> "summary")
+    const rawTitle = typeof section?.title === "string"
+      ? section.title.replace(/^\d+\.\s*/, "").trim().toLowerCase()
+      : "";
+
     if (!rawTitle) return;
     if (!Array.isArray(section?.blocks) || section.blocks.length === 0) return;
     const hasSubstance = section.blocks.some(
@@ -344,13 +347,13 @@ const ensureSectionCoverage = (sections: any[]): boolean => {
   });
 
   const requiredTitleGroups: Array<string[]> = [
-    ["1. summary overview"],
-    ["2. detailed test analysis"],
-    ["3. personalised eye exercises", "3. personalised self-care guidance"],
-    ["4. targeted nutrition strategy", "4. personalised self-care guidance"],
-    ["5. medical follow-up"],
-    ["6. long-term improvement plan"],
-    ["7. disclaimers"],
+    ["summary overview", "summary"],
+    ["detailed test analysis", "test analysis"],
+    ["personalised eye exercises", "personalised self-care guidance", "eye exercises"],
+    ["targeted nutrition strategy", "nutrition strategy"],
+    ["medical follow-up", "medical advice"],
+    ["long-term improvement plan", "improvement plan"],
+    ["disclaimers", "disclaimer"],
   ];
 
   return requiredTitleGroups.every((group) => group.some((title) => titleHasContent.has(title)));
@@ -473,8 +476,7 @@ const buildAnalysisParagraphs = (summary: InsightSummary): string[] => {
       ? ` ${pendingCount} test${pendingCount === 1 ? " is" : "s are"} pending data (${summary.pendingNames.join(", ")}).`
       : "";
   paragraphs.push(
-    `AI review processed ${totalCount} vision screening${totalCount === 1 ? "" : "s"} with ${completedCount} current score${
-      completedCount === 1 ? "" : "s"
+    `AI review processed ${totalCount} vision screening${totalCount === 1 ? "" : "s"} with ${completedCount} current score${completedCount === 1 ? "" : "s"
     }.${pendingText}`,
   );
 
@@ -482,8 +484,7 @@ const buildAnalysisParagraphs = (summary: InsightSummary): string[] => {
     paragraphs.push(
       `${summary.topPerformer.name} is performing strongest at ${formatPercent(
         summary.topPerformer.latest,
-      )}, ${describeTrendModifier(summary.topPerformer.trend)} over ${summary.topPerformer.sessions} session${
-        summary.topPerformer.sessions === 1 ? "" : "s"
+      )}, ${describeTrendModifier(summary.topPerformer.trend)} over ${summary.topPerformer.sessions} session${summary.topPerformer.sessions === 1 ? "" : "s"
       }.`,
     );
   }
@@ -635,8 +636,7 @@ const createTestDetailBody = (insight: TestInsight, testData: any): SectionBody 
     );
   } else {
     paragraphs.push(
-      `${insight.name} currently measures ${formatPercent(currentScore)} across ${sessions} recorded session${
-        sessions === 1 ? "" : "s"
+      `${insight.name} currently measures ${formatPercent(currentScore)} across ${sessions} recorded session${sessions === 1 ? "" : "s"
       }, ${trendText}.`,
     );
 
@@ -770,8 +770,7 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
 
   const summaryParagraphs = [
     `Care baseline score ${scoreText} signals ${care.label.toLowerCase()} needs. ${care.summary}`,
-    `We analysed ${totalTestCategories} test categor${totalTestCategories === 1 ? "y" : "ies"} across ${totalSessions} session${
-      totalSessions === 1 ? "" : "s"
+    `We analysed ${totalTestCategories} test categor${totalTestCategories === 1 ? "y" : "ies"} across ${totalSessions} session${totalSessions === 1 ? "" : "s"
     }, with cumulative progress at ${xpSummary}.`,
   ];
   if (symptomList) {
@@ -937,8 +936,8 @@ const buildFallbackReport = (dataset: any, reason?: string | null) => {
     "Months 4–6: Schedule a formal eye exam and compare professional findings with your AIris test trends.",
     ...(averageSessionDuration !== null
       ? [
-          `Keep each assessment near ${formatDuration(averageSessionDuration)}; pause or reset if timers stretch longer to prevent fatigue-driven dips.`,
-        ]
+        `Keep each assessment near ${formatDuration(averageSessionDuration)}; pause or reset if timers stretch longer to prevent fatigue-driven dips.`,
+      ]
       : []),
     ...guidanceEnhancements.extraImprovementBullets,
   ];
