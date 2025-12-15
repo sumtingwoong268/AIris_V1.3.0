@@ -428,13 +428,13 @@ export default function Friends() {
 
               <TabsContent value="weekly" className="space-y-4">
                 <Card className="glass-card border-none shadow-none bg-transparent">
-                  <CardHeader className="px-0">
+                  <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-xl">
                       <Trophy className="h-6 w-6 text-yellow-400" />
                       Weekly Streak Leaders
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4 px-0">
+                  <CardContent className="space-y-4">
                     {leaderboard.map((profile, index) => (
                       <div
                         key={profile.id}
@@ -462,7 +462,9 @@ export default function Friends() {
                                   "text-orange-400"
                                 }`} />}
                             </div>
-                            <p className="text-xs text-muted-foreground font-medium">@{profile.username}</p>
+                            <p className="text-xs text-muted-foreground font-medium">
+                              {profile.username.startsWith('@') ? profile.username : `@${profile.username}`}
+                            </p>
                           </div>
                         </div>
                         <div className="flex flex-col items-end">

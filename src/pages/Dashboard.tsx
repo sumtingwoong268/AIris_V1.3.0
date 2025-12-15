@@ -451,7 +451,7 @@ export default function Dashboard() {
                 <span className="text-xs font-bold uppercase tracking-wider text-orange-600/80 dark:text-orange-400">Current Streak</span>
                 <div className="text-5xl font-extrabold text-slate-900 mt-2 dark:text-white flex items-baseline gap-1">
                   {streakValue}
-                  <span className="text-lg font-medium text-slate-400">days</span>
+                  <span className="text-lg font-medium text-slate-400">weeks</span>
                 </div>
               </div>
               <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-3xl shadow-lg shadow-orange-500/30 text-white animate-pulse-glow">

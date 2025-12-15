@@ -32,7 +32,7 @@ export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", right
                         variant="ghost"
                         size="icon"
                         onClick={handleBack}
-                        className="rounded-full hover:bg-slate-100 -ml-2 dark:hover:bg-slate-800 transition-colors"
+                        className="rounded-full hover:bg-slate-100 -ml-2 dark:hover:bg-slate-800 transition-colors md:hidden"
                     >
                         <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
                     </Button>
