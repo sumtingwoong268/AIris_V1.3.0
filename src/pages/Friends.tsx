@@ -419,12 +419,7 @@ export default function Friends() {
                 >
                   Weekly Streak Leaders
                 </TabsTrigger>
-                <TabsTrigger
-                  className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all shadow-none"
-                  value="all-users"
-                >
-                  All Users
-                </TabsTrigger>
+
               </TabsList>
 
               <TabsContent value="weekly" className="space-y-4">
@@ -483,7 +478,7 @@ export default function Friends() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="all-users" className="space-y-4">
+              {/* <TabsContent value="all-users" className="space-y-4">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -533,59 +528,9 @@ export default function Friends() {
                     )}
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </TabsContent> */}
 
-              <TabsContent value="all-users" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-primary" />
-                      All Users
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {allUsers.length === 0 ? (
-                      <p className="rounded-2xl border border-dashed border-muted py-8 text-center text-muted-foreground">
-                        No users found yet.
-                      </p>
-                    ) : (
-                      allUsers.map((profile) => (
-                        <div
-                          key={profile.id}
-                          className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-slate-900/60"
-                        >
-                          <div className="flex items-center gap-3">
-                            {profile.avatar_url ? (
-                              <img
-                                src={profile.avatar_url}
-                                alt={profile.display_name || profile.username}
-                                className="h-10 w-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary font-bold text-white">
-                                {(profile.display_name?.[0] || profile.username?.[1] || "?").toUpperCase()}
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-semibold text-slate-900 dark:text-slate-100">
-                                {profile.display_name || profile.username}
-                              </p>
-                              <p className="text-sm text-muted-foreground">{profile.username}</p>
-                              <p className="text-sm text-muted-foreground">
-                                Level {Math.floor((profile.xp || 0) / 100) + 1} • Streak: {profile.current_streak} weeks
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 text-primary">
-                            <Flame className="h-5 w-5" />
-                            <span className="font-semibold">{profile.current_streak}</span>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+
             </Tabs>
           </TabsContent>
 
