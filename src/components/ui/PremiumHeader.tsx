@@ -11,9 +11,10 @@ type PremiumHeaderProps = {
     rightContent?: ReactNode;
     children?: ReactNode;
     onBack?: () => void;
+    hideBackArrow?: boolean;
 };
 
-export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", rightContent, children, onBack }: PremiumHeaderProps) {
+export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", rightContent, children, onBack, hideBackArrow }: PremiumHeaderProps) {
     const navigate = useNavigate();
 
     const handleBack = () => {
@@ -28,14 +29,16 @@ export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", right
         <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
             <header className="pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
                 <div className="flex items-center gap-3">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleBack}
-                        className="rounded-full hover:bg-slate-100 -ml-2 dark:hover:bg-slate-800 transition-colors md:hidden"
-                    >
-                        <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-                    </Button>
+                    {!hideBackArrow && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleBack}
+                            className="rounded-full hover:bg-slate-100 -ml-2 dark:hover:bg-slate-800 transition-colors"
+                        >
+                            <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+                        </Button>
+                    )}
                     <div
                         className="flex cursor-pointer items-center gap-3 group"
                         onClick={handleBack}

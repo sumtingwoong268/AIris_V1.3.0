@@ -395,7 +395,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900 pb-20 transition-colors duration-500">
 
       {/* Floating Header */}
-      <PremiumHeader title="AIris" backRoute="/dashboard">
+      <PremiumHeader title="AIris" backRoute="/dashboard" hideBackArrow>
         {/* Restored Navigation Links including Blogs */}
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
@@ -417,6 +417,10 @@ export default function Dashboard() {
           <Button variant="ghost" size="sm" onClick={() => navigate("/blogs")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
             <BookOpen className="mr-2 h-4 w-4 text-indigo-500" />
             Blogs
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <User className="mr-2 h-4 w-4 text-slate-500" />
+            Profile
           </Button>
         </div>
       </PremiumHeader>
