@@ -9,7 +9,6 @@ export const SUPPORTED_LANGUAGES = [
   { code: "bn", label: "Bengali" },
   { code: "pa", label: "Punjabi" },
   { code: "ta", label: "Tamil" },
-  { code: "kn", label: "Kannada" },
   { code: "ko", label: "Korean" },
   { code: "ur", label: "Urdu" },
   { code: "ja", label: "Japanese" },

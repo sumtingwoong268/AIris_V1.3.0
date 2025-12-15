@@ -1,4 +1,4 @@
-const ALLOWED_LANGUAGES = new Set(["en", "hi", "bn", "pa", "ta", "kn", "ko", "ur", "ja"]);
+const ALLOWED_LANGUAGES = new Set(["en", "hi", "bn", "pa", "ta", "ko", "ur", "ja"]);
 
 type RequestLike = {
   method?: string;
@@ -31,14 +31,24 @@ const parseJsonBody = (body: unknown) => {
 
 const cleanEnv = (value: string | undefined) => (typeof value === "string" && value.trim() ? value.trim() : "");
 
-const TRANSLATOR_KEY =
-  cleanEnv(process.env.AZURE_TRANSLATOR_KEY) || cleanEnv(process.env.VITE_AZURE_TRANSLATOR_KEY);
-const TRANSLATOR_REGION =
-  cleanEnv(process.env.AZURE_TRANSLATOR_REGION) || cleanEnv(process.env.VITE_AZURE_TRANSLATOR_REGION);
-const TRANSLATOR_ENDPOINT =
-  cleanEnv(process.env.AZURE_TRANSLATOR_ENDPOINT) ||
-  cleanEnv(process.env.VITE_AZURE_TRANSLATOR_ENDPOINT) ||
-  "https://api.cognitive.microsofttranslator.com";
+const DEEPL_KEY = cleanEnv(process.env.DEEPL_API_KEY) || cleanEnv(process.env.VITE_DEEPL_API_KEY);
+const DEEPL_ENDPOINT =
+  cleanEnv(process.env.DEEPL_API_ENDPOINT) ||
+  cleanEnv(process.env.VITE_DEEPL_API_ENDPOINT) ||
+  "https://api-free.deepl.com/v2/translate";
+
+type LanguageInfo = { code: string; beta?: boolean } | null;
+
+const LANGUAGE_MAP: Record<string, LanguageInfo> = {
+  en: { code: "EN" },
+  ja: { code: "JA" },
+  ko: { code: "KO" },
+  hi: { code: "HI", beta: true },
+  bn: { code: "BN", beta: true },
+  pa: { code: "PA", beta: true },
+  ta: { code: "TA", beta: true },
+  ur: { code: "UR", beta: true },
+};
 
 const sanitizeTexts = (input: unknown): string[] => {
   if (!Array.isArray(input)) return [];
@@ -90,10 +100,9 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
     return;
   }
 
-  if (!TRANSLATOR_KEY || !TRANSLATOR_REGION) {
+  if (!DEEPL_KEY) {
     res.status(500).json({
-      error:
-        "Azure Translator credentials are missing. Set AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION, and AZURE_TRANSLATOR_ENDPOINT.",
+      error: "DeepL credentials are missing. Set DEEPL_API_KEY (and optionally DEEPL_API_ENDPOINT).",
     });
     return;
   }
@@ -119,18 +128,19 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
     return;
   }
 
+  const targetLangInfo = LANGUAGE_MAP[to];
+  if (!targetLangInfo) {
+    res.status(400).json({ error: "Selected language is not supported by DeepL." });
+    return;
+  }
+  const targetLang = targetLangInfo.code;
+  const targetIsBeta = Boolean(targetLangInfo.beta);
+
   const clientKey = getClientKey(req.headers);
   if (isRateLimited(clientKey)) {
     res.status(429).json({ error: "Too many translation requests. Please wait a few seconds and try again." });
     return;
   }
-
-  const endpoint = TRANSLATOR_ENDPOINT.replace(/\/$/, "");
-  const searchParams = new URLSearchParams({ "api-version": "3.0", to });
-  if (from && ALLOWED_LANGUAGES.has(from)) {
-    searchParams.append("from", from);
-  }
-  const url = `${endpoint}/translate?${searchParams.toString()}`;
 
   // Serve cached translations and collect missing texts
   const translations: Record<string, string> = {};
@@ -153,14 +163,24 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
   }
 
   try {
-    const response = await fetch(url, {
+    const params = new URLSearchParams();
+    params.append("target_lang", targetLang);
+    const sourceInfo = from && ALLOWED_LANGUAGES.has(from) ? LANGUAGE_MAP[from] : LANGUAGE_MAP["en"];
+    if (sourceInfo?.code) {
+      params.append("source_lang", sourceInfo.code);
+    }
+    missing.forEach((text) => params.append("text", text));
+    if (targetIsBeta || sourceInfo?.beta) {
+      params.append("enable_beta_languages", "1");
+    }
+
+    const response = await fetch(DEEPL_ENDPOINT, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Ocp-Apim-Subscription-Key": TRANSLATOR_KEY,
-        "Ocp-Apim-Subscription-Region": TRANSLATOR_REGION,
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `DeepL-Auth-Key ${DEEPL_KEY}`,
       },
-      body: JSON.stringify(texts.map((text) => ({ Text: text }))),
+      body: params.toString(),
     });
 
     if (!response.ok) {
@@ -169,13 +189,15 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
       return;
     }
 
-    const data = (await response.json()) as Array<{
-      translations?: Array<{ text: string }>;
-    }>;
+    const data = (await response.json()) as {
+      translations?: Array<{ text: string; detected_source_language?: string }>;
+      message?: string;
+    };
 
-    data.forEach((item, index) => {
-      const translated = item?.translations?.[0]?.text;
+    const deeplTranslations = data?.translations ?? [];
+    deeplTranslations.forEach((item, index) => {
       const source = missing[index];
+      const translated = item?.text;
       const value = translated ?? source;
       translations[source] = value;
       cache.set(cacheKey(source, to), { value, expiresAt: Date.now() + CACHE_TTL_MS });
@@ -183,7 +205,7 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
 
     res.status(200).json({ translations, target: to });
   } catch (error: any) {
-    console.error("Azure translation error:", error);
+    console.error("DeepL translation error:", error);
     res.status(500).json({ error: "Failed to translate text" });
   }
 }

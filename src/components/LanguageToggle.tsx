@@ -11,6 +11,7 @@ export const LanguageToggle = () => {
   const locationKey = `${location.pathname}${location.search}`;
   const { translating } = usePageTranslation(language, !loading, locationKey);
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const label = useMemo(
@@ -36,18 +37,32 @@ export const LanguageToggle = () => {
       className="fixed right-3 top-16 z-[120] flex flex-col items-end gap-2"
       data-no-translate="true"
     >
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className={cn(
-          "inline-flex h-10 items-center justify-center rounded-full border border-border/70 bg-white/90 px-3 text-sm font-medium text-slate-700 shadow-lg backdrop-blur transition hover:scale-105 active:scale-95 dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-100",
-        )}
-        aria-label="Open language selector"
-        disabled={loading || translating}
-      >
-        <Globe2 className="mr-2 h-4 w-4" />
-        <span className="truncate max-w-[140px]">{label}</span>
-      </button>
+      {collapsed ? (
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          className={cn(
+            "inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-white/90 text-slate-700 shadow-lg backdrop-blur transition hover:scale-105 active:scale-95 dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-100",
+          )}
+          aria-label="Expand language selector"
+          disabled={loading || translating}
+        >
+          <Globe2 className="h-4 w-4" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className={cn(
+            "inline-flex h-10 items-center justify-center rounded-full border border-border/70 bg-white/90 px-3 text-sm font-medium text-slate-700 shadow-lg backdrop-blur transition hover:scale-105 active:scale-95 dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-100",
+          )}
+          aria-label="Open language selector"
+          disabled={loading || translating}
+        >
+          <Globe2 className="mr-2 h-4 w-4" />
+          <span className="truncate max-w-[140px]">{label}</span>
+        </button>
+      )}
 
       <div
         className={cn(
@@ -59,6 +74,16 @@ export const LanguageToggle = () => {
           <Languages className="h-4 w-4" />
           <span>Translate page</span>
           {(loading || translating) && <span className="text-amber-500">...</span>}
+          <button
+            type="button"
+            className="ml-auto text-[11px] font-semibold text-slate-500 underline-offset-2 hover:text-slate-700 dark:text-slate-300 dark:hover:text-white"
+            onClick={() => {
+              setOpen(false);
+              setCollapsed(true);
+            }}
+          >
+            Collapse
+          </button>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {SUPPORTED_LANGUAGES.map((item) => {
