@@ -63,6 +63,8 @@ const TEST_LABELS: Record<string, string> = {
   acuity: "Visual Acuity Test",
   amsler: "Amsler Grid Test",
   reading_stress: "Reading Stress Test",
+  d15: "Farnsworth D-15",
+  d15_desaturated: "Farnsworth D-15 (Desaturated)",
 };
 
 const capitalizeWords = (value: string) =>
@@ -414,6 +416,28 @@ const TEST_SELF_CARE_LIBRARY: Record<
         Math.round((insight.latest ?? 50) + 15),
       )}% sustained comfort before extending session lengths.`,
   },
+  d15: {
+    selfCare: () =>
+      "Color sequencing drills: perform daily hue-sorting (physical caps or digital) under consistent lighting to stabilise chromatic discrimination.",
+    followUp: () =>
+      "If colour mismatch persists, ask your clinician about a full Farnsworth-Munsell evaluation to map cone pathway deficits.",
+    longTerm: (insight) =>
+      `Aim to hold ${insight.name.toLowerCase()} scores above ${Math.min(
+        95,
+        Math.round((insight.latest ?? 65) + 20),
+      )}% by maintaining weekly practice and logging any lighting conditions that worsen results.`,
+  },
+  d15_desaturated: {
+    selfCare: () =>
+      "Low-saturation hue ladders: practice ordering desaturated colours for 10 minutes three times weekly to strengthen subtle chromatic pathways.",
+    followUp: () =>
+      "Discuss occupational colour demands; consider a desaturated Farnsworth assessment to confirm thresholds under reduced contrast.",
+    longTerm: (insight) =>
+      `Build consistency in ${insight.name.toLowerCase()} by sustaining weekly drills until scores stay above ${Math.min(
+        90,
+        Math.round((insight.latest ?? 55) + 25),
+      )}% for four consecutive sessions.`,
+  },
 };
 
 const TEST_NUTRITION_LIBRARY: Record<string, (insight: TestInsight) => string> = {
@@ -427,6 +451,10 @@ const TEST_NUTRITION_LIBRARY: Record<string, (insight: TestInsight) => string> =
     `Macular fortification: prioritise leafy greens, zinc-rich legumes, and oily fish (2 servings/week) to protect retinal pigment integrity and counter the distortions noted in your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} performance.`,
   reading_stress: (insight) =>
     `Anti-fatigue nutrition: space complex carbohydrates with magnesium (pumpkin seeds, legumes) and B-complex sources to sustain ocular muscles and reduce the strain reflected in your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} results.`,
+  d15: (insight) =>
+    `Cone support: emphasise carotenoid-rich greens and berries plus omega-3s twice weekly to reinforce colour discrimination reflected in your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} score.`,
+  d15_desaturated: (insight) =>
+    `Fine-contrast nutrition: combine lutein/zeaxanthin sources (spinach, kale) with vitamin A/C and zinc to bolster low-saturation colour pathways linked to your ${formatPercent(insight.latest)} ${insight.name.toLowerCase()} performance.`,
 };
 
 const buildAnalysisParagraphs = (summary: InsightSummary): string[] => {
