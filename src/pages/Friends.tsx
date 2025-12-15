@@ -39,6 +39,7 @@ export default function Friends() {
   const [selfStreakStatus, setSelfStreakStatus] = useState<StreakStatus | null>(null);
   const [selfCountdown, setSelfCountdown] = useState<string>("");
   const hasRefetchedSelfOnExpiry = useRef(false);
+  const formatUsername = (value: string) => (value.startsWith("@") ? value : `@${value}`);
 
   const fetchSelfProfile = useCallback(async () => {
     if (!user) return;
@@ -463,7 +464,7 @@ export default function Friends() {
                                 }`} />}
                             </div>
                             <p className="text-xs text-muted-foreground font-medium">
-                              {profile.username.startsWith('@') ? profile.username : `@${profile.username}`}
+                              {formatUsername(profile.username)}
                             </p>
                           </div>
                         </div>
@@ -601,7 +602,7 @@ export default function Friends() {
                           <p className="font-bold text-foreground">
                             {friend.display_name || friend.username}
                           </p>
-                          <p className="text-xs text-muted-foreground">@{friend.username}</p>
+                          <p className="text-xs text-muted-foreground">{formatUsername(friend.username)}</p>
                           <Badge variant="secondary" className="mt-1 h-5 text-[10px] px-1.5 bg-primary/10 text-primary hover:bg-primary/20">
                             Level {Math.floor((friend.xp || 0) / 100) + 1}
                           </Badge>
