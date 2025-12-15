@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Moon, Sun, Upload, Trophy, Star, Zap, Shield } from "lucide-react";
 import { useDarkModePreference } from "@/hooks/useDarkModePreference";
-import logo from "@/assets/logo.png";
+import { PremiumHeader } from "@/components/ui/PremiumHeader";
 import { sanitizeUsername, usernameIsAvailable, USERNAME_MAX_LENGTH } from "@/utils/username";
 
 export default function Profile() {
@@ -358,34 +358,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-slate-900/70 supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-900/40">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/dashboard")}
-              className="rounded-full hover:bg-white/20"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div
-              className="flex cursor-pointer items-center gap-3 transition-opacity hover:opacity-80"
-              onClick={() => navigate("/dashboard")}
-            >
-              <img src={logo} alt="AIris" className="h-10 drop-shadow-md" />
-              <div className="flex flex-col">
-                <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
-                  AIris
-                </span>
-                <span className="text-[10px] font-medium text-muted-foreground -mt-1 uppercase tracking-wider">
-                  Profile & Settings
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PremiumHeader title="AIris" subtitle="Profile & Settings" backRoute="/dashboard" />
 
       <main className="container mx-auto max-w-5xl space-y-10 px-4 py-10">
         <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl p-1">

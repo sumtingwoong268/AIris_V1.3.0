@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpenText, Clock, Plus } from "lucide-react";
-import logo from "@/assets/airis-logo-new.png";
+import { PremiumHeader } from "@/components/ui/PremiumHeader";
 import { BLOG_POSTS } from "@/utils/blogPosts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,33 +10,16 @@ export default function Blogs() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-        <header className="pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hover:bg-slate-100 -ml-2 dark:hover:bg-slate-800">
-              <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-            </Button>
-            <div
-              className="flex cursor-pointer items-center gap-3 group"
-              onClick={() => navigate("/dashboard")}
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md group-hover:scale-105 transition-transform">
-                <img src={logo} alt="AIris" className="h-6 w-6 object-contain brightness-0 invert" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-bold leading-none text-slate-900 dark:text-white">AIris Insights</span>
-                <span className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Eye care guides</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button onClick={() => navigate("/dashboard")} variant="ghost" size="sm" className="rounded-full px-4 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-              Dashboard
-            </Button>
-          </div>
-        </header>
-      </div>
+      <PremiumHeader
+        title="AIris Insights"
+        subtitle="Eye care guides"
+        onBack={() => navigate(-1)}
+        rightContent={
+          <Button onClick={() => navigate("/dashboard")} variant="ghost" size="sm" className="rounded-full px-4 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+            Dashboard
+          </Button>
+        }
+      />
 
       <main className="container mx-auto max-w-5xl space-y-10 px-4 pt-32 pb-20">
         <div className="relative overflow-hidden rounded-[32px] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 shadow-2xl text-white">

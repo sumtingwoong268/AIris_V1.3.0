@@ -4,6 +4,7 @@ import { ArrowLeft, CalendarDays, Clock, Share2 } from "lucide-react";
 import { BLOG_POSTS } from "@/utils/blogPosts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PremiumHeader } from "@/components/ui/PremiumHeader";
 
 export default function BlogArticle() {
   const navigate = useNavigate();
@@ -40,17 +41,11 @@ export default function BlogArticle() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-slate-900/70 supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-900/40">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hover:bg-white/20">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">AIris Blog</span>
-              <span className="text-sm font-bold text-slate-900 dark:text-slate-50 line-clamp-1">{post.title}</span>
-            </div>
-          </div>
+      <PremiumHeader
+        title="AIris Insights"
+        subtitle={post.title.length > 30 ? `${post.title.substring(0, 30)}...` : post.title}
+        onBack={() => navigate(-1)}
+        rightContent={
           <Button
             variant="ghost"
             className="hidden items-center gap-2 text-primary hover:bg-white/20 sm:inline-flex rounded-full"
@@ -59,8 +54,8 @@ export default function BlogArticle() {
             <Share2 className="h-4 w-4" />
             Share
           </Button>
-        </div>
-      </header>
+        }
+      />
 
       <main className="container mx-auto max-w-4xl space-y-10 px-4 py-10">
         <div className={`relative overflow-hidden rounded-[32px] border border-primary/20 bg-gradient-to-br ${post.heroGradient} p-10 text-white shadow-2xl`}>

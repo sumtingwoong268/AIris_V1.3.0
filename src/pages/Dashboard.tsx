@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { supabase } from "@/integrations/supabase/client";
-import logo from "@/assets/airis-logo-new.png";
+import { PremiumHeader } from "@/components/ui/PremiumHeader";
 import { XPBanner } from "@/components/dashboard/XPBanner";
 import {
   Eye,
@@ -395,56 +395,31 @@ export default function Dashboard() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900 pb-20 transition-colors duration-500">
 
       {/* Floating Header */}
-      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-        <header className="pointer-events-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
-          <div
-            className="flex items-center gap-3 cursor-pointer group"
-            onClick={() => navigate("/dashboard")}
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md group-hover:scale-105 transition-transform duration-300">
-              <img src={logo} alt="AIris" className="h-6 w-6 object-contain brightness-0 invert" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white hidden sm:block">AIris</span>
-          </div>
-
-          {/* Restored Navigation Links including Blogs */}
-          <nav className="hidden md:flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-              <Users className="mr-2 h-4 w-4 text-emerald-500" />
-              Friends
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/achievements")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-              <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
-              Achievements
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/reports")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-              <FileText className="mr-2 h-4 w-4 text-blue-500" />
-              Reports
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/statistics")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-              <Award className="mr-2 h-4 w-4 text-purple-500" />
-              Statistics
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/blogs")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-              <BookOpen className="mr-2 h-4 w-4 text-indigo-500" />
-              Blogs
-            </Button>
-          </nav>
-
-          <nav className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm" className="rounded-full px-2 lg:px-4 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
-              <Link to="/profile" className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold dark:from-indigo-900 dark:to-violet-900 dark:border-indigo-800 dark:text-indigo-300">
-                  {profile?.username?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
-                </div>
-                <span className="hidden lg:block text-sm font-medium text-slate-700 dark:text-slate-200">
-                  {profile?.username || "Profile"}
-                </span>
-              </Link>
-            </Button>
-          </nav>
-        </header>
-      </div>
+      <PremiumHeader title="AIris" backRoute="/dashboard">
+        {/* Restored Navigation Links including Blogs */}
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <Users className="mr-2 h-4 w-4 text-emerald-500" />
+            Friends
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/achievements")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
+            Achievements
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/reports")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <FileText className="mr-2 h-4 w-4 text-blue-500" />
+            Reports
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/statistics")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <Award className="mr-2 h-4 w-4 text-purple-500" />
+            Statistics
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/blogs")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <BookOpen className="mr-2 h-4 w-4 text-indigo-500" />
+            Blogs
+          </Button>
+        </div>
+      </PremiumHeader>
 
       <main className="container mx-auto px-4 pt-32 max-w-6xl animate-fade-in">
         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6 auto-rows-auto">

@@ -53,8 +53,19 @@ const App = () => {
         <div className="min-h-screen w-full bg-background text-foreground">
           <BrowserRouter>
             <FriendRequestProvider>
-              <ThemeToggle />
-              <LanguageToggle />
+              <div className="fixed top-3 right-3 z-[100] flex flex-col items-end gap-3 pointer-events-none">
+                {/* Pointer events auto allows children to be clickable while container lets clicks pass through if we used inset-0, 
+                    but here we are fixed top-right so pointer-events-none is safer if it grows large, 
+                    BUT actually we want buttons to be clickable. 
+                    Since it's top-right corner, let's just use pointer-events-auto for the container or omit it. 
+                    If I use pointer-events-none on container, children need pointer-events-auto.
+                    Let's just use a normal div. It won't block anything else on the page unless it overlaps.
+                 */}
+                <div className="pointer-events-auto flex flex-col items-end gap-3">
+                  <ThemeToggle />
+                  <LanguageToggle />
+                </div>
+              </div>
               <Routes>
                 <Route path="/" element={<Auth />} />
                 <Route path="/auth" element={<Auth />} />

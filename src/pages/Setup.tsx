@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import logo from "@/assets/logo.png";
+import { PremiumHeader } from "@/components/ui/PremiumHeader";
 import { sanitizeUsername, usernameIsAvailable, USERNAME_MAX_LENGTH } from "@/utils/username";
 
 export default function Setup() {
@@ -24,7 +24,7 @@ export default function Setup() {
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     display_name: "",
     full_name: "",
@@ -71,7 +71,7 @@ export default function Setup() {
   }, [user]);
 
   const symptomOptions = [
-    "Blurred_distance", "Near_strain", "Headaches", "Dryness", 
+    "Blurred_distance", "Near_strain", "Headaches", "Dryness",
     "Halos_glare", "Color_confusion", "Night_vision_issues"
   ];
 
@@ -121,7 +121,7 @@ export default function Setup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.privacy_accepted) {
       toast({ title: "Error", description: "Please accept the Privacy Policy to continue", variant: "destructive" });
       return;
@@ -259,22 +259,11 @@ export default function Setup() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="border-b border-border/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto flex items-center gap-3 px-4 py-4">
-          <Button variant="ghost" size="icon" onClick={handleProtectedNavigation}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex cursor-pointer items-center gap-3" onClick={handleProtectedNavigation}>
-            <img src={logo} alt="AIris" className="h-10" />
-            <div className="flex flex-col">
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                AIris
-              </span>
-              <span className="text-[10px] text-muted-foreground -mt-1">the future of eyecare</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PremiumHeader
+        title="AIris"
+        subtitle="the future of eyecare"
+        onBack={handleProtectedNavigation}
+      />
 
       <main className="container mx-auto max-w-5xl space-y-10 px-4 py-10">
         <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
@@ -313,7 +302,7 @@ export default function Setup() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-8">
-              
+
               {/* Avatar Upload */}
               <div className="space-y-2">
                 <Label>Profile Photo</Label>
@@ -355,19 +344,19 @@ export default function Setup() {
                   </div>
                   <div>
                     <Label>Display Name *</Label>
-                    <Input required value={formData.display_name} onChange={e => setFormData({...formData, display_name: e.target.value})} />
+                    <Input required value={formData.display_name} onChange={e => setFormData({ ...formData, display_name: e.target.value })} />
                   </div>
                   <div>
                     <Label>Full Name</Label>
-                    <Input value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} />
+                    <Input value={formData.full_name} onChange={e => setFormData({ ...formData, full_name: e.target.value })} />
                   </div>
                   <div>
                     <Label>Date of Birth</Label>
-                    <Input type="date" value={formData.date_of_birth} onChange={e => setFormData({...formData, date_of_birth: e.target.value})} />
+                    <Input type="date" value={formData.date_of_birth} onChange={e => setFormData({ ...formData, date_of_birth: e.target.value })} />
                   </div>
                   <div>
                     <Label>Gender</Label>
-                    <Select value={formData.gender} onValueChange={val => setFormData({...formData, gender: val})}>
+                    <Select value={formData.gender} onValueChange={val => setFormData({ ...formData, gender: val })}>
                       <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="male">Male</SelectItem>
@@ -378,7 +367,7 @@ export default function Setup() {
                   </div>
                   <div>
                     <Label>Ethnicity (Optional)</Label>
-                    <Input value={formData.ethnicity} onChange={e => setFormData({...formData, ethnicity: e.target.value})} />
+                    <Input value={formData.ethnicity} onChange={e => setFormData({ ...formData, ethnicity: e.target.value })} />
                   </div>
                 </div>
               </div>
@@ -389,7 +378,7 @@ export default function Setup() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>Do you wear glasses/contacts?</Label>
-                    <Select value={formData.wears_correction} onValueChange={val => setFormData({...formData, wears_correction: val})}>
+                    <Select value={formData.wears_correction} onValueChange={val => setFormData({ ...formData, wears_correction: val })}>
                       <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">None</SelectItem>
@@ -401,7 +390,7 @@ export default function Setup() {
                   </div>
                   <div>
                     <Label>Correction Type</Label>
-                    <Select value={formData.correction_type} onValueChange={val => setFormData({...formData, correction_type: val})}>
+                    <Select value={formData.correction_type} onValueChange={val => setFormData({ ...formData, correction_type: val })}>
                       <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="distance">Distance</SelectItem>
@@ -413,7 +402,7 @@ export default function Setup() {
                   </div>
                   <div>
                     <Label>Last Eye Exam</Label>
-                    <Select value={formData.last_eye_exam} onValueChange={val => setFormData({...formData, last_eye_exam: val})}>
+                    <Select value={formData.last_eye_exam} onValueChange={val => setFormData({ ...formData, last_eye_exam: val })}>
                       <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="never">Never</SelectItem>
@@ -432,15 +421,15 @@ export default function Setup() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>Screen Time (hours/day)</Label>
-                    <Input type="number" min="0" max="16" value={formData.screen_time_hours} onChange={e => setFormData({...formData, screen_time_hours: e.target.value})} />
+                    <Input type="number" min="0" max="16" value={formData.screen_time_hours} onChange={e => setFormData({ ...formData, screen_time_hours: e.target.value })} />
                   </div>
                   <div>
                     <Label>Outdoor Time (hours/day)</Label>
-                    <Input type="number" min="0" max="10" value={formData.outdoor_time_hours} onChange={e => setFormData({...formData, outdoor_time_hours: e.target.value})} />
+                    <Input type="number" min="0" max="10" value={formData.outdoor_time_hours} onChange={e => setFormData({ ...formData, outdoor_time_hours: e.target.value })} />
                   </div>
                   <div>
                     <Label>Sleep Quality</Label>
-                    <Select value={formData.sleep_quality} onValueChange={val => setFormData({...formData, sleep_quality: val})}>
+                    <Select value={formData.sleep_quality} onValueChange={val => setFormData({ ...formData, sleep_quality: val })}>
                       <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="good">Good</SelectItem>
@@ -508,16 +497,16 @@ export default function Setup() {
                 </div>
                 <div>
                   <Label>Eye Surgeries or Trauma (Optional)</Label>
-                  <Input value={formData.eye_surgeries} onChange={e => setFormData({...formData, eye_surgeries: e.target.value})} placeholder="Describe any surgeries or eye injuries" />
+                  <Input value={formData.eye_surgeries} onChange={e => setFormData({ ...formData, eye_surgeries: e.target.value })} placeholder="Describe any surgeries or eye injuries" />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox checked={formData.uses_eye_medication} onCheckedChange={val => setFormData({...formData, uses_eye_medication: !!val})} />
+                  <Checkbox checked={formData.uses_eye_medication} onCheckedChange={val => setFormData({ ...formData, uses_eye_medication: !!val })} />
                   <Label>I use eye drops or vision medication</Label>
                 </div>
                 {formData.uses_eye_medication && (
                   <div>
                     <Label>Medication Details</Label>
-                    <Input value={formData.medication_details} onChange={e => setFormData({...formData, medication_details: e.target.value})} placeholder="List medications" />
+                    <Input value={formData.medication_details} onChange={e => setFormData({ ...formData, medication_details: e.target.value })} placeholder="List medications" />
                   </div>
                 )}
               </div>
@@ -525,7 +514,7 @@ export default function Setup() {
               {/* Privacy Policy */}
               <div className="space-y-4 border-t pt-4">
                 <div className="flex items-start space-x-2">
-                  <Checkbox required checked={formData.privacy_accepted} onCheckedChange={val => setFormData({...formData, privacy_accepted: !!val})} />
+                  <Checkbox required checked={formData.privacy_accepted} onCheckedChange={val => setFormData({ ...formData, privacy_accepted: !!val })} />
                   <label className="text-sm">
                     I agree to the <a href="https://docs.google.com/document/d/1mRvsgIr6H9fzEfP02vHtCDwWrA2sbnauyJqczURnWWQ/edit?tab=t.0#heading=h.az3l7ex3egnh" target="_blank" className="text-blue-600 underline">Privacy Policy</a> *
                   </label>

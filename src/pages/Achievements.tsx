@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { saveAs } from "file-saver";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
+import { PremiumHeader } from "@/components/ui/PremiumHeader";
 import {
   ensureSampleEntries,
   loadEntries,
@@ -201,28 +202,18 @@ export default function Achievements() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-slate-900/70 supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-900/40">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-white/20">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex cursor-pointer items-center gap-3 transition-opacity hover:opacity-80" onClick={() => navigate("/dashboard")}>
-              <img src={logo} alt="AIris" className="h-10 drop-shadow-md" />
-              <div className="flex flex-col">
-                <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">AIris</span>
-                <span className="text-[10px] font-medium text-muted-foreground -mt-1 uppercase tracking-wider">Achievements</span>
-              </div>
-            </div>
-          </div>
-          <Button onClick={openNewEntry} className="rounded-full bg-gradient-primary hover:opacity-90 shadow-lg shadow-blue-500/20">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+      <PremiumHeader
+        title="Achievements"
+        subtitle="Track your progress"
+        rightContent={
+          <Button onClick={openNewEntry} className="rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20">
             <Plus className="mr-2 h-4 w-4" /> New Entry
           </Button>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="container mx-auto space-y-8 px-4 py-10">
+      <main className="container mx-auto space-y-8 px-4 pt-32 pb-20">
         <div className="grid gap-6 lg:grid-cols-[1.5fr,1fr]">
           <Card className="border-none bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-xl">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />

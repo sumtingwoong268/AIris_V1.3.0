@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Copy, Flame, Trophy, UserPlus, Check, X, Users } from "lucide-react";
-import logo from "@/assets/airis-logo-new.png";
+import { PremiumHeader } from "@/components/ui/PremiumHeader";
 import { sanitizeUsername } from "@/utils/username";
 import { useFriendRequests } from "@/context/FriendRequestsContext";
 import {
@@ -324,26 +324,7 @@ export default function Friends() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
       {/* Floating Header Pattern to match other pages */}
-      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-        <header className="pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-slate-100 -ml-2 dark:hover:bg-slate-800">
-              <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-            </Button>
-            <div
-              className="flex cursor-pointer items-center gap-3 group"
-              onClick={() => navigate("/dashboard")}
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md group-hover:scale-105 transition-transform">
-                <img src={logo} alt="AIris" className="h-6 w-6 object-contain brightness-0 invert" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-bold leading-none text-slate-900 dark:text-white">AIris Community</span>
-              </div>
-            </div>
-          </div>
-        </header>
-      </div>
+      <PremiumHeader title="AIris Community" backRoute="/dashboard" />
 
       <main className="container mx-auto max-w-5xl space-y-8 px-4 pt-32 pb-20">
         <div className="rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-10 shadow-2xl text-white relative overflow-hidden">

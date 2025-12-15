@@ -25,7 +25,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, XAxis, YAxis } from "recharts";
 import { format, formatDistanceToNow } from "date-fns";
 import { formatDurationMs } from "@/hooks/useTestTimer";
-import logo from "@/assets/airis-logo-new.png";
+import { PremiumHeader } from "@/components/ui/PremiumHeader";
 
 type TestResult = {
   id?: string;
@@ -364,37 +364,53 @@ export default function Statistics() {
 
   const latestChangeValue =
     latestTrend === null ? "-" : `${latestTrend > 0 ? "+" : latestTrend < 0 ? "-" : ""}${Math.abs(latestTrend).toFixed(1)}%`;
-  const latestChangeDescription =
-    latestTrend === null
-      ? "Complete another test to see change over time"
-      : latestTrend > 0
-        ? "Improved since your last session"
-        : latestTrend < 0
-          ? "Slight drop from your last session"
-          : "Holding steady session to session";
+
+  // New Stats Calculations
+  const currentStreak = useMemo(() => {
+    if (sortedHistory.length === 0) return 0;
+    const dates = Array.from(new Set(sortedHistory.map(t => t.created_at ? new Date(t.created_at).toDateString() : null).filter(Boolean))).map(d => new Date(d as string));
+    dates.sort((a, b) => b.getTime() - a.getTime()); // Descending
+
+    let streak = 0;
+    const now = new Date();
+    const today = new Date(now.toDateString());
+    const yesterday = new Date(now.setDate(now.getDate() - 1));
+    yesterday.setHours(0, 0, 0, 0);
+
+    // Check if streak is active (test today or yesterday)
+    if (dates.length > 0) {
+      const lastTest = dates[0];
+      if (lastTest.getTime() === today.getTime() || lastTest.getTime() === yesterday.getTime()) {
+        streak = 1;
+        let checkDate = lastTest;
+        for (let i = 1; i < dates.length; i++) {
+          const prevDate = new Date(checkDate);
+          prevDate.setDate(prevDate.getDate() - 1);
+          if (dates[i].getTime() === prevDate.getTime()) {
+            streak++;
+            checkDate = prevDate;
+          } else {
+            break;
+          }
+        }
+      }
+    }
+    return streak;
+  }, [sortedHistory]);
+
+  const totalFocusMinutes = useMemo(() => {
+    const totalMs = sessionDurations.reduce((acc, curr) => acc + curr, 0);
+    return Math.round(totalMs / 60000);
+  }, [sessionDurations]);
+
+  const topTestCategory = useMemo(() => {
+    if (distributionData.length === 0) return { label: "-", value: 0 };
+    return distributionData.reduce((prev, current) => (prev.value > current.value) ? prev : current);
+  }, [distributionData]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
-      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-        <header className="pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-slate-100 -ml-2 dark:hover:bg-slate-800">
-              <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-            </Button>
-            <div
-              className="flex cursor-pointer items-center gap-3 group"
-              onClick={() => navigate("/dashboard")}
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md group-hover:scale-105 transition-transform">
-                <img src={logo} alt="AIris" className="h-6 w-6 object-contain brightness-0 invert" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-bold leading-none text-slate-900 dark:text-white">AIris Stats</span>
-              </div>
-            </div>
-          </div>
-        </header>
-      </div>
+      <PremiumHeader title="AIris Stats" />
 
       <div className="container mx-auto max-w-6xl px-4 pt-32 pb-20 lg:px-6">
         <section className="grid gap-6 xl:grid-cols-[2fr,1fr]">
@@ -420,27 +436,62 @@ export default function Statistics() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {/* Total Tests */}
                 <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-md hover:bg-white/20 transition-colors">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white/70 mb-2">
                     <Target className="h-3 w-3" /> Total Tests
                   </div>
                   <div className="text-2xl font-bold">{totalTests}</div>
                 </div>
+
+                {/* Avg Score */}
                 <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-md hover:bg-white/20 transition-colors">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white/70 mb-2">
                     <Award className="h-3 w-3" /> Avg Score
                   </div>
                   <div className="text-2xl font-bold">{averageScore}%</div>
                 </div>
+
+                {/* Current Streak */}
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-md hover:bg-white/20 transition-colors">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white/70 mb-2">
+                    <Activity className="h-3 w-3" /> Streak
+                  </div>
+                  <div className="text-2xl font-bold">{currentStreak} <span className="text-sm font-medium text-white/60">days</span></div>
+                </div>
+
+                {/* Focus Time */}
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-md hover:bg-white/20 transition-colors">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white/70 mb-2">
+                    <Timer className="h-3 w-3" /> Focus Time
+                  </div>
+                  <div className="text-2xl font-bold">{totalFocusMinutes} <span className="text-sm font-medium text-white/60">min</span></div>
+                </div>
+
+                {/* Top Category - Spans 2 cols */}
                 <div className="col-span-2 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-md hover:bg-white/20 transition-colors flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white/70 mb-1">
-                      <Activity className="h-3 w-3" /> Last Session
+                      <Target className="h-3 w-3" /> Top Category
+                    </div>
+                    <div className="text-lg font-bold truncate max-w-[200px]">{topTestCategory.label}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-white/60 mb-1">Sessions</div>
+                    <div className="text-lg font-bold">{topTestCategory.value}</div>
+                  </div>
+                </div>
+
+                {/* Last Session / Change - Spans 2 cols */}
+                <div className="col-span-2 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-md hover:bg-white/20 transition-colors flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white/70 mb-1">
+                      <Calendar className="h-3 w-3" /> Last Session
                     </div>
                     <div className="text-lg font-bold">{timeSinceLast}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-white/60 mb-1">Change</div>
+                    <div className="text-xs text-white/60 mb-1">Trend</div>
                     <div className="text-lg font-bold flex items-center gap-1 justify-end">
                       {latestTrend !== null && latestTrend < 0 ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
                       {latestChangeValue}
@@ -504,10 +555,14 @@ export default function Statistics() {
           <div className="py-16 text-center text-sm text-muted-foreground">Loading your insights...</div>
         ) : (
           <>
-            <section className="mt-10 grid gap-6 xl:grid-cols-[2fr,1fr]">
-              <Card className="glass-card">
+            <section className="mt-8 grid gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 items-start">
+              {/* Performance Trend - Spans 2 cols */}
+              <Card className="glass-card col-span-1 lg:col-span-2 xl:col-span-2">
                 <CardHeader>
-                  <CardTitle>Performance Trend</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-blue-500" />
+                    Performance Trend
+                  </CardTitle>
                   <CardDescription>Your recent scores across all tests.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-2">
@@ -526,7 +581,7 @@ export default function Statistics() {
                           },
                         },
                       }}
-                      className="aspect-auto h-80 rounded-[20px] bg-white/50 border border-white/20 p-3 shadow-sm backdrop-blur-sm dark:bg-slate-950/50 md:h-96"
+                      className="aspect-auto h-64 w-full rounded-[20px] bg-white/50 border border-white/20 p-3 shadow-sm backdrop-blur-sm dark:bg-slate-950/50"
                     >
                       <LineChart data={performanceTrendData}>
                         <CartesianGrid strokeDasharray="4 8" className="stroke-muted" />
@@ -576,229 +631,226 @@ export default function Statistics() {
                   )}
                 </CardContent>
               </Card>
-              <div className="grid gap-6">
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle>Monthly Activity</CardTitle>
-                    <CardDescription>How often you&apos;ve checked in recently.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-2">
-                    {monthlyActivityData.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-muted p-6 text-center text-sm text-muted-foreground">
-                        Your monthly cadence will appear after a few sessions.
-                      </div>
-                    ) : (
+
+              {/* Monthly Activity - Col 3 */}
+              <Card className="glass-card col-span-1">
+                <CardHeader>
+                  <CardTitle>Monthly Activity</CardTitle>
+                  <CardDescription>Check-in frequency.</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  {monthlyActivityData.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-muted p-6 text-center text-sm text-muted-foreground">
+                      Your monthly cadence will appear after a few sessions.
+                    </div>
+                  ) : (
+                    <ChartContainer
+                      config={{
+                        tests: {
+                          label: "Tests",
+                          theme: {
+                            light: "hsl(220 90% 55%)",
+                            dark: "hsl(210 100% 78%)",
+                          },
+                        },
+                      }}
+                      className="aspect-auto h-64 rounded-[24px] bg-white/85 p-3 shadow-inner dark:bg-slate-900/60"
+                    >
+                      <BarChart data={monthlyActivityData}>
+                        <CartesianGrid strokeDasharray="4 8" className="stroke-muted" />
+                        <XAxis
+                          dataKey="month"
+                          stroke="currentColor"
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={12}
+                          className="text-xs text-muted-foreground"
+                        />
+                        <YAxis
+                          allowDecimals={false}
+                          stroke="currentColor"
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={8}
+                          className="text-xs text-muted-foreground"
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="tests" fill="var(--color-tests)" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ChartContainer>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Test Mix - New Row, Col 1 */}
+              <Card className="glass-card col-span-1">
+                <CardHeader>
+                  <CardTitle>Test Mix</CardTitle>
+                  <CardDescription>Focus distribution.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center gap-6 pt-2">
+                  {distributionData.length === 0 ? (
+                    <div className="w-full rounded-2xl border border-dashed border-muted p-6 text-center text-sm text-muted-foreground">
+                      Run a variety of tests to see your distribution chart.
+                    </div>
+                  ) : (
+                    <>
                       <ChartContainer
                         config={{
-                          tests: {
-                            label: "Tests",
+                          sessions: {
+                            label: "Sessions",
                             theme: {
-                              light: "hsl(220 90% 55%)",
-                              dark: "hsl(210 100% 78%)",
+                              light: "hsl(158 70% 45%)",
+                              dark: "hsl(158 70% 78%)",
                             },
                           },
                         }}
-                        className="aspect-auto h-72 rounded-[24px] bg-white/85 p-3 shadow-inner dark:bg-slate-900/60"
+                        className="aspect-auto h-48 w-full rounded-[24px] bg-white/85 p-3 shadow-inner dark:bg-slate-900/60"
                       >
-                        <BarChart data={monthlyActivityData}>
-                          <CartesianGrid strokeDasharray="4 8" className="stroke-muted" />
-                          <XAxis
-                            dataKey="month"
-                            stroke="currentColor"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={12}
-                            className="text-xs text-muted-foreground"
-                          />
-                          <YAxis
-                            allowDecimals={false}
-                            stroke="currentColor"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                            className="text-xs text-muted-foreground"
-                          />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="tests" fill="var(--color-tests)" radius={[6, 6, 0, 0]} />
-                        </BarChart>
+                        <PieChart>
+                          <Pie
+                            data={distributionData}
+                            dataKey="value"
+                            nameKey="label"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={45}
+                            outerRadius={75}
+                            paddingAngle={4}
+                          >
+                            {distributionData.map((entry) => (
+                              <Cell key={entry.label} fill={entry.color} />
+                            ))}
+                          </Pie>
+                        </PieChart>
                       </ChartContainer>
-                    )}
-                  </CardContent>
-                </Card>
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle>Test Mix</CardTitle>
-                    <CardDescription>Where you&apos;re spending the most time.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex flex-col items-center gap-6 pt-2">
-                    {distributionData.length === 0 ? (
-                      <div className="w-full rounded-2xl border border-dashed border-muted p-6 text-center text-sm text-muted-foreground">
-                        Run a variety of tests to see your distribution chart.
-                      </div>
-                    ) : (
-                      <>
-                        <ChartContainer
-                          config={{
-                            sessions: {
-                              label: "Sessions",
-                              theme: {
-                                light: "hsl(158 70% 45%)",
-                                dark: "hsl(158 70% 78%)",
-                              },
-                            },
-                          }}
-                          className="aspect-auto h-60 w-full rounded-[24px] bg-white/85 p-3 shadow-inner dark:bg-slate-900/60"
-                        >
-                          <PieChart>
-                            <Pie
-                              data={distributionData}
-                              dataKey="value"
-                              nameKey="label"
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={55}
-                              outerRadius={90}
-                              paddingAngle={4}
-                            >
-                              {distributionData.map((entry) => (
-                                <Cell key={entry.label} fill={entry.color} />
-                              ))}
-                            </Pie>
-                          </PieChart>
-                        </ChartContainer>
-                        <div className="grid w-full gap-3">
-                          {distributionData.map((entry) => (
-                            <div
-                              key={entry.label}
-                              className="flex items-center justify-between rounded-xl border border-white/50 bg-white/80 px-3 py-2 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/70"
-                            >
-                              <div className="flex items-center gap-3">
-                                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-                                <span className="text-sm font-medium" style={{ color: entry.color }}>
-                                  {entry.label}
-                                </span>
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                {entry.value} session{entry.value === 1 ? "" : "s"}
+                      <div className="grid w-full gap-2">
+                        {distributionData.map((entry) => (
+                          <div
+                            key={entry.label}
+                            className="flex items-center justify-between rounded-xl border border-white/50 bg-white/80 px-3 py-2 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/70"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                              <span className="text-xs font-medium truncate max-w-[100px]" style={{ color: entry.color }}>
+                                {entry.label}
                               </span>
                             </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-                <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle>Session Tempo</CardTitle>
-                    <CardDescription>Elapsed minutes for your most recent sessions.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-2">
-                    {sessionTrendData.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-muted p-6 text-center text-sm text-muted-foreground">
-                        Timers will appear once you complete a timed session.
+                            <span className="text-xs text-muted-foreground">
+                              {entry.value}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ) : (
-                      <ChartContainer
-                        config={{
-                          minutes: {
-                            label: "Minutes",
-                            theme: {
-                              light: "hsl(265 85% 55%)",
-                              dark: "hsl(265 80% 75%)",
-                            },
-                          },
-                        }}
-                        className="aspect-auto h-72 rounded-[20px] bg-white/50 border border-white/20 p-3 shadow-sm backdrop-blur-sm dark:bg-slate-950/50"
-                      >
-                        <LineChart data={sessionTrendData}>
-                          <CartesianGrid strokeDasharray="4 8" className="stroke-muted" />
-                          <XAxis
-                            dataKey="date"
-                            stroke="currentColor"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={12}
-                            className="text-xs text-muted-foreground"
-                          />
-                          <YAxis
-                            stroke="currentColor"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                            className="text-xs text-muted-foreground"
-                          />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line
-                            dataKey="minutes"
-                            type="monotone"
-                            stroke="var(--color-minutes)"
-                            strokeWidth={3}
-                            dot={{ r: 3 }}
-                            activeDot={{ r: 6 }}
-                          />
-                        </LineChart>
-                      </ChartContainer>
-                    )}
-                    {latestSessionTiming && (
-                      <div className="mt-4 rounded-2xl border border-primary/20 bg-white/80 p-4 text-sm text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-100">
-                        <p className="font-semibold text-foreground">Most recent session</p>
-                        <p className="text-xs text-muted-foreground">
-                          {latestSessionTiming.label} • {latestSessionTiming.createdAt ? format(new Date(latestSessionTiming.createdAt), "MMM d, h:mma") : "recent"}
-                        </p>
-                        <p className="mt-2 text-sm">
-                          {latestSessionTiming.sessionDurationMs
-                            ? `Session time ${formatDurationMs(latestSessionTiming.sessionDurationMs)}`
-                            : "Duration pending"}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </section>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
 
-            <section className="mt-10 grid gap-6 lg:grid-cols-2">
-              <Card className="glass-card">
+              {/* Session Tempo - Col 2 */}
+              <Card className="glass-card col-span-1">
                 <CardHeader>
-                  <CardTitle>Average Timing by Test</CardTitle>
-                  <CardDescription>Your typical pacing for each screening.</CardDescription>
+                  <CardTitle>Session Tempo</CardTitle>
+                  <CardDescription>Recent duration.</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  {sessionTrendData.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-muted p-6 text-center text-sm text-muted-foreground">
+                      Timers will appear once you complete a timed session.
+                    </div>
+                  ) : (
+                    <ChartContainer
+                      config={{
+                        minutes: {
+                          label: "Minutes",
+                          theme: {
+                            light: "hsl(265 85% 55%)",
+                            dark: "hsl(265 80% 75%)",
+                          },
+                        },
+                      }}
+                      className="aspect-auto h-48 rounded-[20px] bg-white/50 border border-white/20 p-3 shadow-sm backdrop-blur-sm dark:bg-slate-950/50"
+                    >
+                      <LineChart data={sessionTrendData}>
+                        <CartesianGrid strokeDasharray="4 8" className="stroke-muted" />
+                        <XAxis
+                          dataKey="date"
+                          stroke="currentColor"
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={12}
+                          className="text-xs text-muted-foreground"
+                        />
+                        <YAxis
+                          stroke="currentColor"
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={8}
+                          className="text-xs text-muted-foreground"
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Line
+                          dataKey="minutes"
+                          type="monotone"
+                          stroke="var(--color-minutes)"
+                          strokeWidth={3}
+                          dot={{ r: 3 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </LineChart>
+                    </ChartContainer>
+                  )}
+                  {latestSessionTiming && (
+                    <div className="mt-4 rounded-2xl border border-primary/20 bg-white/80 p-3 text-sm text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-100">
+                      <p className="font-semibold text-foreground text-xs">Most recent</p>
+                      <p className="text-xs text-muted-foreground">
+                        {latestSessionTiming.createdAt ? format(new Date(latestSessionTiming.createdAt), "MMM d, h:mma") : "recent"}
+                      </p>
+                      <p className="mt-1 text-xs font-medium">
+                        {latestSessionTiming.sessionDurationMs
+                          ? `Duration: ${formatDurationMs(latestSessionTiming.sessionDurationMs)}`
+                          : "Duration pending"}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Average Timing - Col 3 */}
+              <Card className="glass-card col-span-1">
+                <CardHeader>
+                  <CardTitle>Average Timing</CardTitle>
+                  <CardDescription>Pacing by test.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {timingByTest.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-muted p-6 text-center text-sm text-muted-foreground">
-                      Timing data will appear after you complete a timed session.
+                      Data needed.
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {timingByTest.map((entry) => (
                         <div
                           key={entry.label}
-                          className="flex flex-col gap-1 rounded-2xl border border-primary/15 bg-white/80 p-4 shadow-sm dark:border-white/10 dark:bg-slate-900/70"
+                          className="flex flex-col gap-1 rounded-2xl border border-primary/15 bg-white/80 p-3 shadow-sm dark:border-white/10 dark:bg-slate-900/70"
                         >
-                          <div className="flex items-center justify-between text-sm font-semibold text-foreground">
+                          <div className="flex items-center justify-between text-xs font-semibold text-foreground">
                             <span>{entry.label}</span>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-[10px] text-muted-foreground">
                               {entry.averageSessionMs
-                                ? `${formatDurationMs(entry.averageSessionMs)} avg session`
+                                ? `${formatDurationMs(entry.averageSessionMs)}`
                                 : "--"}
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {entry.sessionCount > 0
-                              ? `${entry.sessionCount} session${entry.sessionCount === 1 ? "" : "s"} timed`
-                              : "Session timing pending"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Avg question {entry.averageQuestionMs ? formatDurationMs(entry.averageQuestionMs) : "--"}
-                            {entry.questionCount > 0 ? ` • ${entry.questionCount} responses` : ""}
-                          </p>
                         </div>
                       ))}
                     </div>
                   )}
                 </CardContent>
               </Card>
+            </section>
+
+            <section className="mt-6">
 
               {/* Detailed Breakdown: Colorful & Data-Rich */}
               <div className="col-span-1 lg:col-span-2 xl:col-span-2 space-y-8">
