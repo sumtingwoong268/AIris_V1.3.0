@@ -10,6 +10,42 @@ type TranslationResponse = {
 const originalTextMap = new WeakMap<Text, string>();
 const translationCache = new Map<string, Map<string, string>>();
 
+const STORAGE_PREFIX = "airis-translate-cache-";
+
+const loadPersistedCache = (language: string): Map<string, string> => {
+  if (typeof window === "undefined") return new Map();
+  try {
+    const raw = window.sessionStorage.getItem(`${STORAGE_PREFIX}${language}`);
+    if (!raw) return new Map();
+    const parsed = JSON.parse(raw) as Record<string, string>;
+    return new Map(Object.entries(parsed));
+  } catch {
+    return new Map();
+  }
+};
+
+const persistCache = (language: string, cache: Map<string, string>) => {
+  if (typeof window === "undefined") return;
+  const obj: Record<string, string> = {};
+  cache.forEach((value, key) => {
+    obj[key] = value;
+  });
+  try {
+    window.sessionStorage.setItem(`${STORAGE_PREFIX}${language}`, JSON.stringify(obj));
+  } catch {
+    // ignore quota errors
+  }
+};
+
+const getCacheForLanguage = (language: string) => {
+  let cache = translationCache.get(language);
+  if (!cache) {
+    cache = loadPersistedCache(language);
+    translationCache.set(language, cache);
+  }
+  return cache;
+};
+
 const isMeaningfulText = (value: string) => {
   const trimmed = value.trim();
   if (!trimmed) return false;
@@ -107,7 +143,7 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
         return;
       }
 
-      const attempts = [50, 250]; // small delays to allow route content to render
+      const attempts = [30, 180]; // slight delays to allow route content to render
 
       setTranslating(true);
       for (const delayMs of attempts) {
@@ -123,8 +159,7 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
         }
 
         // Apply cached translations and find missing texts
-        const cache = translationCache.get(language) ?? new Map<string, string>();
-        translationCache.set(language, cache);
+        const cache = getCacheForLanguage(language);
         applyTranslations(nodes, Object.fromEntries(cache));
 
         const missing = uniqueTexts.filter((text) => !cache.has(text)).slice(0, 200);
@@ -166,6 +201,7 @@ export function usePageTranslation(language: string, ready: boolean, refreshKey?
           Object.entries(data.translations || {}).forEach(([source, translated]) => {
             cache.set(source, translated);
           });
+          persistCache(language, cache);
           applyTranslations(nodes, data.translations || {});
         } catch (error: any) {
           console.error("Page translation error:", error);
