@@ -146,13 +146,13 @@ const blockContent = (block: string) => {
     // Safe because we sanitized before
     return (
       <div
-        className="leading-relaxed text-slate-700 dark:text-white"
+        className="leading-relaxed text-slate-800 dark:text-white prose prose-neutral max-w-none prose-p:text-slate-800 dark:prose-p:text-white prose-li:text-slate-800 dark:prose-li:text-white prose-strong:text-slate-900 dark:prose-strong:text-white prose-h1:text-slate-900 dark:prose-h1:text-white prose-h2:text-slate-900 dark:prose-h2:text-white prose-h3:text-slate-900 dark:prose-h3:text-white prose-h4:text-slate-900 dark:prose-h4:text-white"
         dangerouslySetInnerHTML={{ __html: trimmed }}
       />
     );
   }
   return (
-    <p className="whitespace-pre-line leading-relaxed text-slate-700 dark:text-white">
+    <p className="whitespace-pre-line leading-relaxed text-slate-800 dark:text-white">
       {trimmed}
     </p>
   );
