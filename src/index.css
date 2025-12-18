@@ -162,11 +162,33 @@ All colors MUST be HSL.
     :root {
       font-size: 15px;
     }
+
+    body {
+      overflow-x: hidden;
+      width: 100vw;
+      position: relative;
+    }
+
+    /* Disable hover effects on mobile to prevent sticky states */
+    @media (hover: none) {
+      .hover\:bg-slate-100:hover {
+        background-color: transparent;
+      }
+
+      .hover\:bg-white\/90:hover {
+        background-color: rgba(255, 255, 255, 0.8);
+      }
+    }
   }
 
   @media (max-width: 480px) {
     :root {
       font-size: 14px;
+    }
+
+    /* Ensure no horizontal overflow from large elements */
+    * {
+      max-width: 100vw;
     }
   }
 }

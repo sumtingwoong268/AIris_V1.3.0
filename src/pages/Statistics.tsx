@@ -410,20 +410,29 @@ export default function Statistics() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
-      <PremiumHeader title="AIris Stats" />
+      <PremiumHeader title="AIris Stats" backRoute="/dashboard">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-1 w-full md:w-auto">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <span className="text-base md:text-sm">Dashboard</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <span className="text-base md:text-sm">Friends</span>
+          </Button>
+        </div>
+      </PremiumHeader>
 
-      <div className="container mx-auto max-w-6xl px-4 pt-32 pb-20 lg:px-6">
-        <section className="grid gap-6 xl:grid-cols-[2fr,1fr]">
+      <div className="container mx-auto max-w-6xl px-4 pt-28 md:pt-32 pb-20 lg:px-6 animate-slide-in-right md:animate-none">
+        <section className="grid gap-6 grid-cols-1 xl:grid-cols-[2fr,1fr]">
           <div className="relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-2xl p-1">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
-            <div className="relative z-10 rounded-[2.3rem] bg-white/5 p-8 backdrop-blur-sm lg:p-10 h-full flex flex-col justify-between">
+            <div className="relative z-10 rounded-[2.3rem] bg-white/5 p-6 md:p-8 backdrop-blur-sm lg:p-10 h-full flex flex-col justify-between">
 
               <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between mb-8">
                 <div className="space-y-3">
                   <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-white/70 font-bold bg-white/10 px-3 py-1 rounded-full w-fit">
                     <Activity className="h-3 w-3" /> Insight Center
                   </p>
-                  <h1 className="text-4xl font-extrabold lg:text-5xl tracking-tight">Your Vision Stats</h1>
+                  <h1 className="text-3xl font-extrabold lg:text-5xl tracking-tight">Your Vision Stats</h1>
                   <p className="max-w-md text-indigo-100/90 leading-relaxed text-lg">
                     Monitor patterns, celebrate wins, and keep your eye health on track.
                   </p>

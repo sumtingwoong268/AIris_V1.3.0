@@ -325,13 +325,22 @@ export default function Friends() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
       {/* Floating Header Pattern to match other pages */}
-      <PremiumHeader title="AIris Community" backRoute="/dashboard" />
+      <PremiumHeader title="AIris Community" backRoute="/dashboard">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-1 w-full md:w-auto">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <span className="text-base md:text-sm">Dashboard</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/achievements")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <span className="text-base md:text-sm">Achievements</span>
+          </Button>
+        </div>
+      </PremiumHeader>
 
-      <main className="container mx-auto max-w-5xl space-y-8 px-4 pt-32 pb-20">
-        <div className="rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-10 shadow-2xl text-white relative overflow-hidden">
+      <main className="container mx-auto max-w-5xl space-y-8 px-4 pt-28 md:pt-32 pb-20 animate-slide-in-right md:animate-none">
+        <div className="rounded-[2rem] md:rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-6 md:p-10 shadow-2xl text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="relative z-10">
-            <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl mb-3">Friends & Leaderboard</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight md:text-5xl mb-3">Friends & Leaderboard</h1>
             <p className="text-indigo-100 max-w-2xl text-lg font-medium leading-relaxed">
               Celebrate your streaks, connect with friends, and send requests to keep one another accountable.
             </p>
@@ -389,7 +398,7 @@ export default function Friends() {
         )}
 
         <Tabs defaultValue="leaderboard" className="space-y-8">
-          <TabsList className="bg-slate-100/80 p-1.5 w-full grid grid-cols-3 gap-1 rounded-2xl dark:bg-slate-800/50 h-auto">
+          <TabsList className="bg-slate-100/80 p-1 w-full grid grid-cols-3 gap-1 rounded-2xl dark:bg-slate-800/50 h-auto">
             <TabsTrigger
               value="leaderboard"
               className="rounded-xl px-2 py-2.5 font-medium data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-indigo-400 whitespace-nowrap overflow-hidden text-ellipsis"

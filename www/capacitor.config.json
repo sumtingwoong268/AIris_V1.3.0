@@ -1,0 +1,10 @@
+{
+  "appId": "com.airis.app",
+  "appName": "AIris",
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false
+    }
+  }
+}

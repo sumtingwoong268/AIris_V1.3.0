@@ -397,35 +397,35 @@ export default function Dashboard() {
       {/* Floating Header */}
       <PremiumHeader title="AIris" backRoute="/dashboard" hideBackArrow>
         {/* Restored Navigation Links including Blogs */}
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-            <Users className="mr-2 h-4 w-4 text-emerald-500" />
-            Friends
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-1 w-full md:w-auto">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <Users className="mr-2 h-5 w-5 md:h-4 md:w-4 text-emerald-500" />
+            <span className="text-base md:text-sm">Friends</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/achievements")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-            <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
-            Achievements
+          <Button variant="ghost" size="sm" onClick={() => navigate("/achievements")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <Sparkles className="mr-2 h-5 w-5 md:h-4 md:w-4 text-amber-500" />
+            <span className="text-base md:text-sm">Achievements</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/reports")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-            <FileText className="mr-2 h-4 w-4 text-blue-500" />
-            Reports
+          <Button variant="ghost" size="sm" onClick={() => navigate("/reports")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <FileText className="mr-2 h-5 w-5 md:h-4 md:w-4 text-blue-500" />
+            <span className="text-base md:text-sm">Reports</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/statistics")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-            <Award className="mr-2 h-4 w-4 text-purple-500" />
-            Statistics
+          <Button variant="ghost" size="sm" onClick={() => navigate("/statistics")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <Award className="mr-2 h-5 w-5 md:h-4 md:w-4 text-purple-500" />
+            <span className="text-base md:text-sm">Statistics</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/blogs")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-            <BookOpen className="mr-2 h-4 w-4 text-indigo-500" />
-            Blogs
+          <Button variant="ghost" size="sm" onClick={() => navigate("/blogs")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <BookOpen className="mr-2 h-5 w-5 md:h-4 md:w-4 text-indigo-500" />
+            <span className="text-base md:text-sm">Blogs</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-            <User className="mr-2 h-4 w-4 text-slate-500" />
-            Profile
+          <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <User className="mr-2 h-5 w-5 md:h-4 md:w-4 text-slate-500" />
+            <span className="text-base md:text-sm">Profile</span>
           </Button>
         </div>
       </PremiumHeader>
 
-      <main className="container mx-auto px-4 pt-32 max-w-6xl animate-fade-in">
+      <main className="container mx-auto px-4 pt-28 md:pt-32 max-w-6xl animate-slide-in-right md:animate-fade-in">
         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6 auto-rows-auto">
 
           {/* 0. Daily Tip (Moved to Top) */}

@@ -770,16 +770,25 @@ export default function Reports() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
-      <PremiumHeader title="Reports" subtitle="Health history" />
+      <PremiumHeader title="Reports" subtitle="Health history" backRoute="/dashboard">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-1 w-full md:w-auto">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <span className="text-base md:text-sm">Dashboard</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/statistics")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
+            <span className="text-base md:text-sm">Statistics</span>
+          </Button>
+        </div>
+      </PremiumHeader>
 
-      <main className="container mx-auto max-w-6xl space-y-10 px-4 pt-32 pb-20">
+      <main className="container mx-auto max-w-6xl space-y-10 px-4 pt-28 md:pt-32 pb-20 animate-slide-in-right md:animate-none">
         <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
           <span className="pointer-events-none absolute -left-12 top-1/3 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
           <span className="pointer-events-none absolute -right-10 bottom-0 h-40 w-40 rounded-full bg-sky-400/30 blur-3xl" />
           <CardContent className="relative z-10 flex flex-col gap-6 p-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3">
               <p className="text-sm uppercase tracking-[0.35rem] text-white/70">Vision reports</p>
-              <h1 className="text-4xl font-bold">Download and share your personalized AIris assessments</h1>
+              <h1 className="text-3xl font-bold md:text-4xl">Download and share your personalized AIris assessments</h1>
               <p className="max-w-2xl text-sm text-white/80">
                 Each report condenses your latest test data into an optometrist-friendly summary. Keep them handy for
                 checkups or track your progress over time.

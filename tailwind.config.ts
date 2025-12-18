@@ -108,6 +108,10 @@ export default {
           from: { opacity: "0", transform: "scale(0.95)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
+        "slide-in-right": {
+          from: { transform: "translateX(20px)", opacity: "0" },
+          to: { transform: "translateX(0)", opacity: "1" },
+        },
         "pulse-glow": {
           "0%, 100%": { boxShadow: "0 0 20px hsl(var(--primary) / 0.3)" },
           "50%": { boxShadow: "0 0 30px hsl(var(--primary) / 0.5)" },
@@ -130,6 +134,7 @@ export default {
         "xp-fill": "xp-fill 1s cubic-bezier(0.4, 0, 0.2, 1) forwards",
         "fade-in": "fade-in 0.4s ease-out",
         "scale-in": "scale-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)", // Bouncy scale
+        "slide-in-right": "slide-in-right 0.3s ease-out",
         "pulse-glow": "pulse-glow 3s ease-in-out infinite",
         "float": "float 6s ease-in-out infinite",
         "shimmer": "shimmer 2s infinite",

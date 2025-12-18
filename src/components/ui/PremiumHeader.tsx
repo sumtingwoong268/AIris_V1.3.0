@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/airis-logo-uploaded.png";
 
 type PremiumHeaderProps = {
@@ -61,9 +62,33 @@ export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", right
                 </div>
 
                 {children && (
-                    <div className="hidden md:flex items-center gap-1 mx-2">
-                        {children}
-                    </div>
+                    <>
+                        <div className="hidden md:flex items-center gap-1 mx-2">
+                            {children}
+                        </div>
+                        <div className="md:hidden flex items-center">
+                            <Sheet>
+                                <SheetTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="rounded-full">
+                                        <Menu className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+                                    </Button>
+                                </SheetTrigger>
+                                <SheetContent side="right" className="w-[280px] sm:w-[350px] dark:bg-slate-950/95 backdrop-blur-xl border-l-white/10">
+                                    <div className="flex flex-col gap-4 mt-8">
+                                        <div className="flex items-center gap-3 mb-6 px-2">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-slate-900 to-slate-800 shadow-md overflow-hidden">
+                                                <img src={logo} alt="AIris" className="h-full w-full object-cover scale-110" />
+                                            </div>
+                                            <span className="text-xl font-bold text-slate-900 dark:text-white">AIris</span>
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            {children}
+                                        </div>
+                                    </div>
+                                </SheetContent>
+                            </Sheet>
+                        </div>
+                    </>
                 )}
 
                 <div className="flex items-center gap-2">
