@@ -50,6 +50,29 @@ export default function Setup() {
   const [familyHistory, setFamilyHistory] = useState<string[]>([]);
   const [customFamilyHistory, setCustomFamilyHistory] = useState("");
 
+  // If the user already completed setup, send them to the dashboard instead of forcing re-onboarding.
+  useEffect(() => {
+    const redirectIfCompleted = async () => {
+      if (!user?.id) return;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("setup_completed, privacy_accepted")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Failed to check setup status:", error);
+        return;
+      }
+
+      if (data?.setup_completed) {
+        navigate("/dashboard", { replace: true });
+      }
+    };
+
+    void redirectIfCompleted();
+  }, [user, navigate]);
+
   useEffect(() => {
     if (!user) return;
     const loadUsername = async () => {

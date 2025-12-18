@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
 import logo from "@/assets/airis-logo-new.png";
 
 const Index = () => {
@@ -39,6 +41,41 @@ const Index = () => {
             >
               Get Started
             </Button>
+
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Menu className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[80vw] sm:w-[350px]">
+                  <SheetHeader>
+                    <SheetTitle>Menu</SheetTitle>
+                  </SheetHeader>
+                  <nav className="flex flex-col gap-4 mt-8">
+                    <a href="#features" className="text-lg font-medium hover:text-primary transition-colors">Features</a>
+                    <a href="#testimonials" className="text-lg font-medium hover:text-primary transition-colors">Stories</a>
+                    <a href="#science" className="text-lg font-medium hover:text-primary transition-colors">Science</a>
+                    <a href="/blogs" onClick={(e) => { e.preventDefault(); navigate("/blogs"); }} className="text-lg font-medium hover:text-primary transition-colors cursor-pointer">Blogs</a>
+                    <hr className="my-2 border-slate-200 dark:border-slate-800" />
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-xl justify-start h-12"
+                      onClick={() => navigate("/auth")}
+                    >
+                      Sign In
+                    </Button>
+                    <Button
+                      className="w-full rounded-xl justify-start h-12 bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                      onClick={() => navigate("/auth")}
+                    >
+                      Get Started
+                    </Button>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </header>
       </div>

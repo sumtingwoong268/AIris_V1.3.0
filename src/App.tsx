@@ -61,7 +61,7 @@ const App = () => {
                     If I use pointer-events-none on container, children need pointer-events-auto.
                     Let's just use a normal div. It won't block anything else on the page unless it overlaps.
                  */}
-                <div className="pointer-events-auto flex flex-col items-end gap-3">
+                <div className="flex flex-col items-end gap-3">
                   <ThemeToggle />
                   <LanguageToggle />
                 </div>
