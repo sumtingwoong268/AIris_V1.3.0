@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
@@ -51,17 +51,10 @@ const App = () => {
         <Toaster />
         <Sonner />
         <div className="min-h-screen w-full bg-background text-foreground">
-          <BrowserRouter>
+          <HashRouter>
             <FriendRequestProvider>
-              <div className="fixed top-3 right-3 z-[100] flex flex-col items-end gap-3 pointer-events-none">
-                {/* Pointer events auto allows children to be clickable while container lets clicks pass through if we used inset-0, 
-                    but here we are fixed top-right so pointer-events-none is safer if it grows large, 
-                    BUT actually we want buttons to be clickable. 
-                    Since it's top-right corner, let's just use pointer-events-auto for the container or omit it. 
-                    If I use pointer-events-none on container, children need pointer-events-auto.
-                    Let's just use a normal div. It won't block anything else on the page unless it overlaps.
-                 */}
-                <div className="pointer-events-auto flex flex-col items-end gap-3">
+              <div className="fixed top-12 right-6 z-[60] flex flex-col items-end gap-3 pointer-events-none pt-[env(safe-area-inset-top)]">
+                <div className="flex flex-col items-end gap-3">
                   <ThemeToggle />
                   <LanguageToggle />
                 </div>
@@ -88,7 +81,7 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </FriendRequestProvider>
-          </BrowserRouter>
+          </HashRouter>
         </div>
       </TooltipProvider>
     </QueryClientProvider>

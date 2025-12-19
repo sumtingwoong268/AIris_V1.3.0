@@ -421,7 +421,7 @@ export default function Statistics() {
         </div>
       </PremiumHeader>
 
-      <div className="container mx-auto max-w-6xl px-4 pt-28 md:pt-32 pb-20 lg:px-6 animate-slide-in-right md:animate-none">
+      <div className="container mx-auto max-w-6xl px-4 pt-28 md:pt-32 pb-20 lg:px-6 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
         <section className="grid gap-6 grid-cols-1 xl:grid-cols-[2fr,1fr]">
           <div className="relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-2xl p-1">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />

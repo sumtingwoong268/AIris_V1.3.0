@@ -21,7 +21,7 @@ export default function Blogs() {
         }
       />
 
-      <main className="container mx-auto max-w-5xl space-y-10 px-4 pt-32 pb-20">
+      <main className="container mx-auto max-w-5xl space-y-10 px-4 pt-32 pb-20 mt-[env(safe-area-inset-top)]">
         <div className="relative overflow-hidden rounded-[32px] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 shadow-2xl text-white">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="relative z-10 grid gap-8 md:grid-cols-[1.5fr,1fr] items-center">

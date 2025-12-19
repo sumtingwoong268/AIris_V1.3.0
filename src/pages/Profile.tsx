@@ -369,15 +369,15 @@ export default function Profile() {
         </div>
       </PremiumHeader>
 
-      <main className="container mx-auto max-w-5xl space-y-10 px-4 pt-28 md:pt-32 pb-20 animate-slide-in-right md:animate-none">
+      <main className="container mx-auto max-w-5xl space-y-10 px-4 pt-28 md:pt-32 pb-20 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
         <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl p-1">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="absolute top-0 right-0 -mt-20 -mr-20 h-80 w-80 rounded-full bg-white/20 blur-[80px]" />
           <div className="absolute bottom-0 left-0 -mb-20 -ml-20 h-64 w-64 rounded-full bg-fuchsia-500/30 blur-[60px]" />
 
           <div className="relative z-10 flex flex-col gap-8 rounded-[22px] bg-white/5 p-8 backdrop-blur-sm lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-6">
-              <div className="relative">
+            <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start text-center sm:text-left">
+              <div className="relative shrink-0">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}

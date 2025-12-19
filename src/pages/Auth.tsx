@@ -122,9 +122,10 @@ export default function Auth() {
         }
       }
     } catch (error: any) {
+      console.error("Auth error details:", error);
       toast({
         title: "Error",
-        description: error.message || "Something went wrong",
+        description: error.message || JSON.stringify(error) || "Something went wrong",
         variant: "destructive",
       });
     } finally {

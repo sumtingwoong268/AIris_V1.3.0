@@ -336,7 +336,7 @@ export default function Friends() {
         </div>
       </PremiumHeader>
 
-      <main className="container mx-auto max-w-5xl space-y-8 px-4 pt-28 md:pt-32 pb-20 animate-slide-in-right md:animate-none">
+      <main className="container mx-auto max-w-5xl space-y-8 px-4 pt-28 md:pt-32 pb-20 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
         <div className="rounded-[2rem] md:rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-6 md:p-10 shadow-2xl text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="relative z-10">

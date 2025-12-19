@@ -27,7 +27,7 @@ export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", right
     };
 
     return (
-        <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none pt-[env(safe-area-inset-top)]">
+        <div className="fixed top-10 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none pt-[env(safe-area-inset-top)]">
             <header className="relative z-50 pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
                 <div className="flex items-center gap-3">
                     {!hideBackArrow && (

@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
       {/* Floating Header */}
-      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pt-[env(safe-area-inset-top)]">
+      <div className="fixed top-10 left-0 right-0 z-50 flex justify-center px-4 pt-[env(safe-area-inset-top)]">
         <header className="flex w-full max-w-5xl items-center justify-between rounded-full border border-white/20 bg-white/70 px-6 py-3 shadow-lg shadow-black/5 backdrop-blur-xl transition-all hover:bg-white/80 dark:bg-slate-900/70 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md">
@@ -80,7 +80,7 @@ const Index = () => {
         </header>
       </div>
 
-      <main className="container mx-auto px-4 pt-32 pb-20 space-y-20">
+      <main className="container mx-auto px-4 pt-32 pb-20 space-y-20 mt-[env(safe-area-inset-top)]">
 
         {/* Hero Section - Asymmetrical */}
         <section className="relative">

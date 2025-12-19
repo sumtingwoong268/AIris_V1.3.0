@@ -34,7 +34,7 @@ export const LanguageToggle = () => {
   return (
     <div
       ref={containerRef}
-      className="flex flex-col items-end gap-2"
+      className="pointer-events-auto flex flex-col items-end gap-2"
       data-no-translate="true"
     >
       {collapsed ? (

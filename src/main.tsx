@@ -52,10 +52,18 @@ const ensureInitialTheme = async () => {
   }
 };
 
-ensureInitialTheme()
-  .catch((error) => {
-    console.error("Failed to initialise theme:", error);
-  })
-  .finally(() => {
+const initApp = async () => {
+  try {
+    // Add a race condition to ensure we don't hang for more than 2 seconds if Supabase is slow
+    await Promise.race([
+      ensureInitialTheme(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Theme initialization timeout")), 2000))
+    ]);
+  } catch (error) {
+    console.warn("Startup notice:", error);
+  } finally {
     createRoot(document.getElementById("root")!).render(<App />);
-  });
+  }
+};
+
+initApp();

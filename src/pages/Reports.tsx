@@ -781,7 +781,7 @@ export default function Reports() {
         </div>
       </PremiumHeader>
 
-      <main className="container mx-auto max-w-6xl space-y-10 px-4 pt-28 md:pt-32 pb-20 animate-slide-in-right md:animate-none">
+      <main className="container mx-auto max-w-6xl space-y-10 px-4 pt-28 md:pt-32 pb-20 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
         <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
           <span className="pointer-events-none absolute -left-12 top-1/3 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
           <span className="pointer-events-none absolute -right-10 bottom-0 h-40 w-40 rounded-full bg-sky-400/30 blur-3xl" />
