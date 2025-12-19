@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
       {/* Floating Header */}
-      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
+      <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pt-[env(safe-area-inset-top)]">
         <header className="flex w-full max-w-5xl items-center justify-between rounded-full border border-white/20 bg-white/70 px-6 py-3 shadow-lg shadow-black/5 backdrop-blur-xl transition-all hover:bg-white/80 dark:bg-slate-900/70 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md">
@@ -20,7 +20,7 @@ const Index = () => {
             <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">AIris</span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600 dark:text-slate-300">
+          <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-slate-600 dark:text-slate-300">
             <a href="#features" className="hover:text-primary transition-colors">Features</a>
             <a href="#testimonials" className="hover:text-primary transition-colors">Stories</a>
             <a href="#science" className="hover:text-primary transition-colors">Science</a>
@@ -42,7 +42,7 @@ const Index = () => {
               Get Started
             </Button>
 
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
