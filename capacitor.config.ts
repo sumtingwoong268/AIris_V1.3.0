@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'AIris',
   webDir: 'dist',
   server: {
-    androidScheme: 'https'
+    url: "https://airis.care",
   }
 };
 
