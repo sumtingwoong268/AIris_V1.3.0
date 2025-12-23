@@ -391,8 +391,17 @@ export default function Dashboard() {
     },
   ];
 
+  const dashboardBg = "#050915";
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900 pb-20 transition-colors duration-500">
+    <div
+      className="dashboard-page relative min-h-screen font-sans selection:bg-indigo-100 selection:text-indigo-900 pb-20 transition-colors duration-500"
+      style={{ backgroundColor: dashboardBg }}
+    >
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-0"
+        style={{ height: "env(safe-area-inset-top, 0px)", backgroundColor: dashboardBg }}
+      />
 
       {/* Floating Header */}
       <PremiumHeader title="AIris" backRoute="/dashboard" hideBackArrow>
@@ -425,8 +434,11 @@ export default function Dashboard() {
         </div>
       </PremiumHeader>
 
-      <main className="container mx-auto px-4 pt-24 md:pt-28 max-w-6xl animate-slide-in-right md:animate-fade-in mt-[env(safe-area-inset-top)] pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6 auto-rows-auto">
+      <main
+        className="container mx-auto px-4 sm:px-6 max-w-6xl animate-slide-in-right md:animate-fade-in pb-12"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)", marginTop: "-8px" }}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6 auto-rows-auto -mt-2">
 
           {/* 0. Daily Tip (Moved to Top) */}
           <div className="col-span-1 md:col-span-4 lg:col-span-6 rounded-[2rem] bg-gradient-to-r from-emerald-50/80 via-teal-50/80 to-emerald-50/80 border border-emerald-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-6 dark:from-emerald-950/20 dark:to-teal-900/10 dark:border-emerald-900/20 backdrop-blur-sm mb-2">

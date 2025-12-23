@@ -327,7 +327,7 @@ export default function Friends() {
       {/* Floating Header Pattern to match other pages */}
       <PremiumHeader title="AIris Community" backRoute="/dashboard" />
 
-      <main className="container mx-auto max-w-5xl space-y-8 px-4 pt-24 md:pt-28 pb-20 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
+      <main className="container mx-auto max-w-5xl space-y-8 px-6 pt-16 md:pt-20 pb-20 animate-slide-in-right md:animate-none">
         <div className="rounded-[2rem] md:rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-6 md:p-10 shadow-2xl text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="relative z-10">

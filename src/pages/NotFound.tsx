@@ -13,7 +13,7 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <div className="container mx-auto flex min-h-screen items-center justify-center px-4 py-16">
+      <div className="container mx-auto flex min-h-screen items-center justify-center px-6 py-16">
         <Card className="glass-card relative overflow-hidden border-none shadow-2xl max-w-lg w-full">
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 opacity-90" />
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />

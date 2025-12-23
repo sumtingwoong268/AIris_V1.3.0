@@ -37,8 +37,16 @@ export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", right
     }, [isMenuOpen]);
 
     return (
-        <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none pt-[env(safe-area-inset-top)]">
-            <header className="relative z-50 pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
+        <div className="fixed left-0 right-0 z-50 flex justify-center px-3 sm:px-4 top-0 pointer-events-none">
+            <header
+                className="relative z-50 pointer-events-auto flex w-full max-w-5xl items-center justify-between px-4 sm:px-6 py-0.5 transition-all rounded-full"
+                style={{
+                    backgroundColor: "#050915",
+                    paddingTop: "env(safe-area-inset-top, 0px)",
+                    border: "1px solid rgba(255,255,255,0.03)",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+                }}
+            >
                 <div className="flex items-center gap-3">
                     {!hideBackArrow && (
                         <Button

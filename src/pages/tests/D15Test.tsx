@@ -345,8 +345,8 @@ export default function D15Test({ initialPanelType = "D15", lockPanelType = fals
 
   return (
     <div className={`min-h-screen ${neutralBg}`}>
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/70 backdrop-blur-md dark:bg-slate-900/70 supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-900/40">
-        <div className="container mx-auto flex items-center gap-3 px-4 py-4">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-50/70 backdrop-blur-md dark:bg-slate-950/70 supports-[backdrop-filter]:bg-slate-50/40 dark:supports-[backdrop-filter]:bg-slate-950/40">
+        <div className="container mx-auto flex items-center gap-3 px-6 py-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-white/20">
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -383,7 +383,7 @@ export default function D15Test({ initialPanelType = "D15", lockPanelType = fals
         </div>
       </header>
 
-      <main className="container mx-auto max-w-5xl space-y-8 px-4 py-10">
+      <main className="container mx-auto max-w-5xl space-y-8 px-6 py-4">
         <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 shadow-2xl text-white">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="relative z-10 grid gap-8 md:grid-cols-[1.5fr,1fr] items-center">

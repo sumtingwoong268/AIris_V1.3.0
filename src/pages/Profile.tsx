@@ -360,7 +360,7 @@ export default function Profile() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <PremiumHeader title="AIris" subtitle="Profile & Settings" backRoute="/dashboard" />
 
-      <main className="container mx-auto max-w-5xl space-y-10 px-4 pt-24 md:pt-28 pb-20 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
+      <main className="container mx-auto max-w-5xl space-y-10 px-6 pt-16 md:pt-20 pb-20 animate-slide-in-right md:animate-none">
         <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl p-1">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="absolute top-0 right-0 -mt-20 -mr-20 h-80 w-80 rounded-full bg-white/20 blur-[80px]" />
