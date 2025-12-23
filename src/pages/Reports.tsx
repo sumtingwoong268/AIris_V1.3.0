@@ -770,18 +770,9 @@ export default function Reports() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
-      <PremiumHeader title="Reports" subtitle="Health history" backRoute="/dashboard">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-1 w-full md:w-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
-            <span className="text-base md:text-sm">Dashboard</span>
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/statistics")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
-            <span className="text-base md:text-sm">Statistics</span>
-          </Button>
-        </div>
-      </PremiumHeader>
+      <PremiumHeader title="Reports" subtitle="Health history" backRoute="/dashboard" />
 
-      <main className="container mx-auto max-w-6xl space-y-10 px-4 pt-28 md:pt-32 pb-20 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
+      <main className="container mx-auto max-w-6xl space-y-10 px-4 pt-24 md:pt-28 pb-20 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
         <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
           <span className="pointer-events-none absolute -left-12 top-1/3 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
           <span className="pointer-events-none absolute -right-10 bottom-0 h-40 w-40 rounded-full bg-sky-400/30 blur-3xl" />

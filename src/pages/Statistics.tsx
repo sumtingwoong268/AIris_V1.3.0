@@ -410,18 +410,9 @@ export default function Statistics() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
-      <PremiumHeader title="AIris Stats" backRoute="/dashboard">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-1 w-full md:w-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
-            <span className="text-base md:text-sm">Dashboard</span>
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
-            <span className="text-base md:text-sm">Friends</span>
-          </Button>
-        </div>
-      </PremiumHeader>
+      <PremiumHeader title="AIris Stats" backRoute="/dashboard" />
 
-      <div className="container mx-auto max-w-6xl px-4 pt-28 md:pt-32 pb-20 lg:px-6 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
+      <main className="container mx-auto px-4 pt-24 md:pt-28 max-w-6xl animate-slide-in-right md:animate-fade-in mt-[env(safe-area-inset-top)] pb-20">
         <section className="grid gap-6 grid-cols-1 xl:grid-cols-[2fr,1fr]">
           <div className="relative overflow-hidden rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-2xl p-1">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
@@ -1063,7 +1054,7 @@ export default function Statistics() {
             </section>
           </>
         )}
-      </div>
+      </main>
     </div>
   );
 }

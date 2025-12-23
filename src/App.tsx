@@ -53,7 +53,7 @@ const App = () => {
         <div className="min-h-screen w-full bg-background text-foreground">
           <HashRouter>
             <FriendRequestProvider>
-              <div className="fixed top-12 right-6 z-[60] flex flex-col items-end gap-3 pointer-events-none pt-[env(safe-area-inset-top)]">
+              <div className="fixed top-24 right-6 z-[60] flex flex-col items-end gap-3 pointer-events-none pt-[env(safe-area-inset-top)] switcher-container">
                 <div className="flex flex-col items-end gap-3">
                   <ThemeToggle />
                   <LanguageToggle />

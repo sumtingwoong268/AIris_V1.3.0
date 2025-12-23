@@ -425,7 +425,7 @@ export default function Dashboard() {
         </div>
       </PremiumHeader>
 
-      <main className="container mx-auto px-4 pt-28 md:pt-32 max-w-6xl animate-slide-in-right md:animate-fade-in mt-[env(safe-area-inset-top)]">
+      <main className="container mx-auto px-4 pt-24 md:pt-28 max-w-6xl animate-slide-in-right md:animate-fade-in mt-[env(safe-area-inset-top)] pb-12">
         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6 auto-rows-auto">
 
           {/* 0. Daily Tip (Moved to Top) */}

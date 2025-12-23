@@ -288,7 +288,7 @@ export default function Setup() {
         onBack={handleProtectedNavigation}
       />
 
-      <main className="container mx-auto max-w-5xl space-y-10 px-4 py-10">
+      <main className="container mx-auto max-w-5xl space-y-10 px-4 py-6">
         <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
           <span className="pointer-events-none absolute -left-14 top-1/3 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
           <span className="pointer-events-none absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-sky-400/30 blur-3xl" />

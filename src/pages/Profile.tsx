@@ -358,18 +358,9 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <PremiumHeader title="AIris" subtitle="Profile & Settings" backRoute="/dashboard">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-1 w-full md:w-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
-            <span className="text-base md:text-sm">Dashboard</span>
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/friends")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
-            <span className="text-base md:text-sm">Friends</span>
-          </Button>
-        </div>
-      </PremiumHeader>
+      <PremiumHeader title="AIris" subtitle="Profile & Settings" backRoute="/dashboard" />
 
-      <main className="container mx-auto max-w-5xl space-y-10 px-4 pt-28 md:pt-32 pb-20 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
+      <main className="container mx-auto max-w-5xl space-y-10 px-4 pt-24 md:pt-28 pb-20 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
         <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl p-1">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="absolute top-0 right-0 -mt-20 -mr-20 h-80 w-80 rounded-full bg-white/20 blur-[80px]" />

@@ -325,18 +325,9 @@ export default function Friends() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
       {/* Floating Header Pattern to match other pages */}
-      <PremiumHeader title="AIris Community" backRoute="/dashboard">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-1 w-full md:w-auto">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
-            <span className="text-base md:text-sm">Dashboard</span>
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/achievements")} className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 justify-start md:justify-center px-4 py-6 md:py-2">
-            <span className="text-base md:text-sm">Achievements</span>
-          </Button>
-        </div>
-      </PremiumHeader>
+      <PremiumHeader title="AIris Community" backRoute="/dashboard" />
 
-      <main className="container mx-auto max-w-5xl space-y-8 px-4 pt-28 md:pt-32 pb-20 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
+      <main className="container mx-auto max-w-5xl space-y-8 px-4 pt-24 md:pt-28 pb-20 animate-slide-in-right md:animate-none mt-[env(safe-area-inset-top)]">
         <div className="rounded-[2rem] md:rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-6 md:p-10 shadow-2xl text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="relative z-10">

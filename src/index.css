@@ -217,4 +217,15 @@ All colors MUST be HSL.
   .animate-appear {
     @apply animate-fade-in;
   }
+
+  /* Hide switchers when mobile menu is open */
+  .switcher-container {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  body[data-menu-open="true"] .switcher-container {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(20px);
+  }
 }

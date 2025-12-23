@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ type PremiumHeaderProps = {
 export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", rightContent, children, onBack, hideBackArrow }: PremiumHeaderProps) {
     const navigate = useNavigate();
 
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const handleBack = () => {
         if (onBack) {
             onBack();
@@ -26,8 +27,17 @@ export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", right
         }
     };
 
+    useEffect(() => {
+        if (isMenuOpen) {
+            document.body.setAttribute('data-menu-open', 'true');
+        } else {
+            document.body.removeAttribute('data-menu-open');
+        }
+        return () => document.body.removeAttribute('data-menu-open');
+    }, [isMenuOpen]);
+
     return (
-        <div className="fixed top-10 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none pt-[env(safe-area-inset-top)]">
+        <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none pt-[env(safe-area-inset-top)]">
             <header className="relative z-50 pointer-events-auto flex w-full max-w-5xl items-center justify-between rounded-full border border-white/40 bg-white/80 px-6 py-3 shadow-xl shadow-indigo-500/5 backdrop-blur-xl transition-all hover:bg-white/90 dark:bg-slate-900/80 dark:border-white/10 supports-[backdrop-filter]:bg-white/60">
                 <div className="flex items-center gap-3">
                     {!hideBackArrow && (
@@ -61,14 +71,15 @@ export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", right
                     </div>
                 </div>
 
-                <>
+                <div className="flex items-center gap-2">
                     {children && (
                         <div className="hidden lg:flex items-center gap-1 mx-2">
                             {children}
                         </div>
                     )}
+                    {rightContent}
                     <div className="flex items-center lg:hidden">
-                        <Sheet>
+                        <Sheet onOpenChange={setIsMenuOpen}>
                             <SheetTrigger asChild>
                                 <Button variant="ghost" size="icon" className="rounded-full" aria-label="Open menu">
                                     <Menu className="h-6 w-6 text-slate-600 dark:text-slate-300" />
@@ -105,10 +116,6 @@ export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", right
                             </SheetContent>
                         </Sheet>
                     </div>
-                </>
-
-                <div className="flex items-center gap-2">
-                    {rightContent}
                 </div>
             </header>
         </div>

@@ -213,7 +213,7 @@ export default function Achievements() {
         }
       />
 
-      <main className="container mx-auto space-y-8 px-4 pt-32 pb-20 mt-[env(safe-area-inset-top)]">
+      <main className="container mx-auto space-y-8 px-4 pt-24 md:pt-28 pb-20 mt-[env(safe-area-inset-top)]">
         <div className="grid gap-6 lg:grid-cols-[1.5fr,1fr]">
           <Card className="border-none bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-xl">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />

@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useXP } from "@/hooks/useXP";
 import { recordTestCompletionStreak } from "@/utils/streak";
+import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 
 type Stage = "calibration" | "practice" | "test" | "summary";
@@ -165,6 +166,7 @@ export default function D15Test({ initialPanelType = "D15", lockPanelType = fals
   const [resetCount, setResetCount] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [tick, setTick] = useState(0);
+  const [selectedCapId, setSelectedCapId] = useState<string | null>(null);
 
   useEffect(() => {
     if (lockPanelType) {
@@ -192,20 +194,39 @@ export default function D15Test({ initialPanelType = "D15", lockPanelType = fals
   const handleDragStart = (capId: string, isFixed: boolean) => {
     if (isFixed) return;
     setDragging(capId);
+    setSelectedCapId(null); // Clear selection when starting a drag
   };
 
   const handleDrop = (targetId: string) => {
     if (!dragging) return;
+    performMove(dragging, targetId);
+    setDragging(null);
+  };
+
+  const performMove = (sourceId: string, targetId: string) => {
     const next = [...arrangement];
-    const fromIndex = next.findIndex((c) => c.capId === dragging);
+    const fromIndex = next.findIndex((c) => c.capId === sourceId);
     const toIndex = next.findIndex((c) => c.capId === targetId);
     if (fromIndex === -1 || toIndex === -1) return;
     if (next[toIndex].isFixed) return;
+
     const [moved] = next.splice(fromIndex, 1);
     next.splice(toIndex, 0, moved);
     setArrangement(next);
-    setInteractions((logs) => [...logs, { capId: dragging, fromIndex, toIndex, timestamp: Date.now() }]);
-    setDragging(null);
+    setInteractions((logs) => [...logs, { capId: sourceId, fromIndex, toIndex, timestamp: Date.now() }]);
+  };
+
+  const handleCapClick = (capId: string, isFixed: boolean) => {
+    if (isFixed) return;
+
+    if (!selectedCapId) {
+      setSelectedCapId(capId);
+    } else if (selectedCapId === capId) {
+      setSelectedCapId(null);
+    } else {
+      performMove(selectedCapId, capId);
+      setSelectedCapId(null);
+    }
   };
 
   const handleAnalyze = async () => {
@@ -293,13 +314,28 @@ export default function D15Test({ initialPanelType = "D15", lockPanelType = fals
 
   const handlePracticeDrop = (target: string) => {
     if (!practiceDrag) return;
+    performPracticeMove(practiceDrag, target);
+    setPracticeDrag(null);
+  };
+
+  const performPracticeMove = (source: string, target: string) => {
     const next = [...practiceOrder];
-    const from = next.indexOf(practiceDrag);
+    const from = next.indexOf(source);
     const to = next.indexOf(target);
     next.splice(from, 1);
-    next.splice(to, 0, practiceDrag);
+    next.splice(to, 0, source);
     setPracticeOrder(next);
-    setPracticeDrag(null);
+  };
+
+  const handlePracticeClick = (cap: string) => {
+    if (!practiceDrag) {
+      setPracticeDrag(cap);
+    } else if (practiceDrag === cap) {
+      setPracticeDrag(null);
+    } else {
+      performPracticeMove(practiceDrag, cap);
+      setPracticeDrag(null);
+    }
   };
 
   const practiceComplete = practiceOrder.join(",") === "cool,neutral,warm";
@@ -482,7 +518,11 @@ export default function D15Test({ initialPanelType = "D15", lockPanelType = fals
                       onDragStart={() => setPracticeDrag(cap)}
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={() => handlePracticeDrop(cap)}
-                      className="flex h-20 w-32 items-center justify-center rounded-2xl border-2 border-white/50 bg-white shadow-lg cursor-grab active:cursor-grabbing hover:-translate-y-1 transition-all dark:bg-slate-800 dark:border-white/10"
+                      onClick={() => handlePracticeClick(cap)}
+                      className={cn(
+                        "flex h-20 w-32 items-center justify-center rounded-2xl border-2 bg-white shadow-lg cursor-grab active:cursor-grabbing hover:-translate-y-1 transition-all dark:bg-slate-800",
+                        practiceDrag === cap ? "border-primary ring-4 ring-primary/20 scale-105" : "border-white/50 dark:border-white/10"
+                      )}
                     >
                       <span className={`font-semibold ${cap === "warm" ? "text-orange-500" : cap === "cool" ? "text-blue-500" : "text-slate-500"}`}>
                         {cap === "warm" ? "Warm" : cap === "neutral" ? "Neutral" : "Cool"}
@@ -543,11 +583,19 @@ export default function D15Test({ initialPanelType = "D15", lockPanelType = fals
                           onDragStart={() => handleDragStart(cap.capId, cap.isFixed)}
                           onDragOver={(e) => e.preventDefault()}
                           onDrop={() => handleDrop(cap.capId)}
-                          className={`relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full shadow-sm transition-all hover:scale-105 ${!cap.isFixed ? 'cursor-grab active:cursor-grabbing hover:-translate-y-1' : ''}`}
+                          onClick={() => handleCapClick(cap.capId, cap.isFixed)}
+                          className={cn(
+                            "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full shadow-sm transition-all hover:scale-110",
+                            !cap.isFixed ? 'cursor-grab active:cursor-grabbing hover:-translate-y-1' : '',
+                            selectedCapId === cap.capId ? "ring-4 ring-primary ring-offset-4 ring-offset-white dark:ring-offset-slate-950 scale-110 z-10" : ""
+                          )}
                           aria-label={cap.isFixed ? "Fixed anchor cap" : "Movable cap"}
                         >
                           <div
-                            className={`rounded-full shadow-inner ${cap.isFixed ? "h-12 w-12 ring-4 ring-white/50 dark:ring-white/20" : "h-14 w-14 border-4 border-white dark:border-slate-800"}`}
+                            className={cn(
+                              "rounded-full shadow-inner transition-transform",
+                              cap.isFixed ? "h-12 w-12 ring-4 ring-white/50 dark:ring-white/20" : "h-16 w-16 border-4 border-white dark:border-slate-800"
+                            )}
                             style={{ background: color }}
                           />
                           {cap.isFixed && (
