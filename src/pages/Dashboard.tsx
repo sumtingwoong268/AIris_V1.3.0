@@ -435,13 +435,13 @@ export default function Dashboard() {
       </PremiumHeader>
 
       <main
-        className="container mx-auto px-4 sm:px-6 max-w-6xl animate-slide-in-right md:animate-fade-in pb-12"
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)", marginTop: "-8px" }}
+        className="container mx-auto px-4 sm:px-6 max-w-6xl animate-slide-in-right md:animate-fade-in pb-12 pt-28"
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 110px)" }}
       >
         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6 auto-rows-auto -mt-2">
 
           {/* 0. Daily Tip (Moved to Top) */}
-          <div className="col-span-1 md:col-span-4 lg:col-span-6 rounded-[2rem] bg-gradient-to-r from-emerald-50/80 via-teal-50/80 to-emerald-50/80 border border-emerald-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-6 dark:from-emerald-950/20 dark:to-teal-900/10 dark:border-emerald-900/20 backdrop-blur-sm mb-2">
+          <div className="col-span-1 md:col-span-4 lg:col-span-6 rounded-[2rem] bg-gradient-to-r from-emerald-50/80 via-teal-50/80 to-emerald-50/80 border border-emerald-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-6 dark:from-emerald-950/20 dark:to-teal-900/10 dark:border-emerald-900/20 backdrop-blur-sm mb-6">
             <div className="flex items-start sm:items-center gap-5">
               <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-500/20">
                 <Sparkles className="h-6 w-6" />

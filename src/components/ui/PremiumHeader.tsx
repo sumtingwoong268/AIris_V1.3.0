@@ -37,37 +37,42 @@ export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", right
     }, [isMenuOpen]);
 
     return (
-        <div className="fixed left-0 right-0 z-50 flex justify-center px-3 sm:px-4 top-0 pointer-events-none">
+        <div className="fixed left-0 right-0 z-50 flex justify-center px-4 sm:px-6 top-4 pointer-events-none">
             <header
-                className="relative z-50 pointer-events-auto flex w-full max-w-5xl items-center justify-between px-4 sm:px-6 py-0.5 transition-all rounded-full"
+                className="relative z-50 pointer-events-auto flex w-full max-w-5xl items-center justify-between px-5 sm:px-8 py-4 transition-all rounded-full"
                 style={{
                     backgroundColor: "#050915",
-                    paddingTop: "env(safe-area-inset-top, 0px)",
+                    paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)",
                     border: "1px solid rgba(255,255,255,0.03)",
                     boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
                 }}
             >
-                <div className="flex items-center gap-3">
+                {/* Left Section: Back Button (Absolute) */}
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 z-20">
                     {!hideBackArrow && (
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={handleBack}
-                            className="rounded-full hover:bg-slate-100 -ml-2 dark:hover:bg-slate-800 transition-colors"
+                            className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         >
                             <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
                         </Button>
                     )}
+                </div>
+
+                {/* Center Section: Logo + Title + Desktop Nav Links */}
+                <div className="flex flex-1 items-center justify-center gap-6">
+                    {/* Brand Group */}
                     <div
                         className="flex cursor-pointer items-center gap-3 group"
                         onClick={handleBack}
                     >
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-slate-900 to-slate-800 shadow-md group-hover:scale-105 transition-transform duration-300 overflow-hidden">
-                            {/* Using the new uploaded logo */}
                             <img src={logo} alt="AIris" className="h-full w-full object-cover scale-110" />
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-lg font-bold leading-none text-slate-900 dark:text-white">
+                        <div className="flex flex-col h-10 justify-center">
+                            <span className="text-lg font-bold text-slate-900 dark:text-white">
                                 {title}
                             </span>
                             {subtitle && (
@@ -77,14 +82,17 @@ export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", right
                             )}
                         </div>
                     </div>
-                </div>
 
-                <div className="flex items-center gap-2">
+                    {/* Navigation Links (Desktop) */}
                     {children && (
-                        <div className="hidden lg:flex items-center gap-1 mx-2">
+                        <div className="hidden lg:flex items-center gap-1">
                             {children}
                         </div>
                     )}
+                </div>
+
+                {/* Right Section: Mobile Menu & Extra Content (Absolute) */}
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 z-20 flex items-center gap-2">
                     {rightContent}
                     <div className="flex items-center lg:hidden">
                         <Sheet onOpenChange={setIsMenuOpen}>
