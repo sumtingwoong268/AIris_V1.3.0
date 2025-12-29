@@ -327,7 +327,7 @@ export default function Friends() {
       {/* Floating Header Pattern to match other pages */}
       <PremiumHeader title="AIris Community" backRoute="/dashboard" />
 
-      <main className="container mx-auto max-w-5xl space-y-8 px-6 pt-20 md:pt-24 pb-20 animate-slide-in-right md:animate-none">
+      <main className="container mx-auto max-w-5xl space-y-8 px-6 pt-24 md:pt-28 pb-20 animate-slide-in-right md:animate-none">
         <div className="rounded-[2rem] md:rounded-[2.5rem] border border-white/20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-6 md:p-10 shadow-2xl text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="relative z-10">
@@ -414,13 +414,19 @@ export default function Friends() {
             <Tabs defaultValue="weekly" className="space-y-6">
               <TabsList className="inline-flex h-auto p-1 bg-slate-100 rounded-xl dark:bg-slate-800/50">
                 <TabsTrigger
-                  className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all shadow-none"
-                  value="weekly"
-                >
-                  Weekly Streak Leaders
-                </TabsTrigger>
+              className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all shadow-none"
+              value="weekly"
+            >
+              Weekly Streak Leaders
+            </TabsTrigger>
+            <TabsTrigger
+              className="rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all shadow-none"
+              value="all-users"
+            >
+              All Users
+            </TabsTrigger>
 
-              </TabsList>
+          </TabsList>
 
               <TabsContent value="weekly" className="space-y-4">
                 <Card className="glass-card border-none shadow-none bg-transparent">
@@ -477,8 +483,7 @@ export default function Friends() {
                   </CardContent>
                 </Card>
               </TabsContent>
-
-              {/* <TabsContent value="all-users" className="space-y-4">
+              <TabsContent value="all-users" className="space-y-4">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -528,9 +533,7 @@ export default function Friends() {
                     )}
                   </CardContent>
                 </Card>
-              </TabsContent> */}
-
-
+              </TabsContent>
             </Tabs>
           </TabsContent>
 

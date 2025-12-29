@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDarkModePreference } from "@/hooks/useDarkModePreference";
 import { ArrowLeft } from "lucide-react";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/airis-logo.png";
 import { useTestTimer } from "@/hooks/useTestTimer";
 import { TestTimerDisplay } from "@/components/tests/TestTimerDisplay";
 import { recordTestCompletionStreak } from "@/utils/streak";

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowUp, ArrowDown, ArrowRight } from "lucide-react";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/airis-logo.png";
 import { XPBar } from "@/components/XPBar";
 import { useTestTimer, type QuestionTimingRecord } from "@/hooks/useTestTimer";
 import { TestTimerDisplay } from "@/components/tests/TestTimerDisplay";

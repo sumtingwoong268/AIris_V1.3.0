@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { saveAs } from "file-saver";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/airis-logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { PremiumHeader } from "@/components/ui/PremiumHeader";
 import {
@@ -213,7 +213,7 @@ export default function Achievements() {
         }
       />
 
-      <main className="container mx-auto space-y-8 px-6 pt-16 md:pt-20 pb-20">
+      <main className="container mx-auto space-y-8 px-6 pt-24 md:pt-28 pb-20">
         <div className="grid gap-6 lg:grid-cols-[1.5fr,1fr]">
           <Card className="border-none bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-xl">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />

@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useXP } from "@/hooks/useXP";
 import { recordTestCompletionStreak } from "@/utils/streak";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/airis-logo.png";
 
 type Stage = "calibration" | "practice" | "test" | "summary";
 type PanelType = "D15" | "LD15";

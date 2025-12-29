@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import logo from "@/assets/airis-logo-uploaded.png";
+import logo from "@/assets/airis-logo.png";
 
 type PremiumHeaderProps = {
     title: string;

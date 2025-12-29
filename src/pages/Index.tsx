@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
-import logo from "@/assets/airis-logo-new.png";
+import logo from "@/assets/airis-logo.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -80,7 +80,7 @@ const Index = () => {
         </header>
       </div>
 
-      <main className="container mx-auto px-4 pt-32 pb-20 space-y-20 mt-[env(safe-area-inset-top)]">
+      <main className="container mx-auto px-4 pt-24 md:pt-28 pb-20 space-y-20 mt-[env(safe-area-inset-top)]">
 
         {/* Hero Section - Asymmetrical */}
         <section className="relative">

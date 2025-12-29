@@ -57,7 +57,7 @@ export default function BlogArticle() {
         }
       />
 
-      <main className="container mx-auto max-w-4xl space-y-10 px-6 pt-16 md:pt-20 pb-20">
+      <main className="container mx-auto max-w-4xl space-y-10 px-6 pt-24 md:pt-28 pb-20">
         <div className={`relative overflow-hidden rounded-[32px] border border-primary/20 bg-gradient-to-br ${post.heroGradient} p-10 text-white shadow-2xl`}>
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
           <div className="relative z-10 space-y-4">
