@@ -973,7 +973,7 @@ export default function Statistics() {
               {/* Complete History Log */}
               <div className="col-span-1 lg:col-span-2 xl:col-span-2 mt-12">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="h-10 w-10 rounded-2xl bg-slate-900 flex items-center justify-center text-white shadow-lg dark:bg-white dark:text-slate-900">
+                  <div className="h-10 w-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-900 shadow-lg dark:bg-slate-900 dark:text-white">
                     <Calendar className="h-5 w-5" />
                   </div>
                   <div>

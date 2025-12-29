@@ -758,6 +758,28 @@ export default function Reports() {
       toast({ title: "Report generated!", description: "Your PDF has been downloaded" });
     } catch (error: any) {
       console.error("PDF generation error:", error);
+      const retryAfterSeconds =
+        typeof error?.retryAfterSeconds === "number" && Number.isFinite(error.retryAfterSeconds)
+          ? Math.max(1, Math.ceil(error.retryAfterSeconds))
+          : null;
+      const rateLimited =
+        error?.status === 429 ||
+        /rate limit/i.test(error?.message ?? "") ||
+        /too many requests/i.test(error?.message ?? "") ||
+        /quota/i.test(error?.message ?? "");
+
+      if (rateLimited) {
+        toast({
+          title: "Please wait before trying again",
+          description:
+            retryAfterSeconds !== null
+              ? `Gemini API rate limit reached. Try again in about ${retryAfterSeconds} seconds.`
+              : "Gemini API rate limit reached. Please wait a moment and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Error generating report",
         description: error?.message ?? "Unknown error",

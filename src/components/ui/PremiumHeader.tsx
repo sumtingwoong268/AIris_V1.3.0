@@ -39,12 +39,9 @@ export function PremiumHeader({ title, subtitle, backRoute = "/dashboard", right
     return (
         <div className="fixed left-0 right-0 z-50 flex justify-center px-4 sm:px-6 top-4 pointer-events-none">
             <header
-                className="relative z-50 pointer-events-auto flex w-full max-w-5xl items-center justify-between px-5 sm:px-8 py-4 transition-all rounded-full"
+                className="relative z-50 pointer-events-auto flex w-full max-w-5xl items-center justify-between px-5 sm:px-8 py-4 transition-all rounded-full bg-white/80 dark:bg-[#050915]/80 backdrop-blur-xl border border-slate-200 dark:border-white/5 shadow-lg shadow-slate-200/50 dark:shadow-black/50"
                 style={{
-                    backgroundColor: "#050915",
                     paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)",
-                    border: "1px solid rgba(255,255,255,0.03)",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
                 }}
             >
                 {/* Left Section: Back Button (Absolute) */}

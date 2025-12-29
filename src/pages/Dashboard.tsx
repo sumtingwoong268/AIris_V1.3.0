@@ -391,16 +391,15 @@ export default function Dashboard() {
     },
   ];
 
-  const dashboardBg = "#050915";
+
 
   return (
     <div
-      className="dashboard-page relative min-h-screen font-sans selection:bg-indigo-100 selection:text-indigo-900 pb-20 transition-colors duration-500"
-      style={{ backgroundColor: dashboardBg }}
+      className="dashboard-page relative min-h-screen font-sans selection:bg-indigo-100 selection:text-indigo-900 pb-20 transition-colors duration-500 bg-slate-50 dark:bg-[#050915]"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 z-0"
-        style={{ height: "env(safe-area-inset-top, 0px)", backgroundColor: dashboardBg }}
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 bg-slate-50 dark:bg-[#050915]"
+        style={{ height: "env(safe-area-inset-top, 0px)" }}
       />
 
       {/* Floating Header */}
@@ -576,7 +575,7 @@ export default function Dashboard() {
           </div>
 
           {/* 5. Trends & Insights (Visually Enhanced) */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-2 rounded-[2.5rem] bg-slate-900 text-white p-6 lg:p-8 relative overflow-hidden flex flex-col justify-between dark:bg-black dark:border dark:border-slate-800 shadow-xl group">
+          <div className="col-span-1 md:col-span-2 lg:col-span-2 rounded-[2.5rem] bg-white text-slate-900 p-6 lg:p-8 relative overflow-hidden flex flex-col justify-between border border-slate-200 shadow-sm dark:bg-slate-900 dark:text-white dark:border-slate-800 group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-indigo-500/30 transition-colors" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-fuchsia-500/20 rounded-full blur-[40px] translate-y-1/2 -translate-x-1/4" />
 
@@ -599,7 +598,7 @@ export default function Dashboard() {
                   </div>
                 ))
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-xs text-slate-600 border border-dashed border-slate-800 rounded-xl">
+                <div className="w-full h-full flex flex-col items-center justify-center text-xs text-slate-600 border border-dashed border-slate-200 rounded-xl dark:border-slate-800">
                   <span>No data available</span>
                 </div>
               )}

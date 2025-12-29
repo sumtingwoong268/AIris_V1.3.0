@@ -36,7 +36,7 @@ const Index = () => {
               Sign In
             </Button>
             <Button
-              className="rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800 hover:shadow-xl hover:-translate-y-0.5 transition-all px-6 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+              className="rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 hover:shadow-xl hover:-translate-y-0.5 transition-all px-6"
               onClick={() => navigate("/auth")}
             >
               Get Started
@@ -67,7 +67,7 @@ const Index = () => {
                       Sign In
                     </Button>
                     <Button
-                      className="w-full rounded-xl justify-start h-12 bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                      className="w-full rounded-xl justify-start h-12 bg-primary text-primary-foreground hover:bg-primary/90"
                       onClick={() => navigate("/auth")}
                     >
                       Get Started
@@ -181,19 +181,24 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[minmax(200px,auto)]">
             {/* Large Featured Card */}
-            <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 rounded-[2.5rem] bg-slate-900 text-white p-10 flex flex-col justify-between overflow-hidden relative group dark:bg-white dark:text-slate-900">
+            <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 rounded-[2.5rem] bg-white text-slate-900 p-10 flex flex-col justify-between overflow-hidden relative group border border-slate-200 shadow-sm dark:bg-slate-900 dark:text-white dark:border-slate-800">
               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity" />
               <div className="relative z-10 space-y-4">
-                <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10 dark:bg-slate-900/10 dark:border-slate-900/10">
+                <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
                   <span className="text-2xl">🧠</span>
                 </div>
                 <h3 className="text-3xl font-bold">AI-Powered Analysis</h3>
-                <p className="text-slate-300 text-lg leading-relaxed dark:text-slate-600">
+                <p className="text-slate-600 text-lg leading-relaxed dark:text-slate-300">
                   Our advanced algorithms analyze your test results to detect subtle changes in your vision over time, providing early warnings and tailored advice.
                 </p>
               </div>
               <div className="relative z-10 pt-8">
-                <Button variant="outline" className="rounded-full border-white/20 text-white hover:bg-white/10 dark:border-slate-900/20 dark:text-slate-900 dark:hover:bg-slate-900/5">Learn more</Button>
+                <Button
+                  variant="outline"
+                  className="rounded-full border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                >
+                  Learn more
+                </Button>
               </div>
             </div>
 
@@ -223,13 +228,13 @@ const Index = () => {
         </section>
 
         {/* CTA */}
-        <section className="rounded-[3rem] bg-slate-900 text-white overflow-hidden relative py-20 px-6 text-center dark:bg-slate-800">
+        <section className="rounded-[3rem] bg-gradient-to-r from-white via-blue-50 to-indigo-50 text-slate-900 overflow-hidden relative py-20 px-6 text-center border border-slate-200/70 shadow-sm dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-900/80 dark:text-white dark:border-slate-800">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10" />
           <div className="relative z-10 max-w-3xl mx-auto space-y-8">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Ready to see the difference?</h2>
-            <p className="text-xl text-slate-300">Join the thousands of people who are taking control of their eye health today.</p>
+            <p className="text-xl text-slate-600 dark:text-slate-300">Join the thousands of people who are taking control of their eye health today.</p>
             <Button
-              className="h-16 px-10 rounded-full bg-white text-slate-900 text-lg font-bold hover:bg-slate-100 hover:scale-105 transition-all shadow-xl"
+              className="h-16 px-10 rounded-full bg-primary text-primary-foreground text-lg font-bold hover:bg-primary/90 hover:scale-105 transition-all shadow-xl"
               onClick={() => navigate("/auth")}
             >
               Get Started for Free

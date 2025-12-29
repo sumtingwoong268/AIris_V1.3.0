@@ -5,9 +5,27 @@ export async function generateReport(payload: { prompt?: string; userData?: unkn
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`generate-report failed: ${res.status} ${text}`);
+  const raw = await res.text();
+  let json: any;
+  try {
+    json = JSON.parse(raw);
+  } catch {
+    json = undefined;
   }
-  return res.json() as Promise<{ text: string; meta?: any }>;
+
+  if (!res.ok) {
+    const message = json?.error ?? raw ?? res.statusText;
+    const error: any = new Error(`generate-report failed: ${res.status} ${message}`);
+    error.status = res.status;
+    if (typeof json?.retryAfterSeconds === "number") {
+      error.retryAfterSeconds = json.retryAfterSeconds;
+    }
+    throw error;
+  }
+
+  if (!json) {
+    throw new Error("generate-report failed: empty response");
+  }
+
+  return json as { text: string; meta?: any };
 }

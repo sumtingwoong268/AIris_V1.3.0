@@ -1226,6 +1226,26 @@ function createDatasetBlock(data: unknown): string {
   }
 }
 
+const parseRateLimitError = (err: any) => {
+  const message = typeof err?.message === "string" ? err.message : "";
+  const retryMatch = message.match(/retry in\s+([\d.]+)s/i);
+  const retryAfterSeconds = retryMatch ? Math.ceil(Number.parseFloat(retryMatch[1])) : undefined;
+  const quotaMatch = message.match(/quota exceeded[^:]*:\s*([^\s,]+)/i);
+  const is429 =
+    err?.status === 429 ||
+    err?.response?.status === 429 ||
+    /429/.test(message) ||
+    /quota exceeded/i.test(message) ||
+    /too many requests/i.test(message);
+
+  return {
+    is429,
+    retryAfterSeconds: Number.isFinite(retryAfterSeconds) ? retryAfterSeconds : undefined,
+    quotaMetric: quotaMatch ? quotaMatch[1] : undefined,
+    message,
+  };
+};
+
 export default async function handler(req: any, res: any) {
   try {
     if (req.method !== "POST") {
@@ -1343,6 +1363,17 @@ The previous response was invalid JSON. RESPOND ONLY WITH VALID JSON THAT MATCHE
     throw lastError ?? new Error("Model did not return valid JSON after retry.");
 
   } catch (err: any) {
+    const rateInfo = parseRateLimitError(err);
+    if (rateInfo.is429) {
+      console.warn("Gemini rate limit reached:", rateInfo.message);
+      res.status(429).json({
+        error: "Gemini API rate limit reached. Please wait and try again.",
+        retryAfterSeconds: rateInfo.retryAfterSeconds ?? 30,
+        quotaMetric: rateInfo.quotaMetric ?? null,
+      });
+      return;
+    }
+
     console.error("generate-report error:", err);
     res.status(500).send(err?.message || "Internal Server Error");
   }
