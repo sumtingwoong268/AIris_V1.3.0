@@ -52,22 +52,24 @@ interface TestAnswer {
   timing?: QuestionTimingRecord | null;
 }
 
-type Phase = "idle" | "control" | "redGreen" | "diagnostic" | "targeted" | "complete";
+type Phase = "idle" | "control" | "testing" | "complete";
 
 const TYPE_CONTROL = "control";
 const TYPE_RED_GREEN = "red_green_deficiency";
 const TYPE_DIAGNOSTIC = "diagnostic_red_green";
 const TYPE_DEUTAN = "deutanopia";
 const TYPE_PROTAN = "protanopia";
+const MIN_PLATES = 12;
+const MAX_PLATES = 15;
 
-const MAX_TOTAL_PLATES = 15;
-const RED_GREEN_BASE_COUNT = 3;
-const RED_GREEN_MAX_EXTRA = 2;
-const DIAGNOSTIC_MIN_COUNT = 2;
-const DIAGNOSTIC_MAX_COUNT = 4;
-const TARGET_FOCUS_COUNT = 3;
-const TARGET_SECONDARY_COUNT = 2;
-const FINAL_PROTAN_COUNT = 1;
+const shuffleArray = <T,>(items: T[]): T[] => {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+};
 
 const normalizeType = (value?: string | null): string | null => {
   if (!value) return null;
@@ -96,10 +98,11 @@ export default function IshiharaTest() {
   const [controlAttempts, setControlAttempts] = useState(0);
   const [controlPassAttempt, setControlPassAttempt] = useState<number | null>(null);
   const [controlWarning, setControlWarning] = useState<string | null>(null);
-  const [usedPlateIds, setUsedPlateIds] = useState<number[]>([]);
-  const [focusType, setFocusType] = useState<"deutanopia" | "protanopia">("deutanopia");
-  const [secondaryType, setSecondaryType] = useState<"deutanopia" | "protanopia">("protanopia");
-  const [targetedScheduled, setTargetedScheduled] = useState(false);
+  const [trueToneDisabled, setTrueToneDisabled] = useState(false);
+  const [brightnessAdjusted, setBrightnessAdjusted] = useState(false);
+  const [colorFiltersDisabled, setColorFiltersDisabled] = useState(false);
+  const [neutralLightingChecked, setNeutralLightingChecked] = useState(false);
+  const [distanceChecked, setDistanceChecked] = useState(false);
   const {
     sessionElapsedMs,
     questionElapsedMs,
@@ -112,6 +115,9 @@ export default function IshiharaTest() {
     reset: resetTimer,
   } = useTestTimer();
 
+  const calibrationReady =
+    trueToneDisabled && brightnessAdjusted && colorFiltersDisabled && neutralLightingChecked && distanceChecked;
+
   useEffect(() => {
     fetch("/ishihara_manifest_38.json")
       .then((res) => res.json())
@@ -120,7 +126,7 @@ export default function IshiharaTest() {
   }, []);
 
   useEffect(() => {
-    if (phase !== "control" && testPlates.length > 0 && currentPlateIndex < testPlates.length - 1) {
+    if (phase === "testing" && testPlates.length > 0 && currentPlateIndex < testPlates.length - 1) {
       const nextPlate = testPlates[currentPlateIndex + 1];
       if (nextPlate) {
         const img = new Image();
@@ -139,99 +145,78 @@ export default function IshiharaTest() {
     return normalized;
   };
 
-  const pickPlatesByType = (
-    type: string,
-    desiredCount: number,
-    used: Set<number>,
-    remainingSlots: number,
-  ): PlateData[] => {
-    if (!manifest || desiredCount <= 0 || remainingSlots <= 0) return [];
-    let needed = Math.min(desiredCount, remainingSlots);
-    const picked: PlateData[] = [];
-
-    for (const plate of manifest.plates) {
-      if (needed <= 0) break;
-      if (used.has(plate.id)) continue;
-      const plateType = normalizeType(plate.analysis.type_inferred);
-      if (plateType !== type) continue;
-      picked.push(plate);
-      used.add(plate.id);
-      needed -= 1;
-    }
-
-    return picked;
+  const buildPlateSequence = (): PlateData[] => {
+    if (!manifest) return [];
+    const nonControl = manifest.plates.filter(
+      (plate) => normalizeType(plate.analysis.type_inferred) !== TYPE_CONTROL,
+    );
+    const shuffled = shuffleArray(nonControl);
+    const desiredCount = Math.min(
+      shuffled.length,
+      Math.max(MIN_PLATES, Math.floor(Math.random() * (MAX_PLATES - MIN_PLATES + 1)) + MIN_PLATES),
+    );
+    return shuffled.slice(0, desiredCount);
   };
 
-  const schedulePlates = (plates: PlateData[]) => {
-    if (!plates.length) return;
-    setTestPlates((prev) => [...prev, ...plates]);
-    setUsedPlateIds((prev) => [...prev, ...plates.map((plate) => plate.id)]);
-  };
-
-  const beginRedGreenSequence = () => {
-    const used = new Set<number>(usedPlateIds);
-    const remainingSlots = Math.max(0, MAX_TOTAL_PLATES - testPlates.length);
-    const initial = pickPlatesByType(TYPE_RED_GREEN, 1, used, remainingSlots);
-
-    if (!initial.length) {
-      const fallback =
-        pickPlatesByType(TYPE_DIAGNOSTIC, 1, used, remainingSlots) ||
-        pickPlatesByType(TYPE_DEUTAN, 1, used, remainingSlots) ||
-        pickPlatesByType(TYPE_PROTAN, 1, used, remainingSlots);
-
-      if (!fallback.length) {
-        toast({
-          title: "No plates available",
-          description: "Could not load an Ishihara plate sequence. Please refresh and try again.",
-          variant: "destructive",
-        });
-        setPhase("complete");
-        return;
-      }
-
-      schedulePlates(fallback);
-      setPhase("diagnostic");
-      setTargetedScheduled(false);
-      const first = fallback[0];
-      startSession(`plate-${first.id}`, `Plate ${first.id}`);
-      setCurrentPlateIndex(0);
+  const startTestingSession = (sequence: PlateData[]) => {
+    if (!sequence.length) {
+      toast({
+        title: "No plates available",
+        description: "Could not load an Ishihara plate sequence. Please refresh and try again.",
+        variant: "destructive",
+      });
+      setPhase("complete");
       return;
     }
-
-    schedulePlates(initial);
-    setPhase("redGreen");
-    setTargetedScheduled(false);
-    const first = initial[0];
-    startSession(`plate-${first.id}`, `Plate ${first.id}`);
+    const first = sequence[0];
+    setPhase("testing");
+    setTestPlates(sequence);
     setCurrentPlateIndex(0);
+    startSession(`plate-${first.id}`, `Plate ${first.id}`);
   };
 
   const handleStart = () => {
     if (!manifest) return;
+    if (!calibrationReady) {
+      toast({
+        title: "Complete calibration first",
+        description: "Confirm brightness, True Tone, and screen color settings before starting.",
+        variant: "destructive",
+      });
+      return;
+    }
     resetTimer();
-    setStarted(true);
     setAnswers([]);
     setTestPlates([]);
-    setUsedPlateIds([]);
     setCurrentPlateIndex(0);
     setCompleted(false);
     setSubmitting(false);
-    setTargetedScheduled(false);
-    setFocusType("deutanopia");
-    setSecondaryType("protanopia");
     setControlAttempts(0);
     setControlPassAttempt(null);
     setControlWarning(null);
+    setUserInput("");
 
     const controlCandidate =
       manifest.plates.find((plate) => normalizeType(plate.analysis.type_inferred) === TYPE_CONTROL) ?? null;
     setControlPlate(controlCandidate);
 
+    const plannedSequence = buildPlateSequence();
+    if (!plannedSequence.length) {
+      toast({
+        title: "No plates available",
+        description: "Could not load an Ishihara plate sequence. Please refresh and try again.",
+        variant: "destructive",
+      });
+      setPhase("complete");
+      return;
+    }
+
+    setStarted(true);
+    setTestPlates(plannedSequence);
     if (controlCandidate) {
       setPhase("control");
     } else {
-      setPhase("redGreen");
-      beginRedGreenSequence();
+      startTestingSession(plannedSequence);
     }
   };
 
@@ -263,44 +248,6 @@ export default function IshiharaTest() {
     };
   };
 
-  const scheduleTargetedSequence = (focus: "deutanopia" | "protanopia", secondary: "deutanopia" | "protanopia") => {
-    if (!manifest) return [];
-    const used = new Set<number>([...usedPlateIds, ...testPlates.map((plate) => plate.id)]);
-    let remainingSlots = Math.max(0, MAX_TOTAL_PLATES - testPlates.length);
-    const planned: PlateData[] = [];
-
-    const take = (type: string, count: number) => {
-      if (count <= 0 || remainingSlots <= 0) return;
-      for (const plate of manifest.plates) {
-        if (remainingSlots <= 0 || count <= 0) break;
-        if (used.has(plate.id)) continue;
-        const plateType = normalizeType(plate.analysis.type_inferred);
-        if (plateType !== type) continue;
-        planned.push(plate);
-        used.add(plate.id);
-        remainingSlots -= 1;
-        count -= 1;
-      }
-    };
-
-    take(focus, TARGET_FOCUS_COUNT);
-    if (secondary !== focus) {
-      take(secondary, TARGET_SECONDARY_COUNT);
-    }
-
-    const needFinalProtan =
-      focus === TYPE_PROTAN ? true : secondary === TYPE_PROTAN ? false : true;
-
-    if (needFinalProtan) {
-      take(TYPE_PROTAN, FINAL_PROTAN_COUNT);
-    }
-
-    schedulePlates(planned);
-    setTargetedScheduled(true);
-    setPhase("targeted");
-    return planned;
-  };
-
   const handleControlAnswer = (overrideAnswer?: string) => {
     if (!controlPlate) return;
     const rawInput = overrideAnswer ?? userInput;
@@ -315,7 +262,8 @@ export default function IshiharaTest() {
       setControlPassAttempt(attemptNumber);
       setControlWarning(null);
       setUserInput("");
-      beginRedGreenSequence();
+      const nextSequence = testPlates.length ? testPlates : buildPlateSequence();
+      startTestingSession(nextSequence);
     } else {
       setControlWarning(
         "That did not match the control plate. Adjust your screen brightness or viewing angle, then try again.",
@@ -362,108 +310,10 @@ export default function IshiharaTest() {
     setAnswers(newAnswers);
     setUserInput("");
     setImageError(false);
-
-    let upcomingPlate: PlateData | null = null;
-
-    const redGreenAnswers = newAnswers.filter((answer) => answer.plateTypeNormalized === TYPE_RED_GREEN);
-    const redGreenMistakes = redGreenAnswers.filter((answer) => !answer.correct).length;
-    const redGreenRequired = Math.min(
-      manifest.plates.filter((plate) => normalizeType(plate.analysis.type_inferred) === TYPE_RED_GREEN).length,
-      RED_GREEN_BASE_COUNT + Math.min(RED_GREEN_MAX_EXTRA, redGreenMistakes),
-    );
-
-    if (phase === "redGreen") {
-      if (redGreenAnswers.length < redGreenRequired && testPlates.length < MAX_TOTAL_PLATES) {
-        const used = new Set<number>([...usedPlateIds, ...testPlates.map((plate) => plate.id)]);
-        const remainingSlots = Math.max(0, MAX_TOTAL_PLATES - testPlates.length);
-        const next = pickPlatesByType(TYPE_RED_GREEN, 1, used, remainingSlots);
-        if (next.length) {
-          schedulePlates(next);
-          upcomingPlate = next[0];
-        } else {
-          setPhase("diagnostic");
-        }
-      }
-
-      if (!upcomingPlate) {
-        setPhase("diagnostic");
-        const used = new Set<number>([...usedPlateIds, ...testPlates.map((plate) => plate.id)]);
-        const remainingSlots = Math.max(0, MAX_TOTAL_PLATES - testPlates.length);
-        const next = pickPlatesByType(TYPE_DIAGNOSTIC, 1, used, remainingSlots);
-        if (next.length) {
-          schedulePlates(next);
-          upcomingPlate = next[0];
-        } else {
-          const focus = focusType;
-          const secondary = focus === "deutanopia" ? "protanopia" : "deutanopia";
-          const planned = targetedScheduled ? [] : scheduleTargetedSequence(focus, secondary);
-          if (planned.length) {
-            upcomingPlate = planned[0];
-          }
-        }
-      }
-    } else if (phase === "diagnostic") {
-      const diagnosticAnswers = newAnswers.filter((answer) => answer.plateTypeNormalized === TYPE_DIAGNOSTIC);
-      const diagMatches = diagnosticAnswers.reduce(
-        (acc, answer) => {
-          if (answer.matchedOutcome === TYPE_DEUTAN) acc.deutanopia += 1;
-          if (answer.matchedOutcome === TYPE_PROTAN) acc.protanopia += 1;
-          return acc;
-        },
-        { deutanopia: 0, protanopia: 0 },
-      );
-
-      let nextFocus: "deutanopia" | "protanopia" = focusType;
-      if (diagMatches.deutanopia > diagMatches.protanopia && diagMatches.deutanopia > 0) {
-        nextFocus = "deutanopia";
-      } else if (diagMatches.protanopia > diagMatches.deutanopia && diagMatches.protanopia > 0) {
-        nextFocus = "protanopia";
-      } else if (diagnosticAnswers.length && diagnosticAnswers[diagnosticAnswers.length - 1].matchedOutcome) {
-        const last = diagnosticAnswers[diagnosticAnswers.length - 1].matchedOutcome;
-        if (last === TYPE_DEUTAN) nextFocus = "deutanopia";
-        if (last === TYPE_PROTAN) nextFocus = "protanopia";
-      }
-
-      const suspectedMatches = diagMatches[nextFocus];
-      const totalMatches = diagMatches.deutanopia + diagMatches.protanopia;
-
-      const shouldContinueDiagnostic =
-        diagnosticAnswers.length < DIAGNOSTIC_MIN_COUNT ||
-        (diagnosticAnswers.length < DIAGNOSTIC_MAX_COUNT && totalMatches === 0) ||
-        (diagnosticAnswers.length < DIAGNOSTIC_MAX_COUNT && suspectedMatches < 2 && suspectedMatches > 0);
-
-      if (shouldContinueDiagnostic && testPlates.length < MAX_TOTAL_PLATES) {
-        const used = new Set<number>([...usedPlateIds, ...testPlates.map((plate) => plate.id)]);
-        const remainingSlots = Math.max(0, MAX_TOTAL_PLATES - testPlates.length);
-        const next = pickPlatesByType(TYPE_DIAGNOSTIC, 1, used, remainingSlots);
-        if (next.length) {
-          schedulePlates(next);
-          upcomingPlate = next[0];
-        }
-      }
-
-      if (!upcomingPlate) {
-        const focus = nextFocus;
-        const secondary = focus === "deutanopia" ? "protanopia" : "deutanopia";
-        setFocusType(focus);
-        setSecondaryType(secondary);
-        const planned = targetedScheduled ? [] : scheduleTargetedSequence(focus, secondary);
-        if (planned.length) {
-          upcomingPlate = planned[0];
-        }
-      }
-    }
-
-    if (!upcomingPlate) {
-      const nextIndex = currentPlateIndex + 1;
-      const alreadyScheduled = testPlates[nextIndex];
-      if (alreadyScheduled) {
-        upcomingPlate = alreadyScheduled;
-      }
-    }
-
-    if (upcomingPlate) {
-      setCurrentPlateIndex((prev) => prev + 1);
+    const nextIndex = currentPlateIndex + 1;
+    if (nextIndex < testPlates.length) {
+      const upcomingPlate = testPlates[nextIndex];
+      setCurrentPlateIndex(nextIndex);
       markQuestionStart(`plate-${upcomingPlate.id}`, `Plate ${upcomingPlate.id}`);
     } else {
       void completeTest(newAnswers);
@@ -478,7 +328,7 @@ export default function IshiharaTest() {
     setPhase("complete");
 
     const correctCount = testAnswers.filter((a) => a.correct).length;
-    const score = Math.round((correctCount / testAnswers.length) * 100);
+    const score = testAnswers.length ? Math.round((correctCount / testAnswers.length) * 100) : 0;
 
     let subtype = "normal";
     const mistakes = testAnswers.filter((a) => !a.correct);
@@ -500,6 +350,26 @@ export default function IshiharaTest() {
     const diagnosticAnswers = testAnswers.filter((answer) => answer.plateTypeNormalized === TYPE_DIAGNOSTIC);
     const deutanAnswers = testAnswers.filter((answer) => answer.plateTypeNormalized === TYPE_DEUTAN);
     const protanAnswers = testAnswers.filter((answer) => answer.plateTypeNormalized === TYPE_PROTAN);
+
+    const typeBreakdown = testAnswers.reduce(
+      (acc, answer) => {
+        const typeKey = answer.plateTypeNormalized ?? "unknown";
+        if (!acc[typeKey]) {
+          acc[typeKey] = { total: 0, correct: 0, mistakes: 0, matches: {} as Record<string, number> };
+        }
+        acc[typeKey].total += 1;
+        if (answer.correct) {
+          acc[typeKey].correct += 1;
+        } else {
+          acc[typeKey].mistakes += 1;
+        }
+        if (answer.matchedOutcome) {
+          acc[typeKey].matches[answer.matchedOutcome] = (acc[typeKey].matches[answer.matchedOutcome] ?? 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, { total: number; correct: number; mistakes: number; matches: Record<string, number> }>,
+    );
 
     const matchCounter = testAnswers.reduce(
       (acc, answer) => {
@@ -531,6 +401,13 @@ export default function IshiharaTest() {
         passed_on_attempt: controlPassAttempt,
         plate_id: controlPlate?.id ?? null,
       },
+      calibration: {
+        trueToneDisabled,
+        brightnessAdjusted,
+        colorFiltersDisabled,
+        neutralLightingChecked,
+        distanceChecked,
+      },
       segments: {
         red_green: {
           total: redGreenAnswers.length,
@@ -552,11 +429,14 @@ export default function IshiharaTest() {
           total: protanAnswers.length,
           matches: protanAnswers.filter((answer) => answer.matchedOutcome === TYPE_PROTAN).length,
         },
+        all_types: typeBreakdown,
       },
       matched_outcomes: matchCounter,
-      focus_type: focusType,
-      secondary_type: secondaryType,
+      focus_type: null,
+      secondary_type: null,
       suspected_deficiency: suspectedDeficiency,
+      total_plates_presented: testAnswers.length,
+      correct_count: correctCount,
     };
 
     if (!user) {
@@ -598,8 +478,16 @@ export default function IshiharaTest() {
             attempts: controlAttempts,
             passedOnAttempt: controlPassAttempt,
           },
-          focusType,
-          secondaryType,
+          calibration: {
+            trueToneDisabled,
+            brightnessAdjusted,
+            colorFiltersDisabled,
+            neutralLightingChecked,
+            distanceChecked,
+          },
+          focusType: null,
+          secondaryType: null,
+          sequenceStrategy: "full_manifest_shuffle",
           suspectedDeficiency,
           analysisSummary,
           timing: {
@@ -694,24 +582,68 @@ export default function IshiharaTest() {
               <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent dark:from-white dark:to-slate-300">Before you begin</h2>
               <p className="text-base text-muted-foreground max-w-lg mx-auto">
                 Make sure your display shows crisp colors with comfortable brightness. If you normally wear glasses or
-                contacts for everyday tasks, keep them on.
+                contacts for everyday tasks, keep them on. Plates are shuffled every run and you&apos;ll see the full mix of plate types.
               </p>
 
-              <div className="grid gap-4 md:grid-cols-3 text-left">
-                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
-                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
-                  <h3 className="font-semibold mb-1">Observe</h3>
-                  <p className="text-xs text-muted-foreground">Enter the number or pattern you see.</p>
+              <div className="grid gap-3 text-left md:grid-cols-2">
+                <label className="flex items-center gap-3 p-3 rounded-xl border border-white/40 bg-white/40 hover:bg-white/60 transition-colors cursor-pointer dark:bg-slate-900/50 dark:border-white/10">
+                  <Input
+                    type="checkbox"
+                    checked={trueToneDisabled}
+                    onChange={(e) => setTrueToneDisabled(e.target.checked)}
+                    className="h-5 w-5 rounded-md border-primary text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm">True Tone / Night Shift / Eye Comfort off.</span>
+                </label>
+                <label className="flex items-center gap-3 p-3 rounded-xl border border-white/40 bg-white/40 hover:bg-white/60 transition-colors cursor-pointer dark:bg-slate-900/50 dark:border-white/10">
+                  <Input
+                    type="checkbox"
+                    checked={colorFiltersDisabled}
+                    onChange={(e) => setColorFiltersDisabled(e.target.checked)}
+                    className="h-5 w-5 rounded-md border-primary text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm">No color filters or accessibility tint active.</span>
+                </label>
+                <label className="flex items-center gap-3 p-3 rounded-xl border border-white/40 bg-white/40 hover:bg-white/60 transition-colors cursor-pointer dark:bg-slate-900/50 dark:border-white/10">
+                  <Input
+                    type="checkbox"
+                    checked={brightnessAdjusted}
+                    onChange={(e) => setBrightnessAdjusted(e.target.checked)}
+                    className="h-5 w-5 rounded-md border-primary text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm">Brightness set mid-high and comfortable.</span>
+                </label>
+                <label className="flex items-center gap-3 p-3 rounded-xl border border-white/40 bg-white/40 hover:bg-white/60 transition-colors cursor-pointer dark:bg-slate-900/50 dark:border-white/10">
+                  <Input
+                    type="checkbox"
+                    checked={neutralLightingChecked}
+                    onChange={(e) => setNeutralLightingChecked(e.target.checked)}
+                    className="h-5 w-5 rounded-md border-primary text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm">Neutral lighting and no tinted screen protectors.</span>
+                </label>
+                <label className="flex items-center gap-3 p-3 rounded-xl border border-white/40 bg-white/40 hover:bg-white/60 transition-colors cursor-pointer dark:bg-slate-900/50 dark:border-white/10 md:col-span-2">
+                  <Input
+                    type="checkbox"
+                    checked={distanceChecked}
+                    onChange={(e) => setDistanceChecked(e.target.checked)}
+                    className="h-5 w-5 rounded-md border-primary text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm">Viewing straight on at arm&apos;s length with minimal glare.</span>
+                </label>
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-dashed border-primary/20 bg-primary/5 p-5">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Brightness / contrast check</span>
+                  <span>Verify every step is visible</span>
                 </div>
-                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
-                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
-                  <h3 className="font-semibold mb-1">Adapt</h3>
-                  <p className="text-xs text-muted-foreground">Plates change based on your answers.</p>
-                </div>
-                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
-                  <div className="h-2 w-2 rounded-full bg-primary mb-2" />
-                  <h3 className="font-semibold mb-1">Complete</h3>
-                  <p className="text-xs text-muted-foreground">Finish the sequence to earn 45 XP.</p>
+                <div className="flex gap-1 h-10 w-full rounded-lg overflow-hidden border border-border/50">
+                  {Array.from({ length: 12 }).map((_, idx) => {
+                    const v = Math.round((idx / 11) * 255);
+                    const hex = v.toString(16).padStart(2, "0");
+                    return <div key={idx} className="flex-1" style={{ background: `#${hex}${hex}${hex}` }} />;
+                  })}
                 </div>
               </div>
 
@@ -719,10 +651,14 @@ export default function IshiharaTest() {
                 <Button
                   size="lg"
                   onClick={handleStart}
-                  className="w-full max-w-xs rounded-full bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-105 transition-all duration-300"
+                  disabled={!calibrationReady}
+                  className="w-full max-w-xs rounded-full bg-gradient-to-r from-primary to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Start Color Test
+                  Start Randomized Test
                 </Button>
+                {!calibrationReady && (
+                  <p className="text-xs text-muted-foreground mt-2">Toggle all calibration checks to continue.</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -740,7 +676,7 @@ export default function IshiharaTest() {
                 ) : (
                   <>
                     <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
-                      Plate {currentPlateIndex + 1} / {Math.max(testPlates.length, currentPlateIndex + 1)}
+                      Plate {currentPlateIndex + 1} / {testPlates.length || currentPlateIndex + 1}
                     </h2>
                     <p className="text-sm text-muted-foreground">
                       Enter the number you see or type “nothing” if none is visible.

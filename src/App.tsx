@@ -50,7 +50,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <div className="min-h-screen w-full bg-background text-foreground">
+        <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
           <HashRouter>
             <FriendRequestProvider>
               <div className="fixed top-24 right-6 z-[60] flex flex-col items-end gap-3 pointer-events-none pt-[env(safe-area-inset-top)] switcher-container">
@@ -59,29 +59,38 @@ const App = () => {
                   <LanguageToggle />
                 </div>
               </div>
-              <Routes>
-                <Route path="/" element={<Auth />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/setup" element={<Setup />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/friends" element={<Friends />} />
-                <Route path="/achievements" element={<Achievements />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/blogs" element={<Blogs />} />
-                <Route path="/blogs/:slug" element={<BlogArticle />} />
-                <Route path="/statistics" element={<Statistics />} />
-                <Route path="/tests/ishihara" element={<IshiharaTest />} />
-                <Route path="/tests/visual-acuity" element={<VisualAcuityTest />} />
-                <Route path="/tests/amsler" element={<AmslerTest />} />
-                <Route path="/tests/reading-stress" element={<ReadingStressTest />} />
-                <Route path="/tests/d15" element={<D15Test />} />
-                <Route path="/tests/d15-desaturated" element={<D15DesaturatedTest />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <div className="flex-1">
+                <Routes>
+                  <Route path="/" element={<Auth />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/setup" element={<Setup />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/friends" element={<Friends />} />
+                  <Route path="/achievements" element={<Achievements />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/blogs" element={<Blogs />} />
+                  <Route path="/blogs/:slug" element={<BlogArticle />} />
+                  <Route path="/statistics" element={<Statistics />} />
+                  <Route path="/tests/ishihara" element={<IshiharaTest />} />
+                  <Route path="/tests/visual-acuity" element={<VisualAcuityTest />} />
+                  <Route path="/tests/amsler" element={<AmslerTest />} />
+                  <Route path="/tests/reading-stress" element={<ReadingStressTest />} />
+                  <Route path="/tests/d15" element={<D15Test />} />
+                  <Route path="/tests/d15-desaturated" element={<D15DesaturatedTest />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
             </FriendRequestProvider>
           </HashRouter>
+          <footer className="mt-auto w-full px-4 py-3 pb-[env(safe-area-inset-bottom)]">
+            <div className="flex justify-center">
+              <span className="rounded-full bg-muted/40 px-3 py-2 text-[11px] font-medium text-muted-foreground shadow-sm ring-1 ring-border/50 backdrop-blur-md">
+                🎨 AIris&apos; graphics illustrated by Uswa Touqeer ✨
+              </span>
+            </div>
+          </footer>
         </div>
       </TooltipProvider>
     </QueryClientProvider>
