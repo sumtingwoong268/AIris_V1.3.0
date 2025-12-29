@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "paths": { "@/*": ["./src/*"] },
+    "paths": {
+      "@/*": ["./src/*"],
+      "lucide-react": ["./src/lib/material-icons"]
+    },
 
     "target": "ES2020",
     "module": "ESNext",

@@ -794,7 +794,7 @@ export default function Reports() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-100 selection:text-indigo-900">
       <PremiumHeader title="Reports" subtitle="Health history" backRoute="/dashboard" />
 
-      <main className="container mx-auto max-w-6xl space-y-10 px-6 pt-16 md:pt-20 pb-20 animate-slide-in-right md:animate-none">
+      <main className="container mx-auto max-w-6xl space-y-10 px-6 pt-20 md:pt-24 pb-20 animate-slide-in-right md:animate-none">
         <Card className="relative overflow-hidden border-none bg-gradient-to-br from-primary via-indigo-600 to-fuchsia-600 text-white shadow-2xl">
           <span className="pointer-events-none absolute -left-12 top-1/3 h-48 w-48 rounded-full bg-white/25 blur-3xl" />
           <span className="pointer-events-none absolute -right-10 bottom-0 h-40 w-40 rounded-full bg-sky-400/30 blur-3xl" />

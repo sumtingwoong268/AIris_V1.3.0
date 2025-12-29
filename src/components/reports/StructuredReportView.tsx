@@ -30,12 +30,9 @@ function stripDangerousAttrs(html: string) {
   // neutralize javascript: in href/src/style
   out = out.replace(/\s(href|src)\s*=\s*"(javascript:[^"]*)"/gi, ' $1="#"');
   out = out.replace(/\s(href|src)\s*=\s*'(javascript:[^']*)'/gi, " $1='#'");
-  out = out.replace(/\sstyle\s*=\s*"(?:[^"]*javascript:[^"]*)"/gi, ' style=""');
-  out = out.replace(/\sstyle\s*=\s*'(?:[^']*javascript:[^']*)'/gi, " style=''");
-
-  // very defensive: block url() in style
-  out = out.replace(/\sstyle\s*=\s*"[^"]*url\s*\([^)]*\)[^"]*"/gi, ' style=""');
-  out = out.replace(/\sstyle\s*=\s*'[^']*url\s*\([^)]*\)[^']*'/gi, " style=''");
+  // drop all inline styles to avoid hardcoded colors bleeding through themes
+  out = out.replace(/\sstyle\s*=\s*"[^"]*"/gi, "");
+  out = out.replace(/\sstyle\s*=\s*'[^']*'/gi, "");
 
   return out;
 }
@@ -202,7 +199,7 @@ export function StructuredReportView({
       </header>
 
       {keyFindings && keyFindings.length > 0 && (
-        <section className="rounded-2xl border border-white/50 bg-white/80 p-6 shadow-md backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
+        <section className="rounded-2xl border border-white/50 bg-white/80 p-6 shadow-md backdrop-blur text-slate-800 dark:text-slate-100 dark:border-white/10 dark:bg-slate-950/60">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-300">
             Key Findings
           </h3>
@@ -210,7 +207,7 @@ export function StructuredReportView({
             {keyFindings.map((finding, idx) => (
               <li
                 key={idx}
-                className="rounded-xl border border-slate-200/70 bg-gradient-to-br from-white/90 via-white to-white/95 px-4 py-3 leading-relaxed text-slate-700 shadow-sm backdrop-blur dark:border-white/10 dark:from-slate-900/65 dark:to-slate-900/80 dark:text-slate-100"
+                className="rounded-xl border border-slate-200/70 bg-gradient-to-br from-white/90 via-white to-white/95 px-4 py-3 leading-relaxed text-current shadow-sm backdrop-blur dark:border-white/10 dark:from-slate-900/65 dark:to-slate-900/80"
               >
                 {finding}
               </li>

@@ -36,7 +36,7 @@ export function XPBanner({ xp, level, username, className }: XPBannerProps) {
 
                     <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight tracking-tight">
                         Hello, {username || "Visionary"}! <br />
-                        <span className="text-indigo-200 text-2xl md:text-3xl font-medium">Ready to level up your vision?</span>
+                        <span className="text-indigo-200 text-lg md:text-xl font-medium">Ready to level up your vision?</span>
                     </h1>
                 </div>
 

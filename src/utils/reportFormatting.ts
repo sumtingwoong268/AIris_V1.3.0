@@ -202,7 +202,7 @@ export const buildHtmlFromStructure = (report: GeminiStructuredReport, accentCol
   const urgencyLabel = urgency.replace(/_/g, " ").toUpperCase();
 
   return `
-    <article style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: ${gradient}; color: #0f172a; padding: 40px; border-radius: 32px; display: flex; flex-direction: column; gap: 28px;">
+    <article style="font-family: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: ${gradient}; color: #0f172a; padding: 40px; border-radius: 32px; display: flex; flex-direction: column; gap: 28px;">
       <header style="display: flex; flex-direction: column; gap: 14px; background: rgba(255,255,255,0.12); border-radius: 24px; padding: 24px 28px; border: 1px solid rgba(255,255,255,0.2);">
         <span style="letter-spacing: 0.18em; font-weight: 600; color: rgba(255,255,255,0.72); font-size: 13px;">AIris Vision Health Report</span>
         <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
