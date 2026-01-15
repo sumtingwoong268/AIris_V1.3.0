@@ -61,6 +61,9 @@ const TYPE_DEUTAN = "deutanopia";
 const TYPE_PROTAN = "protanopia";
 const MIN_PLATES = 12;
 const MAX_PLATES = 15;
+const ADAPTIVE_MAX_EXTRA_PLATES = 3;
+const SLOW_ANSWER_THRESHOLD_MS = 12000;
+const ADAPTIVE_CONFIDENCE_THRESHOLD = 1.1;
 
 const shuffleArray = <T,>(items: T[]): T[] => {
   const copy = [...items];
@@ -79,6 +82,75 @@ const normalizeType = (value?: string | null): string | null => {
 const normalizeOutcomeKey = (value: string): string =>
   value.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 
+const pickRandom = <T,>(items: T[]): T | null => {
+  if (!items.length) return null;
+  return items[Math.floor(Math.random() * items.length)];
+};
+
+const deriveAdaptiveTargets = (history: TestAnswer[]): { focusType: string | null; secondaryType: string | null; confidence: number } => {
+  const stats = new Map<string, { seen: number; mistakes: number; slow: number }>();
+
+  const note = (key: string | null, answer: TestAnswer) => {
+    if (!key) return;
+    const normalized = normalizeType(key);
+    if (!normalized) return;
+    const entry = stats.get(normalized) ?? { seen: 0, mistakes: 0, slow: 0 };
+    entry.seen += 1;
+    if (!answer.correct) entry.mistakes += 1;
+    if ((answer.timing?.durationMs ?? 0) >= SLOW_ANSWER_THRESHOLD_MS) {
+      entry.slow += 1;
+    }
+    stats.set(normalized, entry);
+  };
+
+  history.forEach((answer) => {
+    note(answer.plateTypeNormalized, answer);
+    if (answer.matchedOutcome && answer.matchedOutcome !== "normal") {
+      note(answer.matchedOutcome, answer);
+    }
+  });
+
+  const ranked = Array.from(stats.entries())
+    .map(([type, stat]) => {
+      const accuracyPenalty = stat.seen ? stat.mistakes / stat.seen : 0;
+      const score = stat.mistakes * 1.2 + accuracyPenalty + stat.slow * 0.5;
+      return { type, score, stat };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const focus = ranked[0] && ranked[0].score >= ADAPTIVE_CONFIDENCE_THRESHOLD ? ranked[0] : null;
+  const secondary = ranked[1] && ranked[1].score >= ADAPTIVE_CONFIDENCE_THRESHOLD * 0.85 ? ranked[1] : null;
+
+  return {
+    focusType: focus?.type ?? null,
+    secondaryType: secondary?.type ?? null,
+    confidence: focus?.score ?? 0,
+  };
+};
+
+const selectAdaptivePlate = (
+  manifest: ManifestData,
+  usedIds: Set<number>,
+  focusType: string | null,
+  secondaryType: string | null,
+): PlateData | null => {
+  const unused = manifest.plates.filter(
+    (plate) => !usedIds.has(plate.id) && normalizeType(plate.analysis.type_inferred) !== TYPE_CONTROL,
+  );
+
+  const tryTypes = [focusType, secondaryType, TYPE_DIAGNOSTIC, TYPE_RED_GREEN, TYPE_DEUTAN, TYPE_PROTAN];
+
+  for (const target of tryTypes) {
+    if (!target) continue;
+    const normalizedTarget = normalizeType(target);
+    const candidates = unused.filter((plate) => normalizeType(plate.analysis.type_inferred) === normalizedTarget);
+    const choice = pickRandom(candidates);
+    if (choice) return choice;
+  }
+
+  return pickRandom(unused);
+};
+
 export default function IshiharaTest() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -94,6 +166,9 @@ export default function IshiharaTest() {
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
+  const [adaptiveAddedCount, setAdaptiveAddedCount] = useState(0);
+  const [adaptiveFocusType, setAdaptiveFocusType] = useState<string | null>(null);
+  const [adaptiveSecondaryType, setAdaptiveSecondaryType] = useState<string | null>(null);
   const [controlPlate, setControlPlate] = useState<PlateData | null>(null);
   const [controlAttempts, setControlAttempts] = useState(0);
   const [controlPassAttempt, setControlPassAttempt] = useState<number | null>(null);
@@ -150,12 +225,33 @@ export default function IshiharaTest() {
     const nonControl = manifest.plates.filter(
       (plate) => normalizeType(plate.analysis.type_inferred) !== TYPE_CONTROL,
     );
-    const shuffled = shuffleArray(nonControl);
-    const desiredCount = Math.min(
-      shuffled.length,
-      Math.max(MIN_PLATES, Math.floor(Math.random() * (MAX_PLATES - MIN_PLATES + 1)) + MIN_PLATES),
+    if (!nonControl.length) return [];
+
+    const byType = nonControl.reduce((acc, plate) => {
+      const key = normalizeType(plate.analysis.type_inferred) ?? "unknown";
+      acc.set(key, [...(acc.get(key) ?? []), plate]);
+      return acc;
+    }, new Map<string, PlateData[]>());
+
+    const starterTypes = [TYPE_DIAGNOSTIC, TYPE_RED_GREEN, TYPE_DEUTAN, TYPE_PROTAN];
+    const starter: PlateData[] = [];
+    starterTypes.forEach((type) => {
+      const choice = pickRandom(byType.get(type) ?? []);
+      if (choice && !starter.find((p) => p.id === choice.id)) {
+        starter.push(choice);
+      }
+    });
+
+    const baseTarget = Math.min(
+      nonControl.length,
+      MAX_PLATES - ADAPTIVE_MAX_EXTRA_PLATES,
+      Math.max(MIN_PLATES, starter.length),
     );
-    return shuffled.slice(0, desiredCount);
+
+    const remainingPool = nonControl.filter((plate) => !starter.find((p) => p.id === plate.id));
+    const remainder = shuffleArray(remainingPool).slice(0, Math.max(baseTarget - starter.length, 0));
+
+    return shuffleArray([...starter, ...remainder]);
   };
 
   const startTestingSession = (sequence: PlateData[]) => {
@@ -189,6 +285,9 @@ export default function IshiharaTest() {
     setAnswers([]);
     setTestPlates([]);
     setCurrentPlateIndex(0);
+    setAdaptiveAddedCount(0);
+    setAdaptiveFocusType(null);
+    setAdaptiveSecondaryType(null);
     setCompleted(false);
     setSubmitting(false);
     setControlAttempts(0);
@@ -245,6 +344,36 @@ export default function IshiharaTest() {
       matchedOutcome,
       matchedOutcomeLabel,
       correct,
+    };
+  };
+
+  const maybeAddAdaptivePlate = (
+    currentSequence: PlateData[],
+    answerHistory: TestAnswer[],
+  ): { sequence: PlateData[]; added: boolean; focusType: string | null; secondaryType: string | null } => {
+    if (!manifest) return { sequence: currentSequence, added: false, focusType: null, secondaryType: null };
+    if (currentSequence.length >= MAX_PLATES) return { sequence: currentSequence, added: false, focusType: null, secondaryType: null };
+    if (adaptiveAddedCount >= ADAPTIVE_MAX_EXTRA_PLATES) {
+      return { sequence: currentSequence, added: false, focusType: null, secondaryType: null };
+    }
+
+    const { focusType, secondaryType, confidence } = deriveAdaptiveTargets(answerHistory);
+    if (!focusType || confidence < ADAPTIVE_CONFIDENCE_THRESHOLD) {
+      return { sequence: currentSequence, added: false, focusType: null, secondaryType: null };
+    }
+
+    const usedIds = new Set(currentSequence.map((plate) => plate.id));
+    const adaptivePlate = selectAdaptivePlate(manifest, usedIds, focusType, secondaryType);
+
+    if (!adaptivePlate) {
+      return { sequence: currentSequence, added: false, focusType, secondaryType };
+    }
+
+    return {
+      sequence: [...currentSequence, adaptivePlate],
+      added: true,
+      focusType,
+      secondaryType,
     };
   };
 
@@ -307,20 +436,39 @@ export default function IshiharaTest() {
     };
 
     const newAnswers = [...answers, newAnswer];
+    const adaptiveResult = maybeAddAdaptivePlate(testPlates, newAnswers);
+    const updatedSequence = adaptiveResult.sequence;
+    const updatedAdaptiveAddedCount = adaptiveAddedCount + (adaptiveResult.added ? 1 : 0);
+
     setAnswers(newAnswers);
+    setTestPlates(updatedSequence);
+    if (adaptiveResult.added) {
+      setAdaptiveAddedCount(updatedAdaptiveAddedCount);
+    }
+    if (adaptiveResult.focusType) {
+      setAdaptiveFocusType(adaptiveResult.focusType);
+    }
+    if (adaptiveResult.secondaryType) {
+      setAdaptiveSecondaryType((prev) => prev ?? adaptiveResult.secondaryType);
+    }
     setUserInput("");
     setImageError(false);
     const nextIndex = currentPlateIndex + 1;
-    if (nextIndex < testPlates.length) {
-      const upcomingPlate = testPlates[nextIndex];
+    if (nextIndex < updatedSequence.length) {
+      const upcomingPlate = updatedSequence[nextIndex];
       setCurrentPlateIndex(nextIndex);
       markQuestionStart(`plate-${upcomingPlate.id}`, `Plate ${upcomingPlate.id}`);
     } else {
-      void completeTest(newAnswers);
+      void completeTest(newAnswers, adaptiveResult.focusType, adaptiveResult.secondaryType, updatedAdaptiveAddedCount);
     }
   };
 
-  const completeTest = async (testAnswers: TestAnswer[]) => {
+  const completeTest = async (
+    testAnswers: TestAnswer[],
+    focusOverride?: string | null,
+    secondaryOverride?: string | null,
+    adaptiveAddedOverride?: number,
+  ) => {
     if (completed) return;
     const timingSummary = completeSession();
     setSubmitting(true);
@@ -350,6 +498,11 @@ export default function IshiharaTest() {
     const diagnosticAnswers = testAnswers.filter((answer) => answer.plateTypeNormalized === TYPE_DIAGNOSTIC);
     const deutanAnswers = testAnswers.filter((answer) => answer.plateTypeNormalized === TYPE_DEUTAN);
     const protanAnswers = testAnswers.filter((answer) => answer.plateTypeNormalized === TYPE_PROTAN);
+
+    const adaptiveAddedTotal = adaptiveAddedOverride ?? adaptiveAddedCount;
+    const strategyUsed = adaptiveAddedTotal > 0 ? "adaptive_mistake_driven" : "coverage_first";
+    const focusType = focusOverride ?? adaptiveFocusType;
+    const secondaryType = secondaryOverride ?? adaptiveSecondaryType;
 
     const typeBreakdown = testAnswers.reduce(
       (acc, answer) => {
@@ -432,11 +585,15 @@ export default function IshiharaTest() {
         all_types: typeBreakdown,
       },
       matched_outcomes: matchCounter,
-      focus_type: null,
-      secondary_type: null,
+      focus_type: focusType,
+      secondary_type: secondaryType,
       suspected_deficiency: suspectedDeficiency,
       total_plates_presented: testAnswers.length,
       correct_count: correctCount,
+      adaptive: {
+        added_plates: adaptiveAddedTotal,
+        strategy: strategyUsed,
+      },
     };
 
     if (!user) {
@@ -485,9 +642,11 @@ export default function IshiharaTest() {
             neutralLightingChecked,
             distanceChecked,
           },
-          focusType: null,
-          secondaryType: null,
-          sequenceStrategy: "full_manifest_shuffle",
+          focusType,
+          secondaryType,
+          sequenceStrategy: strategyUsed,
+          adaptiveAddedPlates: adaptiveAddedTotal,
+          adaptiveFocusType: focusType,
           suspectedDeficiency,
           analysisSummary,
           timing: {
